@@ -7,6 +7,8 @@ INCLUDEDIRS = -I. \
 LIBDIRS = -L${QTDIR}/lib
 LIBS = -lQt6Core -lQt6Widgets -lQt6Gui -lQt6DBus
 FLAGS = 
+# Utils
+MOC = ${QTDIR}/libexec/moc
 # Files
 HEADERS := $(shell ls **/*.h)
 WIDGETS := $(shell ls widgets/*.cpp)
@@ -35,12 +37,12 @@ debug: tests
 tests: bin test_anchor test_thought
 
 test_anchor: mocs $(HEADERS) $(WIDGETS) tests/test_anchor.cpp
-	g++ -g $(INCLUDEDIRS) $(FLAGS) \
+	$(CXX) -g $(INCLUDEDIRS) $(FLAGS) \
 		$(WIDGETS) $(MOCS_O) tests/test_anchor.cpp \
 		-o bin/test_anchor $(LIBDIRS) $(LIBS) 
 
 test_thought: mocs $(HEADERS) $(WIDGETS) tests/test_thought.cpp
-	g++ -g $(INCLUDEDIRS) $(FLAGS) \
+	$(CXX) -g $(INCLUDEDIRS) $(FLAGS) \
 		$(WIDGETS) $(MOCS_O) tests/test_thought.cpp \
 		-o bin/test_thought $(LIBDIRS) $(LIBS)
 
@@ -48,4 +50,4 @@ test_thought: mocs $(HEADERS) $(WIDGETS) tests/test_thought.cpp
 mocs: moc $(MOCS_O)
 
 mocs/%.moc.cpp: widgets/%.h
-	${QTDIR}/libexec/moc $< -o $@
+	$(MOC) $< -o $@
