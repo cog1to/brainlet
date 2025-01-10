@@ -12,7 +12,8 @@ Style::Style(
 	QColor hoverBorderColor,
 	QFont font,
 	QColor activeAnchorColor,
-	QColor textColor
+	QColor textColor,
+	QColor hoverBackground
 ) {
 	m_background = background;
 	m_borderWidth = borderWidth;
@@ -22,6 +23,23 @@ Style::Style(
 	m_font = font;
 	m_activeAnchorColor = activeAnchorColor;
 	m_textColor = textColor;
+	m_hoverBackground = hoverBackground;
+}
+
+Style& Style::defaultStyle() {
+	static Style style(
+		QColor(23, 43, 52, 255),		
+		1.0,
+		QColor(248, 144, 87, 255),
+		2.0,
+		QColor(248, 144, 87, 255),
+		QFont("Noto Sans", 12),
+		QColor(228, 83, 75, 255),
+		QColor(215, 221, 232, 255),
+		QColor(0, 0, 0, 128)
+	);
+
+	return style;
 }
 
 const QColor Style::background() const {
@@ -96,3 +114,11 @@ void Style::setTextColor(QColor color) {
 	emit styleChanged(this);
 }
 
+const QColor Style::hoverBackground() const {
+	return m_hoverBackground;
+}
+
+void Style::setHoverBackground(QColor color) {
+	m_hoverBackground = color;
+	emit styleChanged(this);
+}

@@ -1,6 +1,7 @@
 #include <QTextEdit>
 #include <QString>
 #include <QPainter>
+#include <iostream>
 
 #include "widgets/thought_widget.h"
 
@@ -15,8 +16,10 @@ ThoughtWidget::ThoughtWidget(
 	m_anchorLink(this, style, hasLink),
 	m_anchorParent(this, style, hasParent),
 	m_anchorChild(this, style, hasChild),
-	m_textEdit(this, style, text)
+	m_textEdit(this, style, "")
 {
+	m_text = QString::fromStdString(text);
+
 	QObject::connect(
 		&m_textEdit, &ThoughtEditWidget::mouseEnter,
 		this, &ThoughtWidget::onTextEnter
@@ -25,6 +28,8 @@ ThoughtWidget::ThoughtWidget(
 		&m_textEdit, &ThoughtEditWidget::mouseLeave,
 		this, &ThoughtWidget::onTextLeave
 	);
+
+	updateText();
 }
 
 ThoughtWidget::~ThoughtWidget() {}
@@ -54,32 +59,50 @@ void ThoughtWidget::setHasLink(bool value) {
 }
 
 const std::string ThoughtWidget::text() const {
-	return m_textEdit.toPlainText().toStdString();
+	return m_text.toStdString();
 }
 
 void ThoughtWidget::setText(std::string value) {
-	m_textEdit.setPlainText(QString::fromStdString(value));
+	m_text = QString::fromStdString(value);
+	updateText();
 }
 
-// Size hint
+// Size measurements
 
 QSize ThoughtWidget::sizeHint() const {
 	const QSize anchorSize = AnchorWidget::defaultSize;
 
 	// Calculate bounding rect for the text.
 	QFontMetrics metrics(m_style->font());
-	QRect bounds = metrics.boundingRect(m_textEdit.toPlainText());
-	// Update desired page size for the text edit.
-	m_textEdit.document()->setPageSize(QSizeF(bounds.width(), bounds.height()));
-	// Get actual text size from the document.
-	QSize textSize = m_textEdit.document()->size().toSize();
+	QRect bounds = metrics.boundingRect(m_text);
+	QSize textSize = bounds.size();
 	// Add paddings and anchor sizes and borders.
 	QSize result(
-		textSize.width() + padding.width() * 2.0 + m_style->hoverBorderWidth() * 1.5 + anchorSize.width() / 2.0,
+		textSize.width() + padding.width() * 2.0 + m_style->hoverBorderWidth() * 2.0 + anchorSize.width(),
 		textSize.height() + padding.height() * 2.0 + m_style->hoverBorderWidth() * 2.0 + anchorSize.height()
 	);
 
 	return result;
+}
+
+QSize ThoughtWidget::sizeForWidth(int width) const {
+	const QSize anchorSize = AnchorWidget::defaultSize;
+	const int textPadding = anchorSize.width() + padding.width() * 2.0 + m_style->hoverBorderWidth();
+	const int verticalPadding = anchorSize.height() + padding.height() * 2.0 + m_style->hoverBorderWidth();
+
+	QFontMetrics metrics(m_style->font());
+	QRect bounds = metrics.boundingRect(
+		QRect(0, 0, width - textPadding, INT_MAX),
+		Qt::AlignHCenter | Qt::TextWordWrap,
+		m_text
+	);
+
+	return QSize(
+		bounds.size().width() + textPadding,
+		// TODO: Figure out how to properly measure text height. This is a hack to
+		// take into account line spacing added by the QTextEdit.
+		bounds.size().height() + verticalPadding + ((bounds.height() / metrics.height()))
+	);
 }
 
 // Hover event
@@ -87,11 +110,13 @@ QSize ThoughtWidget::sizeHint() const {
 void ThoughtWidget::onTextEnter() {
 	m_hover = true;
 	update();
+	emit textMouseEnter(this);
 }
 
 void ThoughtWidget::onTextLeave() {
 	m_hover = false;
 	update();
+	emit textMouseLeave(this);
 }
 
 // Draw and layout
@@ -105,15 +130,19 @@ void ThoughtWidget::paintEvent(QPaintEvent *event) {
 	float hoverWidth = m_style->hoverBorderWidth();
 	QSize cur = size();
 	QPen pen(borderColor, borderWidth);
+
+	QPainter painter(this);
+
 	if (m_hover) {
 		pen.setWidth(hoverWidth);
+		QBrush brush(m_style->hoverBackground());
+		painter.setBrush(brush);
 	}
-	QPainter painter(this);
 
 	QRectF border(
 		anchorSize.width() / 2.0,
 		anchorSize.height() / 2.0,
-		cur.width() - hoverWidth/2.0 - anchorSize.width()/2.0,
+		cur.width() - hoverWidth/2.0 - anchorSize.width(),
 		cur.height() - hoverWidth/2.0 - anchorSize.height());
 
 	painter.setRenderHint(QPainter::Antialiasing);
@@ -157,8 +186,34 @@ void ThoughtWidget::resizeEvent(QResizeEvent *event) {
 	QRect text(
 		anchorSize.width() / 2.0 + m_style->hoverBorderWidth() / 2.0 + padding.width(),
 		anchorSize.height() / 2.0 + m_style->hoverBorderWidth() / 2.0 + padding.height(),
-		size.width() - anchorSize.width() / 2.0 - m_style->hoverBorderWidth() * 1.5 - padding.width() * 2,
+		size.width() - anchorSize.width() - m_style->hoverBorderWidth() * 2 - padding.width() * 2,
 		size.height() - anchorSize.height() - m_style->hoverBorderWidth() - padding.height() * 2);
 	m_textEdit.setGeometry(text);
+
+	updateText();
 }
 
+// Private
+
+void ThoughtWidget::updateText() {
+	QFontMetrics metrics(m_style->font());
+
+	const QSize anchorSize = AnchorWidget::defaultSize;
+	const int textPadding = anchorSize.width() + padding.width() * 2.0 + m_style->hoverBorderWidth();
+	const int verticalPadding = anchorSize.height() + padding.height() * 2.0 + m_style->hoverBorderWidth();
+	const int availableWidth = size().width() - textPadding;
+	QRect bounds = metrics.boundingRect(
+		QRect(0, 0, size().width() - textPadding, INT_MAX),
+		Qt::AlignHCenter | Qt::TextWordWrap,
+		m_text
+	);
+
+	if (bounds.size().height() > (size().height() - verticalPadding)) {
+		QString elided = metrics.elidedText(m_text, Qt::ElideRight, availableWidth);
+		m_textEdit.setPlainText(elided);
+	} else {
+		m_textEdit.setPlainText(m_text);
+	}
+
+	m_textEdit.setAlignment(Qt::AlignCenter);
+}

@@ -28,8 +28,14 @@ public:
 	void setHasLink(bool);
 	const std::string text() const;
 	void setText(std::string);
-	// Method overrides.
+	// Method override.
 	QSize sizeHint() const override;
+	// Calculates bounding rect for given width without height restriction.
+	QSize sizeForWidth(int width) const;
+
+signals:
+	void textMouseEnter(ThoughtWidget*);
+	void textMouseLeave(ThoughtWidget*);
 
 protected slots:
 	void onTextEnter();
@@ -48,7 +54,11 @@ protected:
 	static constexpr QSize padding = QSize(10, 2);
 
 private:
+	// State.
 	bool m_hover = false;
+	QString m_text;
+	// Helpers.
+	void updateText();
 };
 
 #endif

@@ -18,8 +18,11 @@ public:
 		QColor hoverBorderColor,
 		QFont font,
 		QColor activeAnchorColor,
-		QColor textColor
+		QColor textColor,
+		QColor hoverBackground
 	);
+	// Default style.
+	static Style& defaultStyle();
 	// Background color.
 	const QColor background() const;
 	void setBackground(QColor);
@@ -33,6 +36,9 @@ public:
 	void setHoverBorderWidth(float);
 	const QColor hoverBorderColor() const;
 	void setHoverBorderColor(QColor);
+	// Background on hover.
+	const QColor hoverBackground() const;
+	void setHoverBackground(QColor);
 	// Main font.
 	const QFont font() const;
 	void setFont(QFont);
@@ -55,6 +61,7 @@ private:
 	QFont m_font;
 	QColor m_activeAnchorColor;
 	QColor m_textColor;
+	QColor m_hoverBackground;
 };
 
 #endif

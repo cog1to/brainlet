@@ -8,17 +8,7 @@ int main(int argc, char *argv[]) {
 	QWidget widget;
 	widget.resize(200, 100);
 
-	// Style
-	Style style(
-		QColor(23, 43, 52, 255),		
-		1.0,
-		QColor(248, 144, 87, 255),
-		2.0,
-		QColor(248, 144, 87, 255),
-		QFont("Helvetica", 12),
-		QColor(228, 83, 75, 255),
-		QColor(255, 255, 255, 255)
-	);
+	Style& style = Style::defaultStyle();
 
 	widget.setStyleSheet("background-color: #1b2b34");
 
