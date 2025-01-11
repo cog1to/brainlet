@@ -17,9 +17,11 @@ class ThoughtWidget: public BaseWidget {
 
 public:
 	// Constructor and destructor.
-	ThoughtWidget(QWidget*, Style*, std::string, bool, bool, bool);
+	ThoughtWidget(QWidget*, Style*, bool, std::string, bool, bool, bool);
 	~ThoughtWidget();
 	// Properties.
+	const bool readOnly() const;
+	void setReadOnly(bool);
 	const bool hasParent() const;
 	void setHasParent(bool);
 	const bool hasChild() const;
@@ -34,12 +36,15 @@ public:
 	QSize sizeForWidth(int width) const;
 
 signals:
-	void textMouseEnter(ThoughtWidget*);
-	void textMouseLeave(ThoughtWidget*);
+	void activated(ThoughtWidget*);
+	void deactivated(ThoughtWidget*);
+	void textChanged(ThoughtWidget*);
 
 protected slots:
 	void onTextEnter();
 	void onTextLeave();
+	void onTextClearFocus();
+	void onTextChanged();
 
 protected:
 	// Event overrides.
@@ -57,6 +62,7 @@ private:
 	// State.
 	bool m_hover = false;
 	QString m_text;
+	QTextCursor m_cursor;;
 	// Helpers.
 	void updateText();
 };

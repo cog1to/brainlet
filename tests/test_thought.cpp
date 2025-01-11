@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
 
 	widget.setStyleSheet("background-color: #1b2b34");
 
-	ThoughtWidget thought(&widget, &style, "jÀest lorem Ipsum", false, false, true);
+	ThoughtWidget thought(&widget, &style, true, "jÀest lorem Ipsum", false, false, true);
 
 	QSize size = thought.sizeHint();
 	thought.setGeometry(

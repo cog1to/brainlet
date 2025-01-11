@@ -34,7 +34,7 @@ debug: FLAGS += -DDEBUG_GUI=1
 debug: tests
 
 # Tests
-tests: bin test_anchor test_thought test_resize
+tests: bin test_anchor test_thought test_resize test_edit
 
 test_anchor: mocs $(HEADERS) $(WIDGETS) tests/test_anchor.cpp
 	$(CXX) -g $(INCLUDEDIRS) $(FLAGS) \
@@ -50,6 +50,11 @@ test_resize: mocs $(HEADERS) $(WIDGETS) tests/test_resize_on_hover.cpp
 	$(CXX) -g $(INCLUDEDIRS) $(FLAGS) \
 		$(WIDGETS) $(MOCS_O) tests/test_resize_on_hover.cpp \
 		-o bin/test_resize $(LIBDIRS) $(LIBS)
+	
+test_edit: mocs $(HEADERS) $(WIDGETS) tests/test_resize_on_hover.cpp
+	$(CXX) -g $(INCLUDEDIRS) $(FLAGS) \
+		$(WIDGETS) $(MOCS_O) tests/test_edit.cpp \
+		-o bin/test_edit $(LIBDIRS) $(LIBS)
 
 # MOCs
 mocs: moc $(MOCS_O)

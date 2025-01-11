@@ -8,6 +8,7 @@
 ThoughtWidget::ThoughtWidget(
 	QWidget *parent,
 	Style *style,
+	bool readOnly,
 	std::string text,
 	bool hasParent,
 	bool hasChild,
@@ -16,17 +17,25 @@ ThoughtWidget::ThoughtWidget(
 	m_anchorLink(this, style, hasLink),
 	m_anchorParent(this, style, hasParent),
 	m_anchorChild(this, style, hasChild),
-	m_textEdit(this, style, "")
+	m_textEdit(this, style, readOnly, "")
 {
 	m_text = QString::fromStdString(text);
 
 	QObject::connect(
-		&m_textEdit, &ThoughtEditWidget::mouseEnter,
-		this, &ThoughtWidget::onTextEnter
+		&m_textEdit, SIGNAL(mouseEnter()),
+		this, SLOT(onTextEnter())
 	);
 	QObject::connect(
-		&m_textEdit, &ThoughtEditWidget::mouseLeave,
-		this, &ThoughtWidget::onTextLeave
+		&m_textEdit, SIGNAL(mouseLeave()),
+		this, SLOT(onTextLeave())
+	);
+	QObject::connect(
+		&m_textEdit, SIGNAL(focusLost()),
+		this, SLOT(onTextClearFocus())
+	);
+	QObject::connect(
+		&m_textEdit, SIGNAL(textChanged()),
+		this, SLOT(onTextChanged())
 	);
 
 	updateText();
@@ -67,6 +76,14 @@ void ThoughtWidget::setText(std::string value) {
 	updateText();
 }
 
+const bool ThoughtWidget::readOnly() const {
+	return m_textEdit.isReadOnly();
+}
+
+void ThoughtWidget::setReadOnly(bool value) {
+	m_textEdit.setReadOnly(value);
+}
+
 // Size measurements
 
 QSize ThoughtWidget::sizeHint() const {
@@ -74,12 +91,26 @@ QSize ThoughtWidget::sizeHint() const {
 
 	// Calculate bounding rect for the text.
 	QFontMetrics metrics(m_style->font());
-	QRect bounds = metrics.boundingRect(m_text);
+	QRect bounds = metrics.boundingRect(
+		// 9000 is set due to a quirk in QFontMetrics measurement. When calling
+		// boundingRect() without a restriction rect or with INT_MAX, it produces
+		// a bounding rect smaller than actually needed to fit the text.
+		QRect(0, 0, 9000, INT_MAX),
+		Qt::AlignHCenter | Qt::TextWordWrap,
+		m_text
+	);
 	QSize textSize = bounds.size();
+
 	// Add paddings and anchor sizes and borders.
 	QSize result(
-		textSize.width() + padding.width() * 2.0 + m_style->hoverBorderWidth() * 2.0 + anchorSize.width(),
-		textSize.height() + padding.height() * 2.0 + m_style->hoverBorderWidth() * 2.0 + anchorSize.height()
+		textSize.width() +
+			padding.width() * 2.0 +
+			m_style->hoverBorderWidth() * 2.0 +
+			anchorSize.width(),
+		textSize.height() +
+			padding.height() * 2.0 +
+			m_style->hoverBorderWidth() * 2.0 +
+			anchorSize.height()
 	);
 
 	return result;
@@ -87,8 +118,14 @@ QSize ThoughtWidget::sizeHint() const {
 
 QSize ThoughtWidget::sizeForWidth(int width) const {
 	const QSize anchorSize = AnchorWidget::defaultSize;
-	const int textPadding = anchorSize.width() + padding.width() * 2.0 + m_style->hoverBorderWidth();
-	const int verticalPadding = anchorSize.height() + padding.height() * 2.0 + m_style->hoverBorderWidth();
+
+	const int textPadding = anchorSize.width() +
+		padding.width() * 2.0 +
+		m_style->hoverBorderWidth() * 2.0 +
+		1.0; // 1px for cursor.
+	const int verticalPadding = anchorSize.height() +
+		padding.height() * 2.0 +
+		m_style->hoverBorderWidth() * 2.0;
 
 	QFontMetrics metrics(m_style->font());
 	QRect bounds = metrics.boundingRect(
@@ -97,26 +134,52 @@ QSize ThoughtWidget::sizeForWidth(int width) const {
 		m_text
 	);
 
-	return QSize(
+	QSize result = QSize(
 		bounds.size().width() + textPadding,
-		// TODO: Figure out how to properly measure text height. This is a hack to
-		// take into account line spacing added by the QTextEdit.
-		bounds.size().height() + verticalPadding + ((bounds.height() / metrics.height()))
+		bounds.size().height() + verticalPadding
 	);
+
+	return result;
 }
 
-// Hover event
+// Text edit events
 
 void ThoughtWidget::onTextEnter() {
 	m_hover = true;
 	update();
-	emit textMouseEnter(this);
+	if (!m_textEdit.hasFocus()) {
+		emit activated(this);
+	}
 }
 
 void ThoughtWidget::onTextLeave() {
 	m_hover = false;
 	update();
-	emit textMouseLeave(this);
+	if (!m_textEdit.hasFocus()) {
+		emit deactivated(this);
+	}
+}
+
+void ThoughtWidget::onTextClearFocus() {
+	// Update text after editing.
+	m_text = m_textEdit.toPlainText();
+	// Redraw.
+	update();
+	// Signal that we're no longer active.
+	if (!m_hover) {
+		emit deactivated(this);
+	}
+}
+
+void ThoughtWidget::onTextChanged() {
+	if (!m_textEdit.hasFocus()) {
+		return;
+	}
+
+	m_text = m_textEdit.toPlainText();
+	// Save cursor because a resize can occur, and that will reset it.
+	m_cursor = m_textEdit.textCursor();
+	emit textChanged(this);
 }
 
 // Draw and layout
@@ -133,7 +196,7 @@ void ThoughtWidget::paintEvent(QPaintEvent *event) {
 
 	QPainter painter(this);
 
-	if (m_hover) {
+	if (m_hover || m_textEdit.hasFocus()) {
 		pen.setWidth(hoverWidth);
 		QBrush brush(m_style->hoverBackground());
 		painter.setBrush(brush);
@@ -143,7 +206,7 @@ void ThoughtWidget::paintEvent(QPaintEvent *event) {
 		anchorSize.width() / 2.0,
 		anchorSize.height() / 2.0,
 		cur.width() - hoverWidth/2.0 - anchorSize.width(),
-		cur.height() - hoverWidth/2.0 - anchorSize.height());
+		cur.height() + hoverWidth/2.0 - anchorSize.height());
 
 	painter.setRenderHint(QPainter::Antialiasing);
 	painter.setPen(pen);
@@ -173,7 +236,7 @@ void ThoughtWidget::resizeEvent(QResizeEvent *event) {
 
 	QRect child(
 		(int)((float)size.width() * childLeftOffset),
-		size.height() - anchorSize.width() - m_style->hoverBorderWidth() / 2.0,
+		size.height() - anchorSize.width() + m_style->hoverBorderWidth() / 2.0,
 		anchorSize.width(), anchorSize.height());
 	m_anchorChild.setGeometry(child);
 
@@ -184,24 +247,40 @@ void ThoughtWidget::resizeEvent(QResizeEvent *event) {
 	m_anchorLink.setGeometry(link);
 
 	QRect text(
-		anchorSize.width() / 2.0 + m_style->hoverBorderWidth() / 2.0 + padding.width(),
-		anchorSize.height() / 2.0 + m_style->hoverBorderWidth() / 2.0 + padding.height(),
-		size.width() - anchorSize.width() - m_style->hoverBorderWidth() * 2 - padding.width() * 2,
-		size.height() - anchorSize.height() - m_style->hoverBorderWidth() - padding.height() * 2);
+		anchorSize.width() / 2.0 +
+			m_style->hoverBorderWidth() / 2.0 +
+			padding.width(),
+		anchorSize.height() / 2.0 +
+			m_style->hoverBorderWidth() / 2.0 +
+			padding.height(),
+		size.width() - anchorSize.width() -
+			m_style->hoverBorderWidth() * 2 -
+			padding.width() * 2 +
+			1.0, // 1px for cursor.
+		size.height() - anchorSize.height() -
+			m_style->hoverBorderWidth() -
+			padding.height() * 2
+	);
 	m_textEdit.setGeometry(text);
 
-	updateText();
+	if (!m_textEdit.hasFocus()) {
+		updateText();
+	}
 }
 
 // Private
 
 void ThoughtWidget::updateText() {
-	QFontMetrics metrics(m_style->font());
-
 	const QSize anchorSize = AnchorWidget::defaultSize;
-	const int textPadding = anchorSize.width() + padding.width() * 2.0 + m_style->hoverBorderWidth();
-	const int verticalPadding = anchorSize.height() + padding.height() * 2.0 + m_style->hoverBorderWidth();
+	const int textPadding = anchorSize.width() +
+		padding.width() * 2.0 +
+		m_style->hoverBorderWidth();
+	const int verticalPadding = anchorSize.height() +
+		padding.height() * 2.0 +
+		m_style->hoverBorderWidth();
 	const int availableWidth = size().width() - textPadding;
+
+	QFontMetrics metrics(m_style->font());
 	QRect bounds = metrics.boundingRect(
 		QRect(0, 0, size().width() - textPadding, INT_MAX),
 		Qt::AlignHCenter | Qt::TextWordWrap,
