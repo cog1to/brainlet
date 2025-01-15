@@ -36,7 +36,7 @@ Style& Style::defaultStyle() {
 		QFont("Noto Sans", 12),
 		QColor(228, 83, 75, 255),
 		QColor(215, 221, 232, 255),
-		QColor(0, 0, 0, 128)
+		QColor(0, 0, 0, 192)
 	);
 
 	return style;

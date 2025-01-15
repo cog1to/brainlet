@@ -8,6 +8,7 @@
 ThoughtWidget::ThoughtWidget(
 	QWidget *parent,
 	Style *style,
+	ThoughtId id,
 	bool readOnly,
 	std::string text,
 	bool hasParent,
@@ -19,6 +20,7 @@ ThoughtWidget::ThoughtWidget(
 	m_anchorChild(this, style, hasChild),
 	m_textEdit(this, style, readOnly, "")
 {
+	m_id = id;
 	m_text = QString::fromStdString(text);
 
 	QObject::connect(
@@ -42,6 +44,10 @@ ThoughtWidget::ThoughtWidget(
 }
 
 ThoughtWidget::~ThoughtWidget() {}
+
+const ThoughtId ThoughtWidget::id() const {
+	return m_id;
+}
 
 const bool ThoughtWidget::hasParent() const {
 	return m_anchorParent.active();
@@ -82,6 +88,10 @@ const bool ThoughtWidget::readOnly() const {
 
 void ThoughtWidget::setReadOnly(bool value) {
 	m_textEdit.setReadOnly(value);
+}
+
+const bool ThoughtWidget::isActive() const {
+	return m_hover || m_textEdit.hasFocus();
 }
 
 // Size measurements

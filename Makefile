@@ -1,9 +1,9 @@
 # Basic config
-INCLUDEDIRS = -I. \
-							-I${QTDIR}/include \
+INCLUDEDIRS = -I${QTDIR}/include \
 							-I${QTDIR}/include/QtCore \
 							-I${QTDIR}/include/QtWidgets \
-							-I${QTDIR}/include/QtGui
+							-I${QTDIR}/include/QtGui \
+							-I.
 LIBDIRS = -L${QTDIR}/lib
 LIBS = -lQt6Core -lQt6Widgets -lQt6Gui -lQt6DBus
 FLAGS = 
@@ -11,6 +11,8 @@ FLAGS =
 MOC = ${QTDIR}/libexec/moc
 # Files
 HEADERS := $(shell ls **/*.h)
+LAYOUTS := $(shell ls layout/*.cpp)
+MODELS := $(shell ls model/*.cpp)
 WIDGETS := $(shell ls widgets/*.cpp)
 MOCS_H = $(wildcard widgets/*.h)
 MOCS_O = $(patsubst widgets/%.cpp,mocs/%.cpp,$(MOCS_H:.h=.moc.cpp))
@@ -34,7 +36,7 @@ debug: FLAGS += -DDEBUG_GUI=1
 debug: tests
 
 # Tests
-tests: bin test_anchor test_thought test_resize test_edit
+tests: bin test_anchor test_thought test_resize test_edit test_base
 
 test_anchor: mocs $(HEADERS) $(WIDGETS) tests/test_anchor.cpp
 	$(CXX) -g $(INCLUDEDIRS) $(FLAGS) \
@@ -55,6 +57,11 @@ test_edit: mocs $(HEADERS) $(WIDGETS) tests/test_resize_on_hover.cpp
 	$(CXX) -g $(INCLUDEDIRS) $(FLAGS) \
 		$(WIDGETS) $(MOCS_O) tests/test_edit.cpp \
 		-o bin/test_edit $(LIBDIRS) $(LIBS)
+
+test_base: mocs $(HEADERS) $(WIDGETS) tests/test_base_canvas.cpp
+	$(CXX) -g $(INCLUDEDIRS) $(FLAGS) \
+		$(MODELS) $(LAYOUTS) $(WIDGETS) $(MOCS_O) tests/test_base_canvas.cpp \
+		-o bin/test_base $(LIBDIRS) $(LIBS)
 
 # MOCs
 mocs: moc $(MOCS_O)

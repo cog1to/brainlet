@@ -7,6 +7,7 @@
 #include <QResizeEvent>
 #include <QTextEdit>
 
+#include "model/thought.h"
 #include "widgets/style.h"
 #include "widgets/base_widget.h"
 #include "widgets/anchor_widget.h"
@@ -17,8 +18,10 @@ class ThoughtWidget: public BaseWidget {
 
 public:
 	// Constructor and destructor.
-	ThoughtWidget(QWidget*, Style*, bool, std::string, bool, bool, bool);
+	ThoughtWidget(QWidget*, Style*, ThoughtId, bool, std::string, bool, bool, bool);
 	~ThoughtWidget();
+	// Id.
+	const ThoughtId id() const;
 	// Properties.
 	const bool readOnly() const;
 	void setReadOnly(bool);
@@ -34,6 +37,8 @@ public:
 	QSize sizeHint() const override;
 	// Calculates bounding rect for given width without height restriction.
 	QSize sizeForWidth(int width) const;
+	// Current state.
+	const bool isActive() const;
 
 signals:
 	void activated(ThoughtWidget*);
@@ -60,6 +65,7 @@ protected:
 
 private:
 	// State.
+	ThoughtId m_id;
 	bool m_hover = false;
 	QString m_text;
 	QTextCursor m_cursor;;

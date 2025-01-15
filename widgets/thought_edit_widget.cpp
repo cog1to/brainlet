@@ -43,7 +43,7 @@ void ThoughtEditWidget::leaveEvent(QEvent*) {
 // Focus and keyboard.
 
 void ThoughtEditWidget::mousePressEvent(QMouseEvent* event) {
-	if (!hasFocus()) {
+	if (!isReadOnly() && !hasFocus()) {
 		setFocus();
 	}
 	QTextEdit::mousePressEvent(event);
