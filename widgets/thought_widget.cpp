@@ -256,22 +256,22 @@ void ThoughtWidget::resizeEvent(QResizeEvent *event) {
 		anchorSize.width(), anchorSize.height());
 	m_anchorLink.setGeometry(link);
 
-	QRect text(
-		anchorSize.width() / 2.0 +
-			m_style->hoverBorderWidth() / 2.0 +
+	QRect textRect(
+		anchorSize.width() / 2 +
+			m_style->hoverBorderWidth() / 2 +
 			padding.width(),
-		anchorSize.height() / 2.0 +
-			m_style->hoverBorderWidth() / 2.0 +
+		anchorSize.height() / 2 +
+			m_style->hoverBorderWidth() / 2 +
 			padding.height(),
 		size.width() - anchorSize.width() -
 			m_style->hoverBorderWidth() * 2 -
 			padding.width() * 2 +
-			1.0, // 1px for cursor.
+			1, // 1px for cursor.
 		size.height() - anchorSize.height() -
 			m_style->hoverBorderWidth() -
 			padding.height() * 2
 	);
-	m_textEdit.setGeometry(text);
+	m_textEdit.setGeometry(textRect);
 
 	if (!m_textEdit.hasFocus()) {
 		updateText();
@@ -283,10 +283,10 @@ void ThoughtWidget::resizeEvent(QResizeEvent *event) {
 void ThoughtWidget::updateText() {
 	const QSize anchorSize = AnchorWidget::defaultSize;
 	const int textPadding = anchorSize.width() +
-		padding.width() * 2.0 +
-		m_style->hoverBorderWidth();
+		padding.width() * 2 +
+		m_style->hoverBorderWidth() * 2;
 	const int verticalPadding = anchorSize.height() +
-		padding.height() * 2.0 +
+		padding.height() * 2 +
 		m_style->hoverBorderWidth();
 	const int availableWidth = size().width() - textPadding;
 
@@ -297,7 +297,9 @@ void ThoughtWidget::updateText() {
 		m_text
 	);
 
-	if (bounds.size().height() > (size().height() - verticalPadding)) {
+	if (!isActive() && ((bounds.size().height() > (size().height() - verticalPadding)) ||
+			(bounds.size().width() > availableWidth)))
+	{
 		QString elided = metrics.elidedText(m_text, Qt::ElideRight, availableWidth);
 		m_textEdit.setPlainText(elided);
 	} else {

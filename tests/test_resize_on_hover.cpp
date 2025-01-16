@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
 
 	widget.setStyleSheet("background-color: #1b2b34");
 
-	ThoughtWidget thought(&widget, &style, true, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent in egestas diam, in molestie quam. Vivamus non dolor laoreet velit mattis accumsan. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Quisque eu scelerisque mauris. In hac habitasse platea dictumst.", false, false, true);
+	ThoughtWidget thought(&widget, &style, 0, true, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent in egestas diam, in molestie quam. Vivamus non dolor laoreet velit mattis accumsan. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Quisque eu scelerisque mauris. In hac habitasse platea dictumst.", false, false, true);
 
 	QSize size = thought.sizeHint();
 	int actualWidth = std::min(normalSize, size.width());

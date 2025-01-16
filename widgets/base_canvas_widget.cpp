@@ -79,7 +79,22 @@ void BaseCanvasWidget::updateLayout() {
 			layout.w, layout.h
 		);
 
+		widget->setParent(this);
 		widget->show();
+	}
+
+	// Remove unused widgets.
+	std::unordered_map<ThoughtId, ThoughtWidget*>::iterator wit;
+	for (wit = m_widgets.begin(); wit != m_widgets.end(); wit++) {
+		if (wit->first == main->id()) {
+			continue;
+		}
+
+		if (items->find(wit->first) != items->end()) {
+			continue;
+		}
+
+		wit->second->setParent(nullptr);
 	}
 }
 

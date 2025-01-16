@@ -44,6 +44,7 @@ int main(int argc, char *argv[]) {
 	ThoughtWidget thought(
 		&widget,
 		&style,
+		0,
 		false,
 		"Lorem ipsum. askdlhsa asd asd s aw r34qw",
 		false, false, true

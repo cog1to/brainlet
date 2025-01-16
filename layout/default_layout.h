@@ -15,14 +15,13 @@ private:
 	void updateWidgets();
 	void layoutVerticalSide(const std::vector<ThoughtId>&, QRect);
 	// Sizing helpers.
-	QSize widgetSize(std::string text, float);
+	QSize widgetSize(std::string text, int);
 	// State.
 	std::unordered_map<ThoughtId, ItemLayout> m_layout;
 	// Layout settings.
-	static constexpr float s_centerWidgetSize = 0.3;
-	static constexpr float s_widgetSize = 0.25;
-	static constexpr float s_sidePanelWidth = 0.3;
-	static constexpr float s_minVerticalSpacing = 0.05;
+	int m_widgetWidth = 0;
+	int m_widgetSpacing = 0;
+	int m_sidePadding = 10;
 };
 
 #endif

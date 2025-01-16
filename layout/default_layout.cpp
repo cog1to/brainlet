@@ -2,7 +2,14 @@
 #include "layout/item_layout.h"
 
 DefaultLayout::DefaultLayout(Style* style)
-	: BaseLayout(style) {}
+	: BaseLayout(style)
+{
+	m_template.setText("xxxxxxxxxx");
+
+	QSize size = m_template.sizeHint();
+	m_widgetWidth = size.width();
+	m_widgetSpacing = size.height() / 2;
+}
 
 void DefaultLayout::reload() {
 	if (m_state == nullptr) {
@@ -23,7 +30,7 @@ void DefaultLayout::reload() {
 
 void DefaultLayout::setSize(QSize size) {
 	m_size = size;
-	updateWidgets();
+	reload();
 }
 
 void DefaultLayout::updateWidgets() {
@@ -37,7 +44,7 @@ void DefaultLayout::updateWidgets() {
 	}
 
 	// Position the central element.
-	QSize centralSize = widgetSize(thought->name(), s_centerWidgetSize);
+	QSize centralSize = widgetSize(thought->name(), m_size.width() * 0.4);
 	ItemLayout centralLayout = ItemLayout(
 		(m_size.width() - centralSize.width()) / 2.0,
 		(m_size.height() - centralSize.height()) / 2.0,
@@ -49,14 +56,15 @@ void DefaultLayout::updateWidgets() {
 	// Save the central element.
 	m_layout.insert_or_assign(thought->id(), centralLayout);
 
+	//  Left side.
 	if (thought->links().size() > 0) {
 		layoutVerticalSide(
 			thought->links(),
 			QRect(
-				(int)((float)m_size.width() * (s_sidePanelWidth - s_widgetSize)),
-				(int)((float)m_size.height() * s_sidePanelWidth),
-				(int)((float)m_size.width() * s_widgetSize),
-				(int)((float)m_size.height() * (1.0 - s_sidePanelWidth * 2.0))
+				m_sidePadding,
+				m_widgetWidth + m_sidePadding,
+				m_widgetWidth,
+				m_size.height() - (m_widgetWidth + m_sidePadding) * 2	
 			)
 		);
 	}
@@ -82,79 +90,58 @@ void DefaultLayout::layoutVerticalSide(
 	// Calculate all sized in order.
 	std::vector<QSize> sizes;
 	for (const auto thought: sorted) {
-		QSize size = widgetSize(thought->name(), s_widgetSize);
+		QSize size = widgetSize(thought->name(), m_widgetWidth);
 		sizes.push_back(size);
 	}
 
-	// Generate layouts. We have 3 options:
-	// 1 widget - center vertically
-	// 2 widgets - space evenly from top and bottom
-	// 3+ widgets - space evenly inbetween
-	if (sizes.size() == 1) {
-		QSize size = sizes[0];
+	// Total height = height of all widget + (count of widgets - 1) * spacer.
+	auto reducer = [](int acc, const QSize& size) { return acc + size.height(); };
+	int totalSpaces = m_widgetSpacing * (sizes.size() - 1);
+	int totalHeight = std::accumulate(sizes.begin(), sizes.end(), 0, reducer);
+	int spacer = m_widgetSpacing;
+	int maxCount = sizes.size();
+
+	// If we can't fit all widgets, we fit max number of them.
+	if ((totalHeight + totalSpaces) > rect.height()) {
+		if (totalHeight <= rect.height()) {
+			spacer = (rect.height() - totalHeight) / (sizes.size() - 1);
+			totalSpaces = spacer * (sizes.size() - 1);
+		} else {
+			while (totalHeight > rect.height()) {
+				maxCount -= 1;
+				totalHeight -= sizes[maxCount].height();
+			}
+			spacer = (rect.height() - totalHeight) / (sizes.size() - 1);
+			totalSpaces = spacer * (sizes.size() - 1);
+		}
+	}
+
+	// Layout.
+	int y = rect.y() + (rect.height() - totalHeight - totalSpaces) / 2, idx;
+	for (idx = 0; idx < maxCount; idx++) {
+		QSize size = sizes[idx];
+		Thought *thought = sorted[idx];
+
 		ItemLayout layout(
-			rect.x() + (rect.width() - size.width()) / 2.0,
-			rect.y() + (rect.height() - size.height()) / 2.0,
+			rect.x() + (rect.width() - size.width()) / 2.0, y,
 			size.width(),
 			size.height(),
 			true
 		);
-		m_layout.insert_or_assign(sorted[0]->id(), layout);
-	} else if (sizes.size() == 2) {
-		QSize first = sizes[0];
-		QSize second = sizes[1];
-		int spacer = (rect.height() - first.height() - second.height()) / 3;
 
-		ItemLayout firstLayout(
-			rect.x() + (rect.width() - first.width()) / 2.0,
-			rect.y() + spacer,
-			first.width(),
-			first.height(),
-			true
-		);
-		m_layout.insert_or_assign(sorted[0]->id(), firstLayout);
-
-		ItemLayout secondLayout(
-			rect.x() + (rect.width() - second.width()) / 2.0,
-			rect.y() + rect.height() - spacer - second.height(),
-			second.width(),
-			second.height(),
-			true
-		);
-		m_layout.insert_or_assign(sorted[1]->id(), secondLayout);
-	} else {
-		// Calculate spacer height by subtracting total height of elements from
-		// available height.
-		auto reducer = [](int acc, const QSize& size) { return acc + size.height(); };
-		int totalHeight = std::accumulate(sizes.begin(), sizes.end(), 0, reducer);
-		int spacer = (rect.height() - totalHeight) / (sizes.size() - 1);
-
-		int y = rect.y(), idx;
-		for (idx = 0; idx < sizes.size(); idx++) {
-			QSize size = sizes[idx];
-			Thought *thought = sorted[idx];
-
-			ItemLayout layout(
-				rect.x() + (rect.width() - size.width()) / 2.0, y,
-				size.width(),
-				size.height(),
-				true
-			);
-
-			m_layout.insert_or_assign(thought->id(), layout);
-			y += size.height() + spacer;
-		}
+		m_layout.insert_or_assign(thought->id(), layout);
+		y += size.height() + spacer;
 	}
 }
 
-QSize DefaultLayout::widgetSize(std::string text, float maxWidthRatio) {
+QSize DefaultLayout::widgetSize(std::string text, int maxWidth) {
 	m_template.setText(text);
 
 	// Get size hint to estimate the full text length.
 	QSize sizeHint = m_template.sizeHint();
 	// Actual width is the width of full text up to max allowed width.
 	int actualWidth = std::min(
-		(int)((float)(m_size.width()) * maxWidthRatio),
+		maxWidth,
 		sizeHint.width()
 	);
 

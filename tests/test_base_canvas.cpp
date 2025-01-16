@@ -5,6 +5,20 @@
 #include "widgets/widgets.h"
 #include "layout/default_layout.h"
 
+void makeThought(
+	std::string name,
+	std::unordered_map<ThoughtId, Thought *>* map,
+	std::vector<ThoughtId>& list
+) {
+	static unsigned long int id = 1;
+
+	Thought *thought = new Thought(id, name, false, false, false);
+	map->insert({thought->id(), thought});
+	list.push_back(thought->id());
+
+	id += 1;
+}
+
 int main(int argc, char *argv[]) {
 	Style& style = Style::defaultStyle();
 
@@ -17,27 +31,28 @@ int main(int argc, char *argv[]) {
 	widget.show();
 
 	// Add state.
-	Thought *central = new Thought(0, "Lorem ipsum dolor sit amet. 39一くめ第泊セ作研び環携でごばひ年自メ載1相ルシコナ選北アキナサ償全ム茨岡ルイフサ思詐手あょた。", true, false, true);
+	Thought *central = new Thought(
+		0, "Lorem ipsum dolor sit amet. 39一くめ第泊セ作研び環携でごばひ年自メ載1相ルシコナ選北アキナサ償全ム茨岡ルイフサ思詐手あょた。", true, false, true);
 	std::unordered_map<ThoughtId, Thought *>* map = new std::unordered_map<ThoughtId, Thought *>();
 
 	// Link items.
-	Thought *leftOne = new Thought(1, "Left two", false, false, false);
-	map->insert({leftOne->id(), leftOne});
-	central->links().push_back(leftOne->id());
-	Thought *leftTwo = new Thought(2, "Left one with a very long name that doesn't fit in a single line", false, false, false);
-	map->insert({leftTwo->id(), leftTwo});
-	central->links().push_back(leftTwo->id());
-	Thought *leftThree = new Thought(5, "Layout test widget #005", false, false, false);
-	map->insert({leftThree->id(), leftThree});
-	central->links().push_back(leftThree->id());
+	makeThought("Left one", map, central->links());
+	makeThought("Left two", map, central->links());
+	makeThought("Left three", map, central->links());
+	makeThought("Left four", map, central->links());
+	makeThought("Left five", map, central->links());
+	makeThought("Left six", map, central->links());
+	makeThought("Abracadabra", map, central->links());
+	makeThought("Lorem ipsum again and again", map, central->links());
+	makeThought("Eight", map, central->links());
+	makeThought("Nine", map, central->links());
+	makeThought("Ten", map, central->links());
+	makeThought("Eleven", map, central->links());
 
 	// Parent items.
-	Thought *parentOne = new Thought(3, "Parent one", false, true, false);
-	map->insert({parentOne->id(), parentOne});
-	central->parents().push_back(parentOne->id());
-	Thought *parentTwo = new Thought(4, "Some other parent node", false, true, false);
-	map->insert({parentTwo->id(), parentTwo});
-	central->parents().push_back(parentTwo->id());
+	makeThought("Parent one", map, central->parents());
+	makeThought("Parent two", map, central->parents());
+	makeThought("Parent three", map, central->parents());
 
 	// Composed state.
 	State state(central, map);
