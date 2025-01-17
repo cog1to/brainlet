@@ -53,6 +53,11 @@ int main(int argc, char *argv[]) {
 	makeThought("Parent one", map, central->parents());
 	makeThought("Parent two", map, central->parents());
 	makeThought("Parent three", map, central->parents());
+	makeThought("Parent two with a very long long long name", map, central->parents());
+
+	// Child items.
+	makeThought("First child", map, central->children());
+	makeThought("Second jj child", map, central->children());
 
 	// Composed state.
 	State state(central, map);
