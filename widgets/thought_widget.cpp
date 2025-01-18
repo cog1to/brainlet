@@ -1,7 +1,6 @@
 #include <QTextEdit>
 #include <QString>
 #include <QPainter>
-#include <iostream>
 
 #include "widgets/thought_widget.h"
 
@@ -114,12 +113,12 @@ QSize ThoughtWidget::sizeHint() const {
 	// Add paddings and anchor sizes and borders.
 	QSize result(
 		textSize.width() +
-			padding.width() * 2.0 +
-			m_style->hoverBorderWidth() * 2.0 +
+			padding.width() * 2 +
+			m_style->hoverBorderWidth() * 2 +
 			anchorSize.width(),
 		textSize.height() +
-			padding.height() * 2.0 +
-			m_style->hoverBorderWidth() * 2.0 +
+			padding.height() * 2 +
+			m_style->hoverBorderWidth() * 2 +
 			anchorSize.height()
 	);
 
@@ -130,12 +129,12 @@ QSize ThoughtWidget::sizeForWidth(int width) const {
 	const QSize anchorSize = AnchorWidget::defaultSize;
 
 	const int textPadding = anchorSize.width() +
-		padding.width() * 2.0 +
-		m_style->hoverBorderWidth() * 2.0 +
-		1.0; // 1px for cursor.
+		padding.width() * 2 +
+		m_style->hoverBorderWidth() * 2 +
+		1;
 	const int verticalPadding = anchorSize.height() +
-		padding.height() * 2.0 +
-		m_style->hoverBorderWidth() * 2.0;
+		padding.height() * 2 +
+		m_style->hoverBorderWidth() * 2;
 
 	QFontMetrics metrics(m_style->font());
 	QRect bounds = metrics.boundingRect(

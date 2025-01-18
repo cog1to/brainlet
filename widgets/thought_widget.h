@@ -68,7 +68,7 @@ private:
 	ThoughtId m_id;
 	bool m_hover = false;
 	QString m_text;
-	QTextCursor m_cursor;;
+	QTextCursor m_cursor;
 	// Helpers.
 	void updateText();
 };

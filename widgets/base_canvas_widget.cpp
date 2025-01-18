@@ -128,6 +128,11 @@ ThoughtWidget *BaseCanvasWidget::createWidget(
 		this, SLOT(onWidgetDeactivated(ThoughtWidget*))
 	);
 
+	QObject::connect(
+		widget, SIGNAL(textChanged(ThoughtWidget*)),
+		this, SLOT(onWidgetActivated(ThoughtWidget*))
+	);
+
 	return widget;
 }
 
