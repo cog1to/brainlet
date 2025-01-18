@@ -36,6 +36,42 @@ void DefaultLayout::setSize(QSize size) {
 	reload();
 }
 
+void DefaultLayout::setState(State *state) {
+	m_state = state;
+	loadSiblings();
+	reload();
+}
+
+void DefaultLayout::loadSiblings() {
+	if (m_state == nullptr) {
+		return;
+	}
+
+	const Thought *thought = m_state->centralThought();
+	if (thought == nullptr) {
+		return;
+	}
+
+	const std::unordered_map<ThoughtId, Thought*> *thoughts = m_state->thoughts();
+
+	// Order direct connected nodes.
+	sortNodes(m_parents, thought->parents(), thoughts);
+	sortNodes(m_links, thought->links(), thoughts);
+	sortNodes(m_children, thought->children(), thoughts);
+
+	// Gather siblings.
+	m_siblings.clear();
+	for (const auto *parent: m_parents) {
+		for (const auto& id: parent->children()) {
+			if (id == thought->id())
+				continue;
+			if (auto found = thoughts->find(id); found != thoughts->end())
+				m_siblings.push_back(found->second);
+		}
+	}
+	std::sort(m_siblings.begin(), m_siblings.end(), compareThoughts);
+}
+
 void DefaultLayout::updateWidgets() {
 	if (m_state == nullptr) {
 		return;
@@ -49,8 +85,8 @@ void DefaultLayout::updateWidgets() {
 	// Position the central element.
 	QSize centralSize = widgetSize(thought->name(), m_size.width() * 0.4);
 	ItemLayout centralLayout = ItemLayout(
-		(m_size.width() - centralSize.width()) / 2.0,
-		(m_size.height() - centralSize.height()) / 2.0,
+		(m_size.width() - centralSize.width()) / 2,
+		(m_size.height() - centralSize.height()) / 2,
 		centralSize.width(),
 		centralSize.height(),
 		true
@@ -60,9 +96,9 @@ void DefaultLayout::updateWidgets() {
 	m_layout.insert_or_assign(thought->id(), centralLayout);
 
 	//  Left side.
-	if (thought->links().size() > 0) {
+	if (m_links.size() > 0) {
 		layoutVerticalSide(
-			thought->links(),
+			m_links,
 			QRect(
 				m_sidePadding,
 				m_widgetWidth + m_sidePadding,
@@ -73,9 +109,9 @@ void DefaultLayout::updateWidgets() {
 	}
 
 	// Top side.
-	if (thought->parents().size() > 0) {
+	if (m_parents.size() > 0) {
 		layoutHorizontalSide(
-			thought->parents(),
+			m_parents,
 			QRect(
 				m_widgetWidth + m_sidePadding,
 				m_sidePadding,
@@ -86,9 +122,9 @@ void DefaultLayout::updateWidgets() {
 	}
 
 	// Bottom side.
-	if (thought->children().size() > 0) {
+	if (m_children.size() > 0) {
 		layoutHorizontalSide(
-			thought->children(),
+			m_children,
 			QRect(
 				m_widgetWidth + m_sidePadding,
 				m_size.height() - m_widgetWidth - m_sidePadding,
@@ -97,25 +133,25 @@ void DefaultLayout::updateWidgets() {
 			)
 		);
 	}
-}
 
-bool compare_thoughts(Thought *a, Thought *b) {
-	return (a->name().compare(b->name()) < 0);
+	// Right side.
+	if (m_siblings.size() > 0) {
+		layoutVerticalSide(
+			m_siblings,
+			QRect(
+				m_size.width() - m_widgetWidth - m_sidePadding,
+				m_widgetWidth + m_sidePadding,
+				m_widgetWidth,
+				m_size.height() - (m_widgetWidth + m_sidePadding) * 2
+			)
+		);
+	}
 }
 
 void DefaultLayout::layoutVerticalSide(
-	const std::vector<ThoughtId>& thoughtIds,
+	const std::vector<Thought*>& sorted,
 	QRect rect
 ) {
-	// Ordered array is required to display widgets alphabetically.
-	std::vector<Thought*> sorted;
-	for (const auto& id: thoughtIds) {
-		if (auto found = m_state->thoughts()->find(id); found != m_state->thoughts()->end()) {
-			sorted.push_back(found->second);
-		}
-	}
-	std::sort(sorted.begin(), sorted.end(), compare_thoughts);
-
 	// Calculate all sized in order.
 	std::vector<QSize> sizes;
 	for (const auto thought: sorted) {
@@ -152,7 +188,7 @@ void DefaultLayout::layoutVerticalSide(
 		Thought *thought = sorted[idx];
 
 		ItemLayout layout(
-			rect.x() + (rect.width() - size.width()) / 2.0, y,
+			rect.x() + (rect.width() - size.width()) / 2, y,
 			size.width(),
 			size.height(),
 			true
@@ -164,18 +200,9 @@ void DefaultLayout::layoutVerticalSide(
 }
 
 void DefaultLayout::layoutHorizontalSide(
-	const std::vector<ThoughtId>& thoughtIds,
+	const std::vector<Thought*>& sorted,
 	QRect rect
 ) {
-	// Ordered array is required to display widgets alphabetically.
-	std::vector<Thought*> sorted;
-	for (const auto& id: thoughtIds) {
-		if (auto found = m_state->thoughts()->find(id); found != m_state->thoughts()->end()) {
-			sorted.push_back(found->second);
-		}
-	}
-	std::sort(sorted.begin(), sorted.end(), compare_thoughts);
-
 	// Total column count from available space.
 	int visibleColumnCount, w = m_widgetWidth;
 	for (visibleColumnCount = 0; w < rect.width(); visibleColumnCount++) {
@@ -262,5 +289,23 @@ QSize DefaultLayout::widgetSize(std::string text, int maxWidth) {
 
 const std::unordered_map<ThoughtId, ItemLayout>* DefaultLayout::items() const {
 	return &m_layout;
+}
+
+inline bool DefaultLayout::compareThoughts(Thought *a, Thought *b) {
+	return (a->name().compare(b->name()) < 0);
+}
+
+inline void DefaultLayout::sortNodes(
+	std::vector<Thought*>& list,
+	const std::vector<ThoughtId>& ids,
+	const std::unordered_map<ThoughtId, Thought*>* map
+) {
+	list.clear();
+	for (const auto& id: ids) {
+		if (auto found = map->find(id); found != map->end()) {
+			list.push_back(found->second);
+		}
+	}
+	std::sort(list.begin(), list.end(), compareThoughts);
 }
 

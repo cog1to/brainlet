@@ -5,7 +5,7 @@
 #include "widgets/widgets.h"
 #include "layout/default_layout.h"
 
-void makeThought(
+Thought *makeThought(
 	std::string name,
 	std::unordered_map<ThoughtId, Thought *>* map,
 	std::vector<ThoughtId>& list
@@ -17,6 +17,7 @@ void makeThought(
 	list.push_back(thought->id());
 
 	id += 1;
+	return thought;
 }
 
 int main(int argc, char *argv[]) {
@@ -50,14 +51,19 @@ int main(int argc, char *argv[]) {
 	makeThought("Eleven", map, central->links());
 
 	// Parent items.
-	makeThought("Parent one", map, central->parents());
+	Thought *parentOne = makeThought("Parent one", map, central->parents());
 	makeThought("Parent two", map, central->parents());
 	makeThought("Parent three", map, central->parents());
-	makeThought("Parent two with a very long long long name", map, central->parents());
+	Thought *parentTwo = makeThought("Parent two with a very long long long name", map, central->parents());
 
 	// Child items.
 	makeThought("First child", map, central->children());
 	makeThought("Second jj child", map, central->children());
+
+	// Sibling items.
+	makeThought("Sibling One", map, parentOne->children());
+	makeThought("Sibling Two", map, parentOne->children());
+	makeThought("Sibling Three And A Half", map, parentTwo->children());
 
 	// Composed state.
 	State state(central, map);
