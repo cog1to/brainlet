@@ -9,8 +9,8 @@ DefaultLayout::DefaultLayout(Style* style)
 	m_template.setText("xxxxxxxxxx");
 
 	QSize size = m_template.sizeHint();
-	m_widgetWidth = size.width();
 	m_widgetHeight = size.height();
+	m_verticalWidgetWidth = size.width();
 	m_widgetSpacing = size.height() / 2;
 }
 
@@ -33,6 +33,8 @@ void DefaultLayout::reload() {
 
 void DefaultLayout::setSize(QSize size) {
 	m_size = size;
+	m_topSideHeight = (int)((float)size.height() * s_sideRatio);
+	m_leftSideWidth = (int)((float)size.width() * s_sideRatio);
 	reload();
 }
 
@@ -101,9 +103,9 @@ void DefaultLayout::updateWidgets() {
 			m_links,
 			QRect(
 				m_sidePadding,
-				m_widgetWidth + m_sidePadding,
-				m_widgetWidth,
-				m_size.height() - (m_widgetWidth + m_sidePadding) * 2
+				m_sidePadding + m_topSideHeight,
+				m_leftSideWidth,
+				m_size.height() - (m_topSideHeight + m_sidePadding) * 2
 			)
 		);
 	}
@@ -113,10 +115,10 @@ void DefaultLayout::updateWidgets() {
 		layoutHorizontalSide(
 			m_parents,
 			QRect(
-				m_widgetWidth + m_sidePadding,
+				m_sidePadding + m_leftSideWidth,
 				m_sidePadding,
-				m_size.width() - (m_widgetWidth + m_sidePadding) * 2,
-				m_widgetWidth
+				m_size.width() - (m_leftSideWidth + m_sidePadding) * 2,
+				m_topSideHeight
 			)
 		);
 	}
@@ -126,10 +128,10 @@ void DefaultLayout::updateWidgets() {
 		layoutHorizontalSide(
 			m_children,
 			QRect(
-				m_widgetWidth + m_sidePadding,
-				m_size.height() - m_widgetWidth - m_sidePadding,
-				m_size.width() - (m_widgetWidth + m_sidePadding) * 2,
-				m_widgetWidth
+				m_sidePadding + m_leftSideWidth,
+				m_size.height() - m_topSideHeight - m_sidePadding,
+				m_size.width() - (m_leftSideWidth + m_sidePadding) * 2,
+				m_topSideHeight
 			)
 		);
 	}
@@ -139,10 +141,10 @@ void DefaultLayout::updateWidgets() {
 		layoutVerticalSide(
 			m_siblings,
 			QRect(
-				m_size.width() - m_widgetWidth - m_sidePadding,
-				m_widgetWidth + m_sidePadding,
-				m_widgetWidth,
-				m_size.height() - (m_widgetWidth + m_sidePadding) * 2
+				m_size.width() - m_leftSideWidth - m_sidePadding,
+				m_sidePadding + m_topSideHeight,
+				m_leftSideWidth,
+				m_size.height() - (m_topSideHeight + m_sidePadding) * 2
 			)
 		);
 	}
@@ -155,7 +157,7 @@ void DefaultLayout::layoutVerticalSide(
 	// Calculate all sized in order.
 	std::vector<QSize> sizes;
 	for (const auto thought: sorted) {
-		QSize size = widgetSize(thought->name(), m_widgetWidth);
+		QSize size = widgetSize(thought->name(), m_leftSideWidth);
 		sizes.push_back(size);
 	}
 
@@ -204,9 +206,9 @@ void DefaultLayout::layoutHorizontalSide(
 	QRect rect
 ) {
 	// Total column count from available space.
-	int visibleColumnCount, w = m_widgetWidth;
+	int visibleColumnCount, w = m_verticalWidgetWidth;
 	for (visibleColumnCount = 0; w < rect.width(); visibleColumnCount++) {
-		w += m_widgetWidth;
+		w += m_verticalWidgetWidth;
 	}
 
 	// Can't fit a single column.
@@ -253,7 +255,10 @@ void DefaultLayout::layoutHorizontalSide(
 		// Layout each item in the column.
 		for (row = 0; row < rowCount; row++) {
 			Thought *thought = sorted[idx];
-			QSize size = widgetSize(thought->name(), std::max(columnWidth - 2 * m_widgetSpacing, m_widgetWidth));
+			QSize size = widgetSize(
+				thought->name(),
+				std::max(columnWidth - 2 * m_widgetSpacing, m_verticalWidgetWidth)
+			);
 
 			ItemLayout layout(
 				x + (columnWidth - size.width()) / 2,

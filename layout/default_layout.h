@@ -32,10 +32,14 @@ private:
 	std::vector<Thought*> m_links;
 	std::unordered_map<ThoughtId, ItemLayout> m_layout;
 	// Layout settings.
-	int m_widgetWidth = 0;
+	int m_verticalWidgetWidth = 0;
 	int m_widgetHeight = 0;
 	int m_widgetSpacing = 0;
 	int m_sidePadding = 10;
+	int m_topSideHeight = 0;
+	int m_leftSideWidth = 0;
+	// Ratio.
+	static constexpr float s_sideRatio = 0.2;
 };
 
 #endif
