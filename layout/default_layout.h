@@ -2,6 +2,8 @@
 #define H_DEFAULT_LAYOUT
 
 #include "layout/base_layout.h"
+#include "layout/item_layout.h"
+#include "layout/scroll_area_layout.h"
 
 class DefaultLayout: public BaseLayout {
 public:
@@ -10,6 +12,7 @@ public:
 	void setSize(QSize) override;
 	void setState(State*) override;
 	const std::unordered_map<ThoughtId, ItemLayout>* items() const override;
+	const std::unordered_map<unsigned int, ScrollAreaLayout>* scrollAreas() const override;
 
 private:
 	// Helpers.
@@ -21,8 +24,8 @@ private:
 	);
 	void updateWidgets();
 	void loadSiblings();
-	void layoutHorizontalSide(const std::vector<Thought*>&, QRect);
-	void layoutVerticalSide(const std::vector<Thought*>&, QRect);
+	void layoutHorizontalSide(const std::vector<Thought*>&, QRect, ScrollBarPos);
+	void layoutVerticalSide(const std::vector<Thought*>&, QRect, ScrollBarPos);
 	// Sizing helpers.
 	QSize widgetSize(std::string text, int);
 	// State.
@@ -31,6 +34,7 @@ private:
 	std::vector<Thought*> m_parents;
 	std::vector<Thought*> m_links;
 	std::unordered_map<ThoughtId, ItemLayout> m_layout;
+	std::unordered_map<unsigned int, ScrollAreaLayout> m_scrollAreas;
 	// Layout settings.
 	int m_verticalWidgetWidth = 0;
 	int m_widgetHeight = 0;

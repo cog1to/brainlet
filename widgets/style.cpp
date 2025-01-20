@@ -13,7 +13,8 @@ Style::Style(
 	QFont font,
 	QColor activeAnchorColor,
 	QColor textColor,
-	QColor hoverBackground
+	QColor hoverBackground,
+	int scrollWidth
 ) {
 	m_background = background;
 	m_borderWidth = borderWidth;
@@ -24,6 +25,7 @@ Style::Style(
 	m_activeAnchorColor = activeAnchorColor;
 	m_textColor = textColor;
 	m_hoverBackground = hoverBackground;
+	m_scrollWidth = scrollWidth;
 }
 
 Style& Style::defaultStyle() {
@@ -36,7 +38,8 @@ Style& Style::defaultStyle() {
 		QFont("Noto Sans", 12),
 		QColor(228, 83, 75, 255),
 		QColor(215, 221, 232, 255),
-		QColor(0, 0, 0, 192)
+		QColor(0, 0, 0, 192),
+		10
 	);
 
 	return style;
@@ -120,5 +123,14 @@ const QColor Style::hoverBackground() const {
 
 void Style::setHoverBackground(QColor color) {
 	m_hoverBackground = color;
+	emit styleChanged(this);
+}
+
+const int Style::scrollWidth() const {
+	return m_scrollWidth;
+}
+
+void Style::setScrollWidth(int value) {
+	m_scrollWidth = value;
 	emit styleChanged(this);
 }

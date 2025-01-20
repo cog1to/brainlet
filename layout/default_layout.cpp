@@ -1,17 +1,18 @@
-#include <iostream>
-
 #include "layout/default_layout.h"
 #include "layout/item_layout.h"
+#include "layout/scroll_area_layout.h"
 
 DefaultLayout::DefaultLayout(Style* style)
 	: BaseLayout(style)
 {
+	// Sample text to estimate "average" widget width.
 	m_template.setText("xxxxxxxxxx");
 
 	QSize size = m_template.sizeHint();
 	m_widgetHeight = size.height();
 	m_verticalWidgetWidth = size.width();
 	m_widgetSpacing = size.height() / 2;
+	m_sidePadding = style->scrollWidth();
 }
 
 void DefaultLayout::reload() {
@@ -26,6 +27,7 @@ void DefaultLayout::reload() {
 
 	// Clear the previous layout.
 	m_layout.clear();
+	m_scrollAreas.clear();
 
 	// Recalculate widget positions.
 	updateWidgets();
@@ -106,7 +108,8 @@ void DefaultLayout::updateWidgets() {
 				m_sidePadding + m_topSideHeight,
 				m_leftSideWidth,
 				m_size.height() - (m_topSideHeight + m_sidePadding) * 2
-			)
+			),
+			ScrollBarPos::Left
 		);
 	}
 
@@ -119,7 +122,8 @@ void DefaultLayout::updateWidgets() {
 				m_sidePadding,
 				m_size.width() - (m_leftSideWidth + m_sidePadding) * 2,
 				m_topSideHeight
-			)
+			),
+			ScrollBarPos::Top
 		);
 	}
 
@@ -132,7 +136,8 @@ void DefaultLayout::updateWidgets() {
 				m_size.height() - m_topSideHeight - m_sidePadding,
 				m_size.width() - (m_leftSideWidth + m_sidePadding) * 2,
 				m_topSideHeight
-			)
+			),
+			ScrollBarPos::Bottom
 		);
 	}
 
@@ -145,14 +150,16 @@ void DefaultLayout::updateWidgets() {
 				m_sidePadding + m_topSideHeight,
 				m_leftSideWidth,
 				m_size.height() - (m_topSideHeight + m_sidePadding) * 2
-			)
+			),
+			ScrollBarPos::Right
 		);
 	}
 }
 
 void DefaultLayout::layoutVerticalSide(
 	const std::vector<Thought*>& sorted,
-	QRect rect
+	QRect rect,
+	ScrollBarPos scrollPos
 ) {
 	// Calculate all sized in order.
 	std::vector<QSize> sizes;
@@ -199,11 +206,26 @@ void DefaultLayout::layoutVerticalSide(
 		m_layout.insert_or_assign(thought->id(), layout);
 		y += size.height() + spacer;
 	}
+
+	// We have items left outside, add scroll area.
+	if (idx < sorted.size()) {
+		int scrollWidth = m_style->scrollWidth();
+
+		ScrollAreaLayout layout(
+			rect.x() - scrollWidth,
+			rect.y(),
+			rect.width() + scrollWidth,
+			rect.height(),
+			scrollPos
+		);
+		m_scrollAreas.insert({scrollPos, layout});
+	}
 }
 
 void DefaultLayout::layoutHorizontalSide(
 	const std::vector<Thought*>& sorted,
-	QRect rect
+	QRect rect,
+	ScrollBarPos scrollPos
 ) {
 	// Total column count from available space.
 	int visibleColumnCount, w = m_verticalWidgetWidth;
@@ -273,6 +295,20 @@ void DefaultLayout::layoutHorizontalSide(
 			idx += 1;
 		}
 	}
+
+	// We have items left outside, add scroll area.
+	if (idx < sorted.size()) {
+		int scrollWidth = m_style->scrollWidth();
+
+		ScrollAreaLayout layout(
+			rect.x() - scrollWidth,
+			rect.y(),
+			rect.width(),
+			rect.height() + scrollWidth,
+			scrollPos
+		);
+		m_scrollAreas.insert({scrollPos, layout});
+	}
 }
 
 QSize DefaultLayout::widgetSize(std::string text, int maxWidth) {
@@ -295,6 +331,12 @@ QSize DefaultLayout::widgetSize(std::string text, int maxWidth) {
 const std::unordered_map<ThoughtId, ItemLayout>* DefaultLayout::items() const {
 	return &m_layout;
 }
+
+const std::unordered_map<unsigned int, ScrollAreaLayout>* DefaultLayout::scrollAreas() const {
+	return &m_scrollAreas;
+}
+
+// Utility functions.
 
 inline bool DefaultLayout::compareThoughts(Thought *a, Thought *b) {
 	return (a->name().compare(b->name()) < 0);

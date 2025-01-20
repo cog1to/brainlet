@@ -30,6 +30,7 @@ ThoughtEditWidget::ThoughtEditWidget(
 	setPlainText(QString::fromStdString(text));
 	setAlignment(Qt::AlignCenter);
 	setFocusPolicy(Qt::NoFocus);
+	installEventFilter(this);
 }
 
 void ThoughtEditWidget::enterEvent(QEnterEvent*) {
@@ -38,6 +39,19 @@ void ThoughtEditWidget::enterEvent(QEnterEvent*) {
 
 void ThoughtEditWidget::leaveEvent(QEvent*) {
 	emit mouseLeave();
+}
+
+bool ThoughtEditWidget::eventFilter(QObject *obj, QEvent *event) {
+	if (
+		event->type() == QEvent::KeyPress ||
+		event->type() == QEvent::Enter ||
+		event->type() == QEvent::Leave ||
+		event->type() == QEvent::MouseButtonPress
+	) {
+		return QObject::eventFilter(obj, event);
+	}
+
+	return false;
 }
 
 // Focus and keyboard.

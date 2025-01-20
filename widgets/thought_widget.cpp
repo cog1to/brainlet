@@ -1,6 +1,7 @@
 #include <QTextEdit>
 #include <QString>
 #include <QPainter>
+#include <iostream>
 
 #include "widgets/thought_widget.h"
 
@@ -275,6 +276,10 @@ void ThoughtWidget::resizeEvent(QResizeEvent *event) {
 	if (!m_textEdit.hasFocus()) {
 		updateText();
 	}
+}
+
+void ThoughtWidget::wheelEvent(QWheelEvent *event) {
+	emit mouseScroll(this, event);
 }
 
 // Private

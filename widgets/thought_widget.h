@@ -2,6 +2,7 @@
 #define H_THOUGHT_WIDGET
 
 #include <string>
+
 #include <QObject>
 #include <QWidget>
 #include <QResizeEvent>
@@ -44,6 +45,7 @@ signals:
 	void activated(ThoughtWidget*);
 	void deactivated(ThoughtWidget*);
 	void textChanged(ThoughtWidget*);
+	void mouseScroll(ThoughtWidget*, QWheelEvent*);
 
 protected slots:
 	void onTextEnter();
@@ -55,6 +57,7 @@ protected:
 	// Event overrides.
 	void paintEvent(QPaintEvent *) override;
 	void resizeEvent(QResizeEvent *) override;
+	void wheelEvent(QWheelEvent *) override;
 	// Children.
 	ThoughtEditWidget m_textEdit;
 	AnchorWidget m_anchorLink;

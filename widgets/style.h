@@ -19,7 +19,8 @@ public:
 		QFont font,
 		QColor activeAnchorColor,
 		QColor textColor,
-		QColor hoverBackground
+		QColor hoverBackground,
+		int scrollWidth
 	);
 	// Default style.
 	static Style& defaultStyle();
@@ -48,6 +49,9 @@ public:
 	// Anchor colors.
 	const QColor activeAnchorColor() const;
 	void setActiveAnchorColor(QColor);
+	// Scroll bar width.
+	const int scrollWidth() const;
+	void setScrollWidth(int);
 
 signals:
 	void styleChanged(Style*);
@@ -62,6 +66,7 @@ private:
 	QColor m_activeAnchorColor;
 	QColor m_textColor;
 	QColor m_hoverBackground;
+	int m_scrollWidth;
 };
 
 #endif

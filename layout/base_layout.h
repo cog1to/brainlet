@@ -8,6 +8,7 @@
 #include "model/state.h"
 #include "model/thought.h"
 #include "layout/item_layout.h"
+#include "layout/scroll_area_layout.h"
 #include "widgets/style.h"
 #include "widgets/thought_widget.h"
 
@@ -21,6 +22,7 @@ public:
 	virtual void reload() = 0;
 	// Layout model.
 	virtual const std::unordered_map<ThoughtId, ItemLayout>* items() const = 0;
+	virtual const std::unordered_map<unsigned int, ScrollAreaLayout>* scrollAreas() const = 0;
 
 protected:
 	QSize m_size;
