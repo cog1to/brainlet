@@ -13,6 +13,7 @@ public:
 	void setState(State*) override;
 	const std::unordered_map<ThoughtId, ItemLayout>* items() const override;
 	const std::unordered_map<unsigned int, ScrollAreaLayout>* scrollAreas() const override;
+	void onScroll(unsigned int, int) override;
 
 private:
 	// Helpers.
@@ -35,6 +36,7 @@ private:
 	std::vector<Thought*> m_links;
 	std::unordered_map<ThoughtId, ItemLayout> m_layout;
 	std::unordered_map<unsigned int, ScrollAreaLayout> m_scrollAreas;
+	std::unordered_map<unsigned int, int> m_offsets;
 	// Layout settings.
 	int m_verticalWidgetWidth = 0;
 	int m_widgetHeight = 0;

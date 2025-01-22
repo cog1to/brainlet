@@ -24,3 +24,5 @@ void BaseLayout::setStyle(Style* style) {
 	m_style = style;
 	reload();
 }
+
+void BaseLayout::onScroll(unsigned int, int) {}

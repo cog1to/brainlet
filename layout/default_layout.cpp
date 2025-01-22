@@ -185,14 +185,29 @@ void DefaultLayout::layoutVerticalSide(
 				maxCount -= 1;
 				totalHeight -= sizes[maxCount].height();
 			}
-			spacer = (rect.height() - totalHeight) / (sizes.size() - 1);
-			totalSpaces = spacer * (sizes.size() - 1);
+			spacer = (rect.height() - totalHeight) / (maxCount - 1);
+			totalSpaces = spacer * (maxCount - 1);
 		}
+	}
+
+	// Apply offset. If the number of visible rows has changed, the cached
+	// offset value might invalid, i.e. trying to layout non-existent rows.
+	// So if number of visible rows after offset goes beyond total row count,
+	// we reduce the offset to fit into the layout.
+	auto cachedOffset = m_offsets.find(scrollPos);
+	int offset = 0;
+	if (cachedOffset != m_offsets.end()) {
+		if (cachedOffset->second + maxCount > sorted.size()) {
+			offset = sorted.size() - maxCount;
+		} else {
+			offset = cachedOffset->second;
+		}
+		m_offsets.insert_or_assign(scrollPos, offset);
 	}
 
 	// Layout.
 	int y = rect.y() + (rect.height() - totalHeight - totalSpaces) / 2, idx;
-	for (idx = 0; idx < maxCount; idx++) {
+	for (idx = offset; idx < maxCount + offset; idx++) {
 		QSize size = sizes[idx];
 		Thought *thought = sorted[idx];
 
@@ -208,17 +223,22 @@ void DefaultLayout::layoutVerticalSide(
 	}
 
 	// We have items left outside, add scroll area.
-	if (idx < sorted.size()) {
+	if (maxCount < sorted.size()) {
 		int scrollWidth = m_style->scrollWidth();
+		float barWidth = (float)maxCount / (float)sorted.size();
+		float relativeOffset = maxCount != 0 ? ((float)offset / (float)sorted.size()) : 0;
 
 		ScrollAreaLayout layout(
 			rect.x() - scrollWidth,
 			rect.y(),
 			rect.width() + scrollWidth,
 			rect.height(),
-			scrollPos
+			scrollPos,
+			barWidth,
+			relativeOffset,
+			sorted.size() - maxCount
 		);
-		m_scrollAreas.insert({scrollPos, layout});
+		m_scrollAreas.insert_or_assign(scrollPos, layout);
 	}
 }
 
@@ -244,7 +264,8 @@ void DefaultLayout::layoutHorizontalSide(
 	if (columnCapacity == 0)
 		return;
 
-	int requiredColumnCount = (sorted.size() + visibleColumnCount - 1) / visibleColumnCount;
+	// Number of columns required to fit all nodes.
+	int requiredColumnCount = (sorted.size() + columnCapacity - 1) / columnCapacity;
 
 	// We have two cases:
 	// 1. All items fit into the visible area, in which case we try layout items
@@ -252,9 +273,9 @@ void DefaultLayout::layoutHorizontalSide(
 	// 2. There's more items than slots available in the visible area, in which
 	//    case we try to display as much items as possible in the visible area.
 	int itemsPerColumn = 0, columnCount = 0;
-	if (requiredColumnCount <= columnCapacity) {
-		itemsPerColumn = requiredColumnCount;
-		columnCount = (sorted.size() + itemsPerColumn - 1) / itemsPerColumn;
+	if (requiredColumnCount <= visibleColumnCount) {
+		columnCount = (sorted.size() + columnCapacity - 1) / columnCapacity;
+		itemsPerColumn = (sorted.size() + columnCount - 1) / columnCount;
 	} else {
 		itemsPerColumn = columnCapacity;
 		columnCount = visibleColumnCount;
@@ -262,8 +283,23 @@ void DefaultLayout::layoutHorizontalSide(
 
 	int columnWidth = rect.width() / columnCount;
 
+	// Apply offset. If the number of visible columns has changed, the cached
+	// offset value might invalid, i.e. trying to layout non-existent columns.
+	// So if number of visible columns after offset goes beyond total column
+	// count, we reduce the offset to fit into the layout.
+	auto cachedOffset = m_offsets.find(scrollPos);
+	int offset = 0;
+	if (cachedOffset != m_offsets.end()) {
+		if (cachedOffset->second + columnCount > requiredColumnCount) {
+			offset = requiredColumnCount - columnCount;
+		} else {
+			offset = cachedOffset->second;
+		}
+		m_offsets.insert_or_assign(scrollPos, offset);
+	}
+
 	// Layout columns.
-	int idx = 0, col, row, x, y, height, rowCount;
+	int idx = offset * itemsPerColumn, col, row, x, y, height, rowCount;
 	for (col = 0; col < columnCount; col++) {
 
 		// Horizontal and vertical position of the column.
@@ -297,17 +333,24 @@ void DefaultLayout::layoutHorizontalSide(
 	}
 
 	// We have items left outside, add scroll area.
-	if (idx < sorted.size()) {
+	if (columnCount < requiredColumnCount) {
 		int scrollWidth = m_style->scrollWidth();
+		float barWidth = (float)columnCount / (float)requiredColumnCount;
+		float relativeOffset = requiredColumnCount != 0
+			? ((float)offset / (float)requiredColumnCount)
+			: 0;
 
 		ScrollAreaLayout layout(
-			rect.x() - scrollWidth,
-			rect.y(),
+			rect.x(),
+			rect.y() - scrollWidth,
 			rect.width(),
 			rect.height() + scrollWidth,
-			scrollPos
+			scrollPos,
+			barWidth,
+			relativeOffset,
+			requiredColumnCount - columnCount
 		);
-		m_scrollAreas.insert({scrollPos, layout});
+		m_scrollAreas.insert_or_assign(scrollPos, layout);
 	}
 }
 
@@ -356,3 +399,24 @@ inline void DefaultLayout::sortNodes(
 	std::sort(list.begin(), list.end(), compareThoughts);
 }
 
+// Slots.
+
+void DefaultLayout::onScroll(unsigned int scrollId, int change) {
+	int offset = 0;
+
+	auto layout = m_scrollAreas.find(scrollId);
+	if (layout == m_scrollAreas.end())
+		return;
+
+	auto cached = m_offsets.find(scrollId);
+	if (cached != m_offsets.end()) {
+		offset = cached->second;
+	}
+
+	offset = std::max(0, std::min(offset + change, layout->second.maxNodeOffset));
+	m_offsets.insert_or_assign(scrollId, offset);
+
+	// TODO: Optimize. Doing full reload on changing one scroll area is wasting
+	// time.
+	reload();
+}

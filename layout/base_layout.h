@@ -24,6 +24,9 @@ public:
 	virtual const std::unordered_map<ThoughtId, ItemLayout>* items() const = 0;
 	virtual const std::unordered_map<unsigned int, ScrollAreaLayout>* scrollAreas() const = 0;
 
+public slots:
+	virtual void onScroll(unsigned int, int);
+
 protected:
 	QSize m_size;
 	State *m_state = nullptr;

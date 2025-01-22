@@ -39,7 +39,7 @@ Style& Style::defaultStyle() {
 		QColor(228, 83, 75, 255),
 		QColor(215, 221, 232, 255),
 		QColor(0, 0, 0, 192),
-		10
+		12
 	);
 
 	return style;

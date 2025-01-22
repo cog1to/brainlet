@@ -23,6 +23,18 @@ BaseCanvasWidget::BaseCanvasWidget(
 	);
 }
 
+BaseCanvasWidget::~BaseCanvasWidget() {
+	std::unordered_map<ThoughtId, ThoughtWidget*>::iterator wi;
+	for (wi = m_widgets.begin(); wi != m_widgets.end(); wi++) {
+		delete wi->second;
+	}
+
+	std::unordered_map<unsigned int, ScrollAreaWidget*>::iterator sc;
+	for (sc = m_scrollAreas.begin(); sc != m_scrollAreas.end(); sc++) {
+		delete sc->second;
+	}
+}
+
 void BaseCanvasWidget::setState(State *state) {
 	m_state = state;
 	if (m_layout != nullptr) {
@@ -123,10 +135,11 @@ void BaseCanvasWidget::layoutScrollAreas() {
 
 		if (widget == nullptr) {
 			widget = createScrollArea(it->first, layout.pos);
-			m_scrollAreas.insert_or_assign(it->first, widget);
+			m_scrollAreas.insert({it->first, widget});
 		}
 
 		widget->setScrollBarPos(layout.pos);
+		widget->setScrollBarSettings(layout.barWidth, layout.offset);
 
 		widget->setGeometry(
 			layout.x, layout.y,
@@ -161,9 +174,12 @@ ScrollAreaWidget *BaseCanvasWidget::createScrollArea(
 	unsigned int id,
 	ScrollBarPos pos
 ) {
-	ScrollAreaWidget *widget = new ScrollAreaWidget(this,	m_style, pos);
+	ScrollAreaWidget *widget = new ScrollAreaWidget(this,	m_style, id, pos);
 
-	// TODO: connect signals.
+	QObject::connect(
+		widget, SIGNAL(scrolled(unsigned int, int)),
+		this, SLOT(onScrollAreaScroll(unsigned int, int))
+	);
 
 	return widget;
 }
@@ -279,4 +295,12 @@ void BaseCanvasWidget::onWidgetScroll(ThoughtWidget* widget, QWheelEvent* event)
 			it->second->wheelEvent(event);
 		}
 	}
+}
+
+void BaseCanvasWidget::onScrollAreaScroll(unsigned int id, int value) {
+	if (m_layout == nullptr)
+		return;
+
+	m_layout->onScroll(id, value);
+	updateLayout();
 }

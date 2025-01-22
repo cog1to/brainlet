@@ -13,10 +13,15 @@ public:
 	ScrollAreaLayout(
 		int x, int y,
 		int w, int h,
-		ScrollBarPos pos
+		ScrollBarPos pos,
+		float barWidth,
+		float offset,
+		int maxNodeOffset
 	);
 	int x, y, w, h;
 	ScrollBarPos pos;
+	float barWidth, offset;
+	int maxNodeOffset;
 };
 
 #endif

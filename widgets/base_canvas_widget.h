@@ -19,6 +19,7 @@ class BaseCanvasWidget: public BaseWidget {
 
 public:
 	BaseCanvasWidget(QWidget*, Style*, BaseLayout*);
+	~BaseCanvasWidget();
 	void setState(State*);
 
 protected:
@@ -43,6 +44,7 @@ private slots:
 	void onWidgetActivated(ThoughtWidget*);
 	void onWidgetDeactivated(ThoughtWidget*);
 	void onWidgetScroll(ThoughtWidget*, QWheelEvent*);
+	void onScrollAreaScroll(unsigned int, int);
 };
 
 #endif
