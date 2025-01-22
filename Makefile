@@ -6,7 +6,7 @@ INCLUDEDIRS = -I${QTDIR}/include \
 							-I.
 LIBDIRS = -L${QTDIR}/lib
 LIBS = -lQt6Core -lQt6Widgets -lQt6Gui -lQt6DBus
-FLAGS = 
+CFLAGS = ${FLAGS}
 # Utils
 MOC = ${QTDIR}/libexec/moc
 # Files
@@ -32,34 +32,34 @@ moc:
 	mkdir -p mocs
 
 # Tests with debug graphics
-debug: FLAGS += -DDEBUG_GUI=1
+debug: CFLAGS += -DDEBUG_GUI=1
 debug: tests
 
 # Tests
-tests: bin test_anchor test_thought test_resize test_edit test_base
+tests: opts bin test_anchor test_thought test_resize test_edit test_base
 
 test_anchor: mocs $(HEADERS) $(WIDGETS) tests/test_anchor.cpp
-	$(CXX) -g $(INCLUDEDIRS) $(FLAGS) \
+	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
 		$(WIDGETS) $(MOCS_O) tests/test_anchor.cpp \
-		-o bin/test_anchor $(LIBDIRS) $(LIBS) 
+		-o bin/test_anchor $(LIBDIRS) $(LIBS)
 
 test_thought: mocs $(HEADERS) $(WIDGETS) tests/test_thought.cpp
-	$(CXX) -g $(INCLUDEDIRS) $(FLAGS) \
+	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
 		$(WIDGETS) $(MOCS_O) tests/test_thought.cpp \
 		-o bin/test_thought $(LIBDIRS) $(LIBS)
 
 test_resize: mocs $(HEADERS) $(WIDGETS) tests/test_resize_on_hover.cpp
-	$(CXX) -g $(INCLUDEDIRS) $(FLAGS) \
+	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
 		$(WIDGETS) $(MOCS_O) tests/test_resize_on_hover.cpp \
 		-o bin/test_resize $(LIBDIRS) $(LIBS)
-	
+
 test_edit: mocs $(HEADERS) $(WIDGETS) tests/test_resize_on_hover.cpp
-	$(CXX) -g $(INCLUDEDIRS) $(FLAGS) \
+	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
 		$(WIDGETS) $(MOCS_O) tests/test_edit.cpp \
 		-o bin/test_edit $(LIBDIRS) $(LIBS)
 
 test_base: mocs $(HEADERS) $(WIDGETS) tests/test_base_canvas.cpp
-	$(CXX) -g $(INCLUDEDIRS) $(FLAGS) \
+	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
 		$(MODELS) $(LAYOUTS) $(WIDGETS) $(MOCS_O) tests/test_base_canvas.cpp \
 		-o bin/test_base $(LIBDIRS) $(LIBS)
 
