@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <iostream>
 
 #include <QColor>
 #include <QPainter>
@@ -67,10 +68,12 @@ void BaseCanvasWidget::paintEvent(QPaintEvent *) {
 		return;
 	}
 
-	QColor color(199, 130, 90, 255);
+	QColor color(199, 130, 90, 128);
 	QPen pen(color, 1);
 
 	QPainter painter(this);
+	painter.setRenderHint(QPainter::Antialiasing, true);
+
 	QPainterPath path;
 	painter.setPen(pen);
 
@@ -83,11 +86,15 @@ void BaseCanvasWidget::paintEvent(QPaintEvent *) {
 		if (toIt == m_widgets.end() || toIt->second->parent() == nullptr)
 			continue;
 
-		QPointF outgoing = fromIt->second->getAnchorFrom(connection.type);
-		QPointF incoming = toIt->second->getAnchorTo(connection.type);
+		AnchorPoint outgoing = fromIt->second->getAnchorFrom(connection.type);
+		AnchorPoint incoming = toIt->second->getAnchorTo(connection.type);
 
-		path.moveTo(outgoing);
-		path.lineTo(incoming); // TODO: Replace with cubic.
+		path.moveTo(outgoing.x, outgoing.y);
+		path.cubicTo(
+			outgoing.cx, outgoing.cy,
+			incoming.cx, incoming.cy,
+			incoming.x, incoming.y
+		);
 	}
 
 	painter.drawPath(path);

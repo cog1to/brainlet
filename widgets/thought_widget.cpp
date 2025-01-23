@@ -1,7 +1,8 @@
+#include <assert.h>
+
 #include <QTextEdit>
 #include <QString>
 #include <QPainter>
-#include <iostream>
 
 #include "widgets/thought_widget.h"
 
@@ -96,60 +97,80 @@ const bool ThoughtWidget::isActive() const {
 
 // Anchors
 
-QPointF ThoughtWidget::getAnchorFrom(ConnectionType type) {
+AnchorPoint ThoughtWidget::getAnchorFrom(ConnectionType type) {
 	const QSize anchorSize = AnchorWidget::defaultSize;
 
 	QPointF point;
 	switch (type) {
 		case ConnectionType::parent:
-			point = QPointF(
+			point = mapToParent(QPointF(
 				(float)size().width() * childLeftOffset + (float)anchorSize.width() / 2.0,
 				(float)size().height() - (float)anchorSize.height() / 2.0
-			);
-			break;
+			));
+			return AnchorPoint {
+				.x = point.x(), .y = point.y(),
+				.cx = point.x(), .cy = point.y() + controlPointOffset * 1.5
+			};
 		case ConnectionType::child:
-			point = QPointF(
+			point = mapToParent(QPointF(
 				(float)size().width() * parentLeftOffset + (float)anchorSize.width() / 2.0,
 				(float)anchorSize.height() / 2.0
-			);
-			break;
+			));
+			return AnchorPoint {
+				.x = point.x(), .y = point.y(),
+				.cx = point.x(), .cy = point.y() - controlPointOffset * 1.5
+			};
 		case ConnectionType::link:
-			point = QPointF(
+			point = mapToParent(QPointF(
 				(float)anchorSize.width() / 2.0,
 				(float)size().height() / 2.0
-			);
-			break;
+			));
+			return AnchorPoint {
+				.x = point.x(), .y = point.y(),
+				.cx = point.x() - controlPointOffset, .cy = point.y()
+			};
 	}
 
-	return mapToParent(point);
+	assert(false);
+	return AnchorPoint{};
 }
 
-QPointF ThoughtWidget::getAnchorTo(ConnectionType type) {
+AnchorPoint ThoughtWidget::getAnchorTo(ConnectionType type) {
 	const QSize anchorSize = AnchorWidget::defaultSize;
 
 	QPointF point;
 	switch (type) {
 		case ConnectionType::parent:
-			point = QPointF(
+			point = mapToParent(QPointF(
 				(float)size().width() * parentLeftOffset + (float)anchorSize.width() / 2.0,
 				(float)anchorSize.height() / 2.0
-			);
-			break;
+			));
+			return AnchorPoint {
+				.x = point.x(), .y = point.y(),
+				.cx = point.x(), .cy = point.y() - controlPointOffset * 1.5
+			};
 		case ConnectionType::child:
-			point = QPointF(
+			point = mapToParent(QPointF(
 				(float)size().width() * childLeftOffset + (float)anchorSize.width() / 2.0,
 				(float)size().height() - (float)anchorSize.height() / 2.0
-			);
-			break;
+			));
+			return AnchorPoint {
+				.x = point.x(), .y = point.y(),
+				.cx = point.x(), .cy = point.y() + controlPointOffset * 1.5
+			};
 		case ConnectionType::link:
-			point = QPointF(
+			point = mapToParent(QPointF(
 				(float)size().width() - (float)anchorSize.width() / 2.0,
 				(float)size().height() / 2.0
-			);
-			break;
+			));
+			return AnchorPoint {
+				.x = point.x(), .y = point.y(),
+				.cx = point.x() + controlPointOffset, .cy = point.y()
+			};
 	}
 
-	return mapToParent(point);
+	assert(false);
+	return AnchorPoint{};
 }
 
 // Size measurements

@@ -15,6 +15,11 @@
 #include "widgets/anchor_widget.h"
 #include "widgets/thought_edit_widget.h"
 
+typedef struct {
+	qreal x, y;
+	qreal cx, cy;
+} AnchorPoint;
+
 class ThoughtWidget: public BaseWidget {
 	Q_OBJECT
 
@@ -42,8 +47,8 @@ public:
 	// Current state.
 	const bool isActive() const;
 	// Anchor ponts for connections.
-	QPointF getAnchorFrom(ConnectionType);
-	QPointF getAnchorTo(ConnectionType);
+	AnchorPoint getAnchorFrom(ConnectionType);
+	AnchorPoint getAnchorTo(ConnectionType);
 
 signals:
 	void activated(ThoughtWidget*);
@@ -71,6 +76,7 @@ protected:
 	static constexpr QSize padding = QSize(10, 2);
 	static constexpr qreal parentLeftOffset = 0.65;
 	static constexpr qreal childLeftOffset = 0.3;
+	static constexpr qreal controlPointOffset = 75;
 
 private:
 	// State.
