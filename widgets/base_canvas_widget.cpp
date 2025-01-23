@@ -1,10 +1,13 @@
 #include <assert.h>
 
 #include <QColor>
+#include <QPainter>
+#include <QPainterPath>
 #include <QWidget>
 
 #include "layout/base_layout.h"
 #include "layout/scroll_area_layout.h"
+#include "layout/item_connection.h"
 #include "widgets/base_canvas_widget.h"
 #include "widgets/scroll_area_widget.h"
 #include "widgets/thought_widget.h"
@@ -55,7 +58,39 @@ void BaseCanvasWidget::resizeEvent(QResizeEvent *event) {
 }
 
 void BaseCanvasWidget::paintEvent(QPaintEvent *) {
-	// TODO: connection lines.
+	if (m_layout == nullptr || m_state == nullptr) {
+		return;
+	}
+
+	const std::vector<ItemConnection> *connections = m_layout->connections();
+	if (connections == nullptr || connections->size() == 0) {
+		return;
+	}
+
+	QColor color(199, 130, 90, 255);
+	QPen pen(color, 1);
+
+	QPainter painter(this);
+	QPainterPath path;
+	painter.setPen(pen);
+
+	for (auto& connection: *connections) {
+		auto fromIt = m_widgets.find(connection.from);
+		if (fromIt == m_widgets.end() || fromIt->second->parent() == nullptr)
+			continue;
+
+		auto toIt = m_widgets.find(connection.to);
+		if (toIt == m_widgets.end() || toIt->second->parent() == nullptr)
+			continue;
+
+		QPointF outgoing = fromIt->second->getAnchorFrom(connection.type);
+		QPointF incoming = toIt->second->getAnchorTo(connection.type);
+
+		path.moveTo(outgoing);
+		path.lineTo(incoming); // TODO: Replace with cubic.
+	}
+
+	painter.drawPath(path);
 }
 
 void BaseCanvasWidget::updateLayout() {
@@ -63,7 +98,7 @@ void BaseCanvasWidget::updateLayout() {
 		return;
 	}
 
-	// Central thought. TODO: remove this, we should only use main map ideally.
+	// Central thought. TODO: remove this if possible, we should only use main map ideally.
 	const Thought *main = m_state->centralThought();
 	const std::unordered_map<ThoughtId, Thought*>* thoughts = m_state->thoughts();
 	const std::unordered_map<ThoughtId, ItemLayout> *items = m_layout->items();
@@ -263,6 +298,9 @@ void BaseCanvasWidget::onWidgetActivated(ThoughtWidget* widget) {
 		x, y,
 		fullSize.width(), fullSize.height()
 	);
+
+	// Repaint to update connections.
+	update();
 }
 
 void BaseCanvasWidget::onWidgetDeactivated(ThoughtWidget* widget) {
@@ -277,6 +315,9 @@ void BaseCanvasWidget::onWidgetDeactivated(ThoughtWidget* widget) {
 			layout.w, layout.h
 		);
 	}
+
+	// Repaint to update connections.
+	update();
 }
 
 void BaseCanvasWidget::onWidgetScroll(ThoughtWidget* widget, QWheelEvent* event) {
@@ -301,6 +342,9 @@ void BaseCanvasWidget::onScrollAreaScroll(unsigned int id, int value) {
 	if (m_layout == nullptr)
 		return;
 
+	// Reload layout to update visible widgets.
 	m_layout->onScroll(id, value);
 	updateLayout();
+	// Repaint to update connections.
+	update();
 }

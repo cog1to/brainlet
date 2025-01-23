@@ -9,6 +9,7 @@
 #include <QTextEdit>
 
 #include "model/thought.h"
+#include "layout/item_connection.h"
 #include "widgets/style.h"
 #include "widgets/base_widget.h"
 #include "widgets/anchor_widget.h"
@@ -40,6 +41,9 @@ public:
 	QSize sizeForWidth(int width) const;
 	// Current state.
 	const bool isActive() const;
+	// Anchor ponts for connections.
+	QPointF getAnchorFrom(ConnectionType);
+	QPointF getAnchorTo(ConnectionType);
 
 signals:
 	void activated(ThoughtWidget*);
@@ -65,6 +69,8 @@ protected:
 	AnchorWidget m_anchorChild;
 	// Size constants.
 	static constexpr QSize padding = QSize(10, 2);
+	static constexpr qreal parentLeftOffset = 0.65;
+	static constexpr qreal childLeftOffset = 0.3;
 
 private:
 	// State.

@@ -4,6 +4,7 @@
 #include "layout/base_layout.h"
 #include "layout/item_layout.h"
 #include "layout/scroll_area_layout.h"
+#include "layout/item_connection.h"
 
 class DefaultLayout: public BaseLayout {
 public:
@@ -13,15 +14,21 @@ public:
 	void setState(State*) override;
 	const std::unordered_map<ThoughtId, ItemLayout>* items() const override;
 	const std::unordered_map<unsigned int, ScrollAreaLayout>* scrollAreas() const override;
+	const std::vector<ItemConnection>* connections() const override;
 	void onScroll(unsigned int, int) override;
 
 private:
 	// Helpers.
 	static inline bool compareThoughts(Thought*, Thought*);
 	static inline void sortNodes(
+		// Data to sort nodes.
 		std::vector<Thought*>&,
 		const std::vector<ThoughtId>&,
-		const std::unordered_map<ThoughtId, Thought*>*
+		const std::unordered_map<ThoughtId, Thought*>*,
+		// Data to fill connections:
+		std::vector<ItemConnection>*,
+		ThoughtId,
+		ConnectionType
 	);
 	void updateWidgets();
 	void loadSiblings();
@@ -37,6 +44,7 @@ private:
 	std::unordered_map<ThoughtId, ItemLayout> m_layout;
 	std::unordered_map<unsigned int, ScrollAreaLayout> m_scrollAreas;
 	std::unordered_map<unsigned int, int> m_offsets;
+	std::vector<ItemConnection> m_connections;
 	// Layout settings.
 	int m_verticalWidgetWidth = 0;
 	int m_widgetHeight = 0;

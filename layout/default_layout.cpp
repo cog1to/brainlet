@@ -42,6 +42,8 @@ void DefaultLayout::setSize(QSize size) {
 
 void DefaultLayout::setState(State *state) {
 	m_state = state;
+	m_connections.clear();
+
 	loadSiblings();
 	reload();
 }
@@ -59,9 +61,18 @@ void DefaultLayout::loadSiblings() {
 	const std::unordered_map<ThoughtId, Thought*> *thoughts = m_state->thoughts();
 
 	// Order direct connected nodes.
-	sortNodes(m_parents, thought->parents(), thoughts);
-	sortNodes(m_links, thought->links(), thoughts);
-	sortNodes(m_children, thought->children(), thoughts);
+	sortNodes(
+		m_parents, thought->parents(), thoughts,
+		&m_connections, thought->id(), ConnectionType::child
+	);
+	sortNodes(
+		m_links, thought->links(), thoughts,
+		&m_connections, thought->id(), ConnectionType::link
+	);
+	sortNodes(
+		m_children, thought->children(), thoughts,
+		&m_connections, thought->id(), ConnectionType::parent
+	);
 
 	// Gather siblings.
 	m_siblings.clear();
@@ -69,8 +80,14 @@ void DefaultLayout::loadSiblings() {
 		for (const auto& id: parent->children()) {
 			if (id == thought->id())
 				continue;
-			if (auto found = thoughts->find(id); found != thoughts->end())
+			if (auto found = thoughts->find(id); found != thoughts->end()) {
 				m_siblings.push_back(found->second);
+				m_connections.push_back(ItemConnection{
+					.from = parent->id(),
+					.to = id,
+					.type = ConnectionType::parent
+				});
+			}
 		}
 	}
 	std::sort(m_siblings.begin(), m_siblings.end(), compareThoughts);
@@ -181,11 +198,19 @@ void DefaultLayout::layoutVerticalSide(
 			spacer = (rect.height() - totalHeight) / (sizes.size() - 1);
 			totalSpaces = spacer * (sizes.size() - 1);
 		} else {
-			while (totalHeight > rect.height()) {
+			while (maxCount > 0 && totalHeight > rect.height()) {
 				maxCount -= 1;
 				totalHeight -= sizes[maxCount].height();
 			}
-			spacer = (rect.height() - totalHeight) / (maxCount - 1);
+
+			// Can't fit a single item, return.
+			if (maxCount == 0) {
+				return;
+			}
+
+			spacer = (maxCount > 1)
+				? (rect.height() - totalHeight) / (maxCount - 1)
+				: 0;
 			totalSpaces = spacer * (maxCount - 1);
 		}
 	}
@@ -198,7 +223,7 @@ void DefaultLayout::layoutVerticalSide(
 	int offset = 0;
 	if (cachedOffset != m_offsets.end()) {
 		if (cachedOffset->second + maxCount > sorted.size()) {
-			offset = sorted.size() - maxCount;
+			offset = std::max(0, (int)sorted.size() - maxCount);
 		} else {
 			offset = cachedOffset->second;
 		}
@@ -274,8 +299,8 @@ void DefaultLayout::layoutHorizontalSide(
 	//    case we try to display as much items as possible in the visible area.
 	int itemsPerColumn = 0, columnCount = 0;
 	if (requiredColumnCount <= visibleColumnCount) {
-		columnCount = (sorted.size() + columnCapacity - 1) / columnCapacity;
-		itemsPerColumn = (sorted.size() + columnCount - 1) / columnCount;
+		itemsPerColumn = (sorted.size() + visibleColumnCount - 1) / visibleColumnCount;
+		columnCount = (sorted.size() + itemsPerColumn - 1) / itemsPerColumn;
 	} else {
 		itemsPerColumn = columnCapacity;
 		columnCount = visibleColumnCount;
@@ -291,7 +316,7 @@ void DefaultLayout::layoutHorizontalSide(
 	int offset = 0;
 	if (cachedOffset != m_offsets.end()) {
 		if (cachedOffset->second + columnCount > requiredColumnCount) {
-			offset = requiredColumnCount - columnCount;
+			offset = std::max(0, (int)requiredColumnCount - columnCount);
 		} else {
 			offset = cachedOffset->second;
 		}
@@ -379,6 +404,10 @@ const std::unordered_map<unsigned int, ScrollAreaLayout>* DefaultLayout::scrollA
 	return &m_scrollAreas;
 }
 
+const std::vector<ItemConnection>* DefaultLayout::connections() const {
+	return &m_connections;
+}
+
 // Utility functions.
 
 inline bool DefaultLayout::compareThoughts(Thought *a, Thought *b) {
@@ -386,14 +415,24 @@ inline bool DefaultLayout::compareThoughts(Thought *a, Thought *b) {
 }
 
 inline void DefaultLayout::sortNodes(
+	// Data to sort nodes.
 	std::vector<Thought*>& list,
 	const std::vector<ThoughtId>& ids,
-	const std::unordered_map<ThoughtId, Thought*>* map
+	const std::unordered_map<ThoughtId, Thought*>* map,
+	// Data to fill connections:
+	std::vector<ItemConnection>* connections,
+	ThoughtId from,
+	ConnectionType conn
 ) {
 	list.clear();
 	for (const auto& id: ids) {
 		if (auto found = map->find(id); found != map->end()) {
 			list.push_back(found->second);
+			connections->push_back(ItemConnection{
+				.from = from,
+				.to = id,
+				.type = conn
+			});
 		}
 	}
 	std::sort(list.begin(), list.end(), compareThoughts);
