@@ -12,6 +12,7 @@ public:
 	// Constructor.
 	Style(
 		QColor background,
+		QColor nodeBackground,
 		float borderWidth,
 		QColor borderColor,
 		float hoverBorderWidth,
@@ -27,6 +28,9 @@ public:
 	// Background color.
 	const QColor background() const;
 	void setBackground(QColor);
+	// Node color.
+	const QColor nodeBackground() const;
+	void setNodeBackground(QColor);
 	// Border settings.
 	const float borderWidth() const;
 	void setBorderWidth(float);
@@ -58,6 +62,7 @@ signals:
 
 private:
 	QColor m_background;
+	QColor m_nodeBackground;
 	float m_borderWidth;
 	QColor m_borderColor;
 	float m_hoverBorderWidth;

@@ -43,6 +43,7 @@ void DefaultLayout::setSize(QSize size) {
 void DefaultLayout::setState(State *state) {
 	m_state = state;
 	m_connections.clear();
+	m_subconnections.clear();
 
 	loadSiblings();
 	reload();
@@ -57,6 +58,7 @@ void DefaultLayout::loadSiblings() {
 	if (thought == nullptr) {
 		return;
 	}
+	ThoughtId mainId = thought->id();
 
 	const std::unordered_map<ThoughtId, Thought*> *thoughts = m_state->thoughts();
 
@@ -78,7 +80,7 @@ void DefaultLayout::loadSiblings() {
 	m_siblings.clear();
 	for (const auto *parent: m_parents) {
 		for (const auto& id: parent->children()) {
-			if (id == thought->id())
+			if (id == mainId)
 				continue;
 			if (auto found = thoughts->find(id); found != thoughts->end()) {
 				m_siblings.push_back(found->second);
@@ -91,6 +93,29 @@ void DefaultLayout::loadSiblings() {
 		}
 	}
 	std::sort(m_siblings.begin(), m_siblings.end(), compareThoughts);
+
+	// Cross-links.
+	std::vector<Thought*> nodeLists[] = {m_parents, m_children, m_links, m_siblings};
+	for (auto list: nodeLists) {
+		for (const auto *node: list) {
+			for (const auto& id: node->links())
+				if (id != mainId)
+					m_subconnections.push_back(
+						ItemConnection{.from = node->id(), .to = id, .type = ConnectionType::link}
+					);
+			if (list != m_parents)
+				for (const auto& id: node->children())
+					if (id != mainId)
+						m_subconnections.push_back(
+							ItemConnection{.from = node->id(), .to = id, .type = ConnectionType::parent}
+						);
+			for (const auto& id: node->parents())
+				if (id != mainId)
+					m_subconnections.push_back(
+						ItemConnection{.from = node->id(), .to = id, .type = ConnectionType::child}
+					);
+		}
+	}
 }
 
 void DefaultLayout::updateWidgets() {
@@ -406,6 +431,10 @@ const std::unordered_map<unsigned int, ScrollAreaLayout>* DefaultLayout::scrollA
 
 const std::vector<ItemConnection>* DefaultLayout::connections() const {
 	return &m_connections;
+}
+
+const std::vector<ItemConnection>* DefaultLayout::subconnections() const {
+	return &m_subconnections;
 }
 
 // Utility functions.

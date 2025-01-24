@@ -47,14 +47,15 @@ int main(int argc, char *argv[]) {
 	makeThought("Lorem ipsum again and again", map, central->links());
 	makeThought("Eight", map, central->links());
 	makeThought("Nine", map, central->links());
-	makeThought("Ten", map, central->links());
+	Thought *ten = makeThought("Ten", map, central->links());
 	makeThought("Eleven", map, central->links());
 
 	// Parent items.
 	Thought *parentOne = makeThought("Parent one", map, central->parents());
 	makeThought("Parent two", map, central->parents());
-	makeThought("Parent three", map, central->parents());
+	Thought *parentThree = makeThought("Parent three", map, central->parents());
 	Thought *parentTwo = makeThought("Parent two with a very long long long name", map, central->parents());
+
 
 	// Child items.
 	makeThought("First child", map, central->children());
@@ -62,8 +63,15 @@ int main(int argc, char *argv[]) {
 
 	// Sibling items.
 	makeThought("Sibling One", map, parentOne->children());
-	makeThought("Sibling Two", map, parentOne->children());
+	Thought *siblingTwo = makeThought("Sibling Two", map, parentOne->children());
 	makeThought("Sibling Three And A Half", map, parentTwo->children());
+
+	// Link from link to parent.
+	ten->links().push_back(parentOne->id());
+	// Parent from link to parent.
+	ten->children().push_back(parentThree->id());
+	// Link from sibling to parent.
+	siblingTwo->links().push_back(parentTwo->id());
 
 	// Composed state.
 	State state(central, map);

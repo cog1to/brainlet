@@ -39,6 +39,8 @@ private:
 	ThoughtWidget *createWidget(const Thought*, bool);
 	ScrollAreaWidget *cachedScrollArea(unsigned int id);
 	ScrollAreaWidget *createScrollArea(unsigned int id, ScrollBarPos);
+	// Layout constants.
+	static constexpr qreal controlPointRatio = 0.5;
 
 private slots:
 	void onWidgetActivated(ThoughtWidget*);

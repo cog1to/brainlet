@@ -17,7 +17,7 @@
 
 typedef struct {
 	qreal x, y;
-	qreal cx, cy;
+	qreal dx, dy;
 } AnchorPoint;
 
 class ThoughtWidget: public BaseWidget {
@@ -76,7 +76,6 @@ protected:
 	static constexpr QSize padding = QSize(10, 2);
 	static constexpr qreal parentLeftOffset = 0.65;
 	static constexpr qreal childLeftOffset = 0.3;
-	static constexpr qreal controlPointOffset = 75;
 
 private:
 	// State.

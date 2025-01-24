@@ -6,6 +6,7 @@
 
 Style::Style(
 	QColor background,
+	QColor nodeBackground,
 	float borderWidth,
 	QColor borderColor,
 	float hoverBorderWidth,
@@ -17,6 +18,7 @@ Style::Style(
 	int scrollWidth
 ) {
 	m_background = background;
+	m_nodeBackground = nodeBackground;
 	m_borderWidth = borderWidth;
 	m_borderColor = borderColor;
 	m_hoverBorderWidth = hoverBorderWidth;
@@ -30,7 +32,8 @@ Style::Style(
 
 Style& Style::defaultStyle() {
 	static Style style(
-		QColor(23, 43, 52, 255),		
+		QColor(23, 43, 52, 255),
+		QColor(16, 31, 38, 128),
 		1.0,
 		QColor(248, 144, 87, 255),
 		2.0,
@@ -51,6 +54,15 @@ const QColor Style::background() const {
 
 void Style::setBackground(QColor color) {
 	m_background = color;
+	emit styleChanged(this);
+}
+
+const QColor Style::nodeBackground() const {
+	return m_nodeBackground;
+}
+
+void Style::setNodeBackground(QColor color) {
+	m_nodeBackground = color;
 	emit styleChanged(this);
 }
 

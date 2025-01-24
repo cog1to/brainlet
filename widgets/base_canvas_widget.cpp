@@ -63,19 +63,18 @@ void BaseCanvasWidget::paintEvent(QPaintEvent *) {
 		return;
 	}
 
+	// Main connections.
 	const std::vector<ItemConnection> *connections = m_layout->connections();
 	if (connections == nullptr || connections->size() == 0) {
 		return;
 	}
 
-	QColor color(199, 130, 90, 128);
-	QPen pen(color, 1);
-
 	QPainter painter(this);
 	painter.setRenderHint(QPainter::Antialiasing, true);
 
+	QColor color = m_style->activeAnchorColor();
+
 	QPainterPath path;
-	painter.setPen(pen);
 
 	for (auto& connection: *connections) {
 		auto fromIt = m_widgets.find(connection.from);
@@ -88,16 +87,54 @@ void BaseCanvasWidget::paintEvent(QPaintEvent *) {
 
 		AnchorPoint outgoing = fromIt->second->getAnchorFrom(connection.type);
 		AnchorPoint incoming = toIt->second->getAnchorTo(connection.type);
+		qreal dx = std::abs(outgoing.x - incoming.x);
+		qreal dy = std::abs(outgoing.y - incoming.y);
 
 		path.moveTo(outgoing.x, outgoing.y);
 		path.cubicTo(
-			outgoing.cx, outgoing.cy,
-			incoming.cx, incoming.cy,
+			outgoing.x + (outgoing.dx * dx * controlPointRatio), outgoing.y + (outgoing.dy * dy * controlPointRatio),
+			incoming.x + (incoming.dx * dx * controlPointRatio), incoming.y + (incoming.dy * dy * controlPointRatio),
 			incoming.x, incoming.y
 		);
 	}
 
+	painter.setPen(QPen(color, 1));
 	painter.drawPath(path);
+
+	// These connect nodes placed around the main node with each other.
+	const std::vector<ItemConnection> *subconnections = m_layout->subconnections();
+	if (subconnections == nullptr || subconnections->size() == 0) {
+		return;
+	}
+
+	QPainterPath spath;
+
+	for (auto& connection: *subconnections) {
+		auto fromIt = m_widgets.find(connection.from);
+		if (fromIt == m_widgets.end() || fromIt->second->parent() == nullptr)
+			continue;
+
+		auto toIt = m_widgets.find(connection.to);
+		if (toIt == m_widgets.end() || toIt->second->parent() == nullptr)
+			continue;
+
+		AnchorPoint outgoing = fromIt->second->getAnchorFrom(connection.type);
+		AnchorPoint incoming = toIt->second->getAnchorTo(connection.type);
+		qreal dx = std::abs(outgoing.x - incoming.x);
+		qreal dy = std::abs(outgoing.y - incoming.y);
+
+		spath.moveTo(outgoing.x, outgoing.y);
+		spath.cubicTo(
+			outgoing.x + (outgoing.dx * dx * controlPointRatio), outgoing.y + (outgoing.dy * dy * controlPointRatio),
+			incoming.x + (incoming.dx * dx * controlPointRatio), incoming.y + (incoming.dy * dy * controlPointRatio),
+			incoming.x, incoming.y
+		);
+	}
+
+	QColor subColor = color;
+	subColor.setAlpha(128);
+	painter.setPen(QPen(color, 0.5));
+	painter.drawPath(spath);
 }
 
 void BaseCanvasWidget::updateLayout() {

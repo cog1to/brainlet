@@ -15,6 +15,7 @@ public:
 	const std::unordered_map<ThoughtId, ItemLayout>* items() const override;
 	const std::unordered_map<unsigned int, ScrollAreaLayout>* scrollAreas() const override;
 	const std::vector<ItemConnection>* connections() const override;
+	const std::vector<ItemConnection>* subconnections() const override;
 	void onScroll(unsigned int, int) override;
 
 private:
@@ -45,6 +46,7 @@ private:
 	std::unordered_map<unsigned int, ScrollAreaLayout> m_scrollAreas;
 	std::unordered_map<unsigned int, int> m_offsets;
 	std::vector<ItemConnection> m_connections;
+	std::vector<ItemConnection> m_subconnections;
 	// Layout settings.
 	int m_verticalWidgetWidth = 0;
 	int m_widgetHeight = 0;

@@ -95,7 +95,7 @@ const bool ThoughtWidget::isActive() const {
 	return m_hover || m_textEdit.hasFocus();
 }
 
-// Anchors
+// Anchor coordinates.
 
 AnchorPoint ThoughtWidget::getAnchorFrom(ConnectionType type) {
 	const QSize anchorSize = AnchorWidget::defaultSize;
@@ -109,7 +109,7 @@ AnchorPoint ThoughtWidget::getAnchorFrom(ConnectionType type) {
 			));
 			return AnchorPoint {
 				.x = point.x(), .y = point.y(),
-				.cx = point.x(), .cy = point.y() + controlPointOffset * 1.5
+				.dx = 0, .dy = 1.0
 			};
 		case ConnectionType::child:
 			point = mapToParent(QPointF(
@@ -118,7 +118,7 @@ AnchorPoint ThoughtWidget::getAnchorFrom(ConnectionType type) {
 			));
 			return AnchorPoint {
 				.x = point.x(), .y = point.y(),
-				.cx = point.x(), .cy = point.y() - controlPointOffset * 1.5
+				.dx = 0, .dy = -1.0
 			};
 		case ConnectionType::link:
 			point = mapToParent(QPointF(
@@ -127,7 +127,7 @@ AnchorPoint ThoughtWidget::getAnchorFrom(ConnectionType type) {
 			));
 			return AnchorPoint {
 				.x = point.x(), .y = point.y(),
-				.cx = point.x() - controlPointOffset, .cy = point.y()
+				.dx = -1.0, .dy = 0
 			};
 	}
 
@@ -147,7 +147,7 @@ AnchorPoint ThoughtWidget::getAnchorTo(ConnectionType type) {
 			));
 			return AnchorPoint {
 				.x = point.x(), .y = point.y(),
-				.cx = point.x(), .cy = point.y() - controlPointOffset * 1.5
+				.dx = 0, .dy = -1.0
 			};
 		case ConnectionType::child:
 			point = mapToParent(QPointF(
@@ -156,7 +156,7 @@ AnchorPoint ThoughtWidget::getAnchorTo(ConnectionType type) {
 			));
 			return AnchorPoint {
 				.x = point.x(), .y = point.y(),
-				.cx = point.x(), .cy = point.y() + controlPointOffset * 1.5
+				.dx = 0, .dy = 1.0
 			};
 		case ConnectionType::link:
 			point = mapToParent(QPointF(
@@ -165,7 +165,7 @@ AnchorPoint ThoughtWidget::getAnchorTo(ConnectionType type) {
 			));
 			return AnchorPoint {
 				.x = point.x(), .y = point.y(),
-				.cx = point.x() + controlPointOffset, .cy = point.y()
+				.dx = 1.0, .dy = 0
 			};
 	}
 
@@ -288,6 +288,9 @@ void ThoughtWidget::paintEvent(QPaintEvent *event) {
 	if (m_hover || m_textEdit.hasFocus()) {
 		pen.setWidth(hoverWidth);
 		QBrush brush(m_style->hoverBackground());
+		painter.setBrush(brush);
+	} else {
+		QBrush brush(m_style->nodeBackground());
 		painter.setBrush(brush);
 	}
 
