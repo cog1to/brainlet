@@ -65,15 +65,15 @@ void DefaultLayout::loadSiblings() {
 	// Order direct connected nodes.
 	sortNodes(
 		m_parents, thought->parents(), thoughts,
-		&m_connections, thought->id(), ConnectionType::child
+		&m_connections, thought->id(), LayoutConnectionType::parent
 	);
 	sortNodes(
 		m_links, thought->links(), thoughts,
-		&m_connections, thought->id(), ConnectionType::link
+		&m_connections, thought->id(), LayoutConnectionType::link
 	);
 	sortNodes(
 		m_children, thought->children(), thoughts,
-		&m_connections, thought->id(), ConnectionType::parent
+		&m_connections, thought->id(), LayoutConnectionType::child
 	);
 
 	// Gather siblings.
@@ -83,11 +83,13 @@ void DefaultLayout::loadSiblings() {
 			if (id == mainId)
 				continue;
 			if (auto found = thoughts->find(id); found != thoughts->end()) {
-				m_siblings.push_back(found->second);
+				if (!listContains(m_links, id)) {
+					m_siblings.push_back(found->second);
+				}
 				m_connections.push_back(ItemConnection{
 					.from = parent->id(),
 					.to = id,
-					.type = ConnectionType::parent
+					.type = ConnectionType::child
 				});
 			}
 		}
@@ -107,12 +109,12 @@ void DefaultLayout::loadSiblings() {
 				for (const auto& id: node->children())
 					if (id != mainId)
 						m_subconnections.push_back(
-							ItemConnection{.from = node->id(), .to = id, .type = ConnectionType::parent}
+							ItemConnection{.from = node->id(), .to = id, .type = ConnectionType::child}
 						);
 			for (const auto& id: node->parents())
 				if (id != mainId)
 					m_subconnections.push_back(
-						ItemConnection{.from = node->id(), .to = id, .type = ConnectionType::child}
+						ItemConnection{.from = id, .to = node->id(), .type = ConnectionType::child}
 					);
 		}
 	}
@@ -203,6 +205,10 @@ void DefaultLayout::layoutVerticalSide(
 	QRect rect,
 	ScrollBarPos scrollPos
 ) {
+	// Not enough space to layout anything, just return.
+	if (rect.width() < m_minWidgetWidth)
+		return;
+
 	// Calculate all sized in order.
 	std::vector<QSize> sizes;
 	for (const auto thought: sorted) {
@@ -443,6 +449,14 @@ inline bool DefaultLayout::compareThoughts(Thought *a, Thought *b) {
 	return (a->name().compare(b->name()) < 0);
 }
 
+inline bool DefaultLayout::listContains(std::vector<Thought*>& list, ThoughtId id) {
+	for (auto *thought: list)
+		if (thought->id() == id)
+			return true;
+
+	return false;
+}
+
 inline void DefaultLayout::sortNodes(
 	// Data to sort nodes.
 	std::vector<Thought*>& list,
@@ -451,17 +465,36 @@ inline void DefaultLayout::sortNodes(
 	// Data to fill connections:
 	std::vector<ItemConnection>* connections,
 	ThoughtId from,
-	ConnectionType conn
+	LayoutConnectionType conn
 ) {
 	list.clear();
 	for (const auto& id: ids) {
 		if (auto found = map->find(id); found != map->end()) {
 			list.push_back(found->second);
-			connections->push_back(ItemConnection{
-				.from = from,
-				.to = id,
-				.type = conn
-			});
+
+			switch (conn) {
+				case LayoutConnectionType::parent:
+					connections->push_back(ItemConnection{
+						.from = id,
+						.to = from,
+						.type = ConnectionType::child
+					});
+					break;
+				case LayoutConnectionType::child:
+					connections->push_back(ItemConnection{
+						.from = from,
+						.to = id,
+						.type = ConnectionType::child
+					});
+					break;
+				case LayoutConnectionType::link:
+					connections->push_back(ItemConnection{
+						.from = from,
+						.to = id,
+						.type = ConnectionType::link
+					});
+					break;
+			}
 		}
 	}
 	std::sort(list.begin(), list.end(), compareThoughts);

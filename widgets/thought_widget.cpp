@@ -102,7 +102,7 @@ AnchorPoint ThoughtWidget::getAnchorFrom(ConnectionType type) {
 
 	QPointF point;
 	switch (type) {
-		case ConnectionType::parent:
+		case ConnectionType::child:
 			point = mapToParent(QPointF(
 				(float)size().width() * childLeftOffset + (float)anchorSize.width() / 2.0,
 				(float)size().height() - (float)anchorSize.height() / 2.0
@@ -110,15 +110,6 @@ AnchorPoint ThoughtWidget::getAnchorFrom(ConnectionType type) {
 			return AnchorPoint {
 				.x = point.x(), .y = point.y(),
 				.dx = 0, .dy = 1.0
-			};
-		case ConnectionType::child:
-			point = mapToParent(QPointF(
-				(float)size().width() * parentLeftOffset + (float)anchorSize.width() / 2.0,
-				(float)anchorSize.height() / 2.0
-			));
-			return AnchorPoint {
-				.x = point.x(), .y = point.y(),
-				.dx = 0, .dy = -1.0
 			};
 		case ConnectionType::link:
 			point = mapToParent(QPointF(
@@ -140,23 +131,14 @@ AnchorPoint ThoughtWidget::getAnchorTo(ConnectionType type) {
 
 	QPointF point;
 	switch (type) {
-		case ConnectionType::parent:
+		case ConnectionType::child:
 			point = mapToParent(QPointF(
-				(float)size().width() * parentLeftOffset + (float)anchorSize.width() / 2.0,
+				(float)size().width() - (float)size().width() * parentRightOffset - (float)anchorSize.width() / 2.0,
 				(float)anchorSize.height() / 2.0
 			));
 			return AnchorPoint {
 				.x = point.x(), .y = point.y(),
 				.dx = 0, .dy = -1.0
-			};
-		case ConnectionType::child:
-			point = mapToParent(QPointF(
-				(float)size().width() * childLeftOffset + (float)anchorSize.width() / 2.0,
-				(float)size().height() - (float)anchorSize.height() / 2.0
-			));
-			return AnchorPoint {
-				.x = point.x(), .y = point.y(),
-				.dx = 0, .dy = 1.0
 			};
 		case ConnectionType::link:
 			point = mapToParent(QPointF(
@@ -316,12 +298,10 @@ void ThoughtWidget::paintEvent(QPaintEvent *event) {
 
 void ThoughtWidget::resizeEvent(QResizeEvent *event) {
 	const QSize anchorSize = AnchorWidget::defaultSize;
-	const qreal parentLeftOffset = 0.65;
-	const qreal childLeftOffset = 0.3;
 	const QSize size = event->size();
 
 	QRect parent(
-		(int)((float)size.width() * parentLeftOffset),
+		(int)((float)size.width() - (float)size.width() * parentRightOffset) - anchorSize.width(),
 		0,
 		anchorSize.width(), anchorSize.height());
 	m_anchorParent.setGeometry(parent);
@@ -394,3 +374,4 @@ void ThoughtWidget::updateText() {
 
 	m_textEdit.setAlignment(Qt::AlignCenter);
 }
+

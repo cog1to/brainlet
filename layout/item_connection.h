@@ -3,7 +3,7 @@
 
 #include "model/thought.h"
 
-enum ConnectionType { parent, child, link };
+enum ConnectionType { link, child };
 
 typedef struct {
 	ThoughtId from;

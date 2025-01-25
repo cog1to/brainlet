@@ -7,6 +7,8 @@
 #include "layout/item_connection.h"
 
 class DefaultLayout: public BaseLayout {
+	enum LayoutConnectionType { child, parent, link };
+
 public:
 	DefaultLayout(Style*);
 	void reload() override;
@@ -29,8 +31,9 @@ private:
 		// Data to fill connections:
 		std::vector<ItemConnection>*,
 		ThoughtId,
-		ConnectionType
+		LayoutConnectionType
 	);
+	static inline bool listContains(std::vector<Thought*>&, ThoughtId);
 	void updateWidgets();
 	void loadSiblings();
 	void layoutHorizontalSide(const std::vector<Thought*>&, QRect, ScrollBarPos);
@@ -54,6 +57,7 @@ private:
 	int m_sidePadding = 10;
 	int m_topSideHeight = 0;
 	int m_leftSideWidth = 0;
+	int m_minWidgetWidth = 40;
 	// Ratio.
 	static constexpr float s_sideRatio = 0.2;
 };

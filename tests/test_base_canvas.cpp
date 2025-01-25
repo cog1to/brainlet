@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
 	makeThought("Left one", map, central->links());
 	makeThought("Left two", map, central->links());
 	makeThought("Left three", map, central->links());
-	makeThought("Left four", map, central->links());
+	Thought *leftFour = makeThought("Left four", map, central->links());
 	makeThought("Left five", map, central->links());
 	makeThought("Left six", map, central->links());
 	makeThought("Abracadabra", map, central->links());
@@ -68,10 +68,12 @@ int main(int argc, char *argv[]) {
 
 	// Link from link to parent.
 	ten->links().push_back(parentOne->id());
-	// Parent from link to parent.
+	// Child from link to parent.
 	ten->children().push_back(parentThree->id());
 	// Link from sibling to parent.
 	siblingTwo->links().push_back(parentTwo->id());
+	// Child link from parent to link.
+	parentThree->children().push_back(leftFour->id());
 
 	// Composed state.
 	State state(central, map);

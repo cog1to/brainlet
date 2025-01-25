@@ -74,7 +74,7 @@ protected:
 	AnchorWidget m_anchorChild;
 	// Size constants.
 	static constexpr QSize padding = QSize(10, 2);
-	static constexpr qreal parentLeftOffset = 0.65;
+	static constexpr qreal parentRightOffset = 0.3;
 	static constexpr qreal childLeftOffset = 0.3;
 
 private:
