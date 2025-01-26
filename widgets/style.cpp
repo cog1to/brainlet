@@ -15,7 +15,8 @@ Style::Style(
 	QColor activeAnchorColor,
 	QColor textColor,
 	QColor hoverBackground,
-	int scrollWidth
+	int scrollWidth,
+	QColor anchorHighlight
 ) {
 	m_background = background;
 	m_nodeBackground = nodeBackground;
@@ -28,6 +29,7 @@ Style::Style(
 	m_textColor = textColor;
 	m_hoverBackground = hoverBackground;
 	m_scrollWidth = scrollWidth;
+	m_anchorHighlight = anchorHighlight;
 }
 
 Style& Style::defaultStyle() {
@@ -42,7 +44,8 @@ Style& Style::defaultStyle() {
 		QColor(228, 83, 75, 255),
 		QColor(215, 221, 232, 255),
 		QColor(0, 0, 0, 192),
-		12
+		12,
+		QColor(255, 255, 255, 255)
 	);
 
 	return style;
@@ -146,3 +149,13 @@ void Style::setScrollWidth(int value) {
 	m_scrollWidth = value;
 	emit styleChanged(this);
 }
+
+const QColor Style::anchorHighlight() const {
+	return m_anchorHighlight;
+}
+
+void Style::setAnchorHighlight(QColor value) {
+	m_anchorHighlight = value;
+	emit styleChanged(this);
+}
+

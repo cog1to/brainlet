@@ -41,6 +41,18 @@ ThoughtWidget::ThoughtWidget(
 		this, SLOT(onTextChanged())
 	);
 
+	AnchorWidget *anchors[] = {&m_anchorLink, &m_anchorParent, &m_anchorChild};
+	for (AnchorWidget *widget: anchors) {
+		QObject::connect(
+			widget, SIGNAL(mouseEnter(AnchorWidget*)),
+			this, SLOT(onAnchorEntered(AnchorWidget*))
+		);
+		QObject::connect(
+			widget, SIGNAL(mouseLeave(AnchorWidget*)),
+			this, SLOT(onAnchorLeft(AnchorWidget*))
+		);
+	}
+
 	updateText();
 }
 
@@ -251,6 +263,22 @@ void ThoughtWidget::onTextChanged() {
 	// Save cursor because a resize can occur, and that will reset it.
 	m_cursor = m_textEdit.textCursor();
 	emit textChanged(this);
+}
+
+// Anchor events
+
+void ThoughtWidget::onAnchorEntered(AnchorWidget* widget) {
+	QRect rect = widget->geometry();
+	QPoint center = QPoint(
+		rect.x() + rect.width() / 2,
+		rect.y() + rect.height() / 2
+	);
+
+	emit anchorEntered(mapTo(parentWidget(), center));
+}
+
+void ThoughtWidget::onAnchorLeft(AnchorWidget*) {
+	emit anchorLeft();
 }
 
 // Draw and layout

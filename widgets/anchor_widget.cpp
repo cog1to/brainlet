@@ -25,6 +25,14 @@ QSize AnchorWidget::sizeHint() const {
 	return QSize(24, 24);
 }
 
+void AnchorWidget::enterEvent(QEnterEvent*) {
+	emit mouseEnter(this);
+}
+
+void AnchorWidget::leaveEvent(QEvent*) {
+	emit mouseLeave(this);
+}
+
 void AnchorWidget::paintEvent(QPaintEvent *) {
 	float borderWidth = m_style->borderWidth();
 	QColor background = m_style->background();

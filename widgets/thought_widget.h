@@ -55,12 +55,16 @@ signals:
 	void deactivated(ThoughtWidget*);
 	void textChanged(ThoughtWidget*);
 	void mouseScroll(ThoughtWidget*, QWheelEvent*);
+	void anchorEntered(QPoint);
+	void anchorLeft();
 
 protected slots:
 	void onTextEnter();
 	void onTextLeave();
 	void onTextClearFocus();
 	void onTextChanged();
+	void onAnchorEntered(AnchorWidget*);
+	void onAnchorLeft(AnchorWidget*);
 
 protected:
 	// Event overrides.

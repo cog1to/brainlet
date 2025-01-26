@@ -11,6 +11,7 @@
 #include "layout/base_layout.h"
 #include "widgets/style.h"
 #include "widgets/base_widget.h"
+#include "widgets/anchor_highlight_widget.h"
 #include "widgets/thought_widget.h"
 #include "widgets/scroll_area_widget.h"
 
@@ -30,8 +31,11 @@ protected:
 private:
 	BaseLayout *m_layout = nullptr;
 	State *m_state = nullptr;
+	// Main content widgets.
 	std::unordered_map<ThoughtId, ThoughtWidget*> m_widgets;
 	std::unordered_map<unsigned int, ScrollAreaWidget*> m_scrollAreas;
+	// Anchor highlight.
+	AnchorHighlightWidget m_anchorHighlight;
 	// Layout.
 	void updateLayout();
 	void layoutScrollAreas();
@@ -47,6 +51,8 @@ private slots:
 	void onWidgetDeactivated(ThoughtWidget*);
 	void onWidgetScroll(ThoughtWidget*, QWheelEvent*);
 	void onScrollAreaScroll(unsigned int, int);
+	void onAnchorEntered(QPoint);
+	void onAnchorLeft();
 };
 
 #endif

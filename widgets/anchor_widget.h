@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QWidget>
 #include <QBrush>
+#include <QEnterEvent>
 
 #include "widgets/style.h"
 #include "widgets/base_widget.h"
@@ -23,9 +24,15 @@ public:
 	// Size.
 	static constexpr QSize defaultSize = QSize(24, 24);
 
+signals:
+	void mouseEnter(AnchorWidget*);
+	void mouseLeave(AnchorWidget*);
+
 protected:
 	// Event overrides.
 	void paintEvent(QPaintEvent *event) override;
+	void enterEvent(QEnterEvent *) override;
+	void leaveEvent(QEvent *) override;
 	// Members.
 	bool m_active;
 };

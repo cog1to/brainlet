@@ -17,7 +17,7 @@ BaseCanvasWidget::BaseCanvasWidget(
 	QWidget *parent,
 	Style *style,
 	BaseLayout *layout
-) : BaseWidget(parent, style) {
+) : BaseWidget(parent, style), m_anchorHighlight(nullptr, style) {
 	m_layout = layout;
 
 	setStyleSheet(
@@ -303,6 +303,16 @@ ThoughtWidget *BaseCanvasWidget::createWidget(
 		this, SLOT(onWidgetScroll(ThoughtWidget*, QWheelEvent*))
 	);
 
+	QObject::connect(
+		widget, SIGNAL(anchorEntered(QPoint)),
+		this, SLOT(onAnchorEntered(QPoint))
+	);
+
+	QObject::connect(
+		widget, SIGNAL(anchorLeft()),
+		this, SLOT(onAnchorLeft())
+	);
+
 	return widget;
 }
 
@@ -391,4 +401,22 @@ void BaseCanvasWidget::onScrollAreaScroll(unsigned int id, int value) {
 	updateLayout();
 	// Repaint to update connections.
 	update();
+}
+
+void BaseCanvasWidget::onAnchorEntered(QPoint center) {
+	const QSize highlightSize(20, 20);
+
+	m_anchorHighlight.setGeometry(
+		center.x() - highlightSize.width() / 2,
+		center.y() - highlightSize.height() / 2,
+		highlightSize.width(),
+		highlightSize.height()
+	);
+
+	m_anchorHighlight.setParent(this);
+	m_anchorHighlight.show();
+}
+
+void BaseCanvasWidget::onAnchorLeft() {
+	m_anchorHighlight.setParent(nullptr);
 }
