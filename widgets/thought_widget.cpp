@@ -16,9 +16,9 @@ ThoughtWidget::ThoughtWidget(
 	bool hasChild,
 	bool hasLink
 ): BaseWidget(parent, style),
-	m_anchorLink(this, style, hasLink),
-	m_anchorParent(this, style, hasParent),
-	m_anchorChild(this, style, hasChild),
+	m_anchorLink(this, style, AnchorType::Link, hasLink),
+	m_anchorParent(this, style, AnchorType::Parent, hasParent),
+	m_anchorChild(this, style, AnchorType::Child, hasChild),
 	m_textEdit(this, style, readOnly, "")
 {
 	m_id = id;
@@ -50,6 +50,10 @@ ThoughtWidget::ThoughtWidget(
 		QObject::connect(
 			widget, SIGNAL(mouseLeave(AnchorWidget*)),
 			this, SLOT(onAnchorLeft(AnchorWidget*))
+		);
+		QObject::connect(
+			widget, SIGNAL(mouseMove(AnchorWidget*, QPoint)),
+			this, SLOT(onAnchorMove(AnchorWidget*, QPoint))
 		);
 	}
 
@@ -132,6 +136,20 @@ AnchorPoint ThoughtWidget::getAnchorFrom(ConnectionType type) {
 				.x = point.x(), .y = point.y(),
 				.dx = -1.0, .dy = 0
 			};
+	}
+
+	assert(false);
+	return AnchorPoint{};
+}
+
+AnchorPoint ThoughtWidget::getAnchorFrom(AnchorType type) {
+	switch (type) {
+		case AnchorType::Parent:
+			return getAnchorTo(ConnectionType::child);
+		case AnchorType::Child:
+			return getAnchorFrom(ConnectionType::child);
+		case AnchorType::Link:
+			return getAnchorFrom(ConnectionType::link);
 	}
 
 	assert(false);
@@ -274,11 +292,17 @@ void ThoughtWidget::onAnchorEntered(AnchorWidget* widget) {
 		rect.y() + rect.height() / 2
 	);
 
-	emit anchorEntered(mapTo(parentWidget(), center));
+	emit anchorEntered(this, widget->type(), mapTo(parentWidget(), center));
 }
 
 void ThoughtWidget::onAnchorLeft(AnchorWidget*) {
 	emit anchorLeft();
+}
+
+void ThoughtWidget::onAnchorMove(AnchorWidget* widget, QPoint point) {
+	emit anchorMoved(
+		widget->mapTo(parentWidget(), point)
+	);
 }
 
 // Draw and layout

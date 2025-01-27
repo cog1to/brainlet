@@ -5,20 +5,24 @@
 #include <QWidget>
 #include <QBrush>
 #include <QEnterEvent>
+#include <QMouseEvent>
 
 #include "widgets/style.h"
 #include "widgets/base_widget.h"
+
+enum AnchorType { Link, Parent, Child };
 
 class AnchorWidget: public BaseWidget {
 	Q_OBJECT
 
 public:
 	// Constructor.
-	AnchorWidget(QWidget*, Style*, bool);
+	AnchorWidget(QWidget*, Style*, AnchorType, bool);
 	~AnchorWidget();
 	// Properties.
 	const bool active() const;
 	void setActive(bool);
+	const AnchorType type() const;
 	// Method overrides.
 	QSize sizeHint() const override;
 	// Size.
@@ -27,14 +31,23 @@ public:
 signals:
 	void mouseEnter(AnchorWidget*);
 	void mouseLeave(AnchorWidget*);
+	void mouseMove(AnchorWidget*, QPoint);
 
 protected:
 	// Event overrides.
-	void paintEvent(QPaintEvent *event) override;
-	void enterEvent(QEnterEvent *) override;
-	void leaveEvent(QEvent *) override;
+	void paintEvent(QPaintEvent*) override;
+	void enterEvent(QEnterEvent*) override;
+	void leaveEvent(QEvent*) override;
+	void mousePressEvent(QMouseEvent*) override;
+	void mouseReleaseEvent(QMouseEvent*) override;
+	void mouseMoveEvent(QMouseEvent*) override;
+
+private:
 	// Members.
+	AnchorType m_type;
 	bool m_active;
+	bool m_pressed;
+	QPoint m_dragStart;
 };
 
 #endif

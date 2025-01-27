@@ -1,13 +1,23 @@
-#include "widgets/anchor_widget.h"
-
 #include <QPainter>
 #include <QWidget>
 #include <QBrush>
+#include <QMouseEvent>
 
-AnchorWidget::AnchorWidget(QWidget *parent, Style *style, bool active)
+#include "widgets/anchor_widget.h"
+
+#include <QDebug>
+
+AnchorWidget::AnchorWidget(
+	QWidget *parent,
+	Style *style,
+	AnchorType type,
+	bool active
+)
 	: BaseWidget(parent, style)
 {
 	m_active = active;
+	m_pressed = false;
+	m_type = type;
 }
 
 AnchorWidget::~AnchorWidget() {}
@@ -21,6 +31,10 @@ void AnchorWidget::setActive(bool active) {
 	update();
 }
 
+const AnchorType AnchorWidget::type() const {
+	return m_type;
+}
+
 QSize AnchorWidget::sizeHint() const {
 	return QSize(24, 24);
 }
@@ -31,6 +45,31 @@ void AnchorWidget::enterEvent(QEnterEvent*) {
 
 void AnchorWidget::leaveEvent(QEvent*) {
 	emit mouseLeave(this);
+}
+
+void AnchorWidget::mousePressEvent(QMouseEvent* event) {
+	m_pressed = true;
+	m_dragStart = event->pos();
+}
+
+void AnchorWidget::mouseReleaseEvent(QMouseEvent*) {
+	m_pressed = false;
+}
+
+void AnchorWidget::mouseMoveEvent(QMouseEvent *event) {
+	if (!m_pressed)
+		return;
+
+	QPoint point = event->pos();
+	QSize current = size();
+
+	emit mouseMove(
+		this,
+		QPoint(
+			current.width() / 2 + point.x() - m_dragStart.x(),
+			current.height() / 2 + point.y() - m_dragStart.y()
+		)
+	);
 }
 
 void AnchorWidget::paintEvent(QPaintEvent *) {

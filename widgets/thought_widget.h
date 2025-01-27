@@ -49,14 +49,16 @@ public:
 	// Anchor ponts for connections.
 	AnchorPoint getAnchorFrom(ConnectionType);
 	AnchorPoint getAnchorTo(ConnectionType);
+	AnchorPoint getAnchorFrom(AnchorType);
 
 signals:
 	void activated(ThoughtWidget*);
 	void deactivated(ThoughtWidget*);
 	void textChanged(ThoughtWidget*);
 	void mouseScroll(ThoughtWidget*, QWheelEvent*);
-	void anchorEntered(QPoint);
+	void anchorEntered(ThoughtWidget*, AnchorType, QPoint);
 	void anchorLeft();
+	void anchorMoved(QPoint);
 
 protected slots:
 	void onTextEnter();
@@ -65,6 +67,7 @@ protected slots:
 	void onTextChanged();
 	void onAnchorEntered(AnchorWidget*);
 	void onAnchorLeft(AnchorWidget*);
+	void onAnchorMove(AnchorWidget*, QPoint);
 
 protected:
 	// Event overrides.

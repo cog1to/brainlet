@@ -5,9 +5,21 @@
 #include "widgets/anchor_highlight_widget.h"
 
 AnchorHighlightWidget::AnchorHighlightWidget(QWidget *parent, Style *style)
-	: BaseWidget(parent, style)
+	: BaseWidget(parent, style), m_anchor(this, style, AnchorType::Parent, true)
 {
 	setAttribute(Qt::WA_TransparentForMouseEvents, true);
+}
+
+void AnchorHighlightWidget::resizeEvent(QResizeEvent *event) {
+	QSize newSize = event->size();
+	QSize anchorSize = AnchorWidget::defaultSize;
+
+	m_anchor.setGeometry(
+		(newSize.width() - anchorSize.width()) / 2,
+		(newSize.height() - anchorSize.height()) / 2,
+		anchorSize.width(),
+		anchorSize.height()
+	);
 }
 
 void AnchorHighlightWidget::paintEvent(QPaintEvent*) {

@@ -3,8 +3,10 @@
 
 #include <QWidget>
 #include <QPaintEvent>
+#include <QResizeEvent>
 
 #include "widgets/base_widget.h"
+#include "widgets/anchor_widget.h"
 
 class AnchorHighlightWidget: public BaseWidget {
 	Q_OBJECT
@@ -12,6 +14,10 @@ class AnchorHighlightWidget: public BaseWidget {
 public:
 	AnchorHighlightWidget(QWidget*, Style*);
 	void paintEvent(QPaintEvent*) override;
+	void resizeEvent(QResizeEvent*) override;
+
+private:
+	AnchorWidget m_anchor;
 };
 
 #endif

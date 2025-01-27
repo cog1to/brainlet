@@ -122,11 +122,12 @@ void BaseCanvasWidget::paintEvent(QPaintEvent *) {
 		AnchorPoint incoming = toIt->second->getAnchorTo(connection.type);
 		qreal dx = std::abs(outgoing.x - incoming.x);
 		qreal dy = std::abs(outgoing.y - incoming.y);
+		qreal cp = controlPointRatio;
 
 		spath.moveTo(outgoing.x, outgoing.y);
 		spath.cubicTo(
-			outgoing.x + (outgoing.dx * dx * controlPointRatio), outgoing.y + (outgoing.dy * dy * controlPointRatio),
-			incoming.x + (incoming.dx * dx * controlPointRatio), incoming.y + (incoming.dy * dy * controlPointRatio),
+			outgoing.x + (outgoing.dx * dx * cp), outgoing.y + (outgoing.dy * dy * cp),
+			incoming.x + (incoming.dx * dx * cp), incoming.y + (incoming.dy * dy * cp),
 			incoming.x, incoming.y
 		);
 	}
@@ -135,6 +136,56 @@ void BaseCanvasWidget::paintEvent(QPaintEvent *) {
 	subColor.setAlpha(128);
 	painter.setPen(QPen(color, 0.5));
 	painter.drawPath(spath);
+
+	if (m_anchorHighlight.parent() != nullptr && m_anchorSource != nullptr)
+		drawAnchorConnection(painter);
+}
+
+void BaseCanvasWidget::drawAnchorConnection(QPainter& painter) {
+	assert(m_anchorHighlight.parent() !=  nullptr);
+	assert(m_anchorSource !=  nullptr);
+
+	QRect highlightCenter = m_anchorHighlight.geometry();
+
+	// Incoming point is the center of the activated anchor of the ThoughtWidget.
+	AnchorPoint incoming = m_anchorSource->widget->getAnchorFrom(
+		m_anchorSource->type
+	);
+
+	// Outgoing point is the center of the higlight view, with control point
+	// mirrored.
+	AnchorPoint outgoing = AnchorPoint{
+		.x = highlightCenter.x() + highlightCenter.width() / 2.0,
+		.y = highlightCenter.y() + highlightCenter.height() / 2.0,
+		.dx = -incoming.dx,
+		.dy = -incoming.dy,
+	};
+
+	QPainterPath path;
+
+	// Add highlight path.
+	path.moveTo(outgoing.x, outgoing.y);
+	qreal dx = std::abs(outgoing.x - incoming.x);
+	qreal dy = std::abs(outgoing.y - incoming.y);
+	qreal cp = controlPointRatio;
+
+	// TODO: Revise this math. Looks kinda ok, but constants/ratios may be
+	// modified for better look & feel.
+	qreal mdx = std::max(dx, 50.0*std::min(dx/10.0, 1.0));
+	qreal mdy = std::max(dy, 50.0*std::min(dy/10.0, 1.0));
+
+	path.moveTo(outgoing.x, outgoing.y);
+	path.cubicTo(
+		outgoing.x + (outgoing.dx * mdx * cp),
+		outgoing.y + (outgoing.dy * mdy * cp),
+		incoming.x + (incoming.dx * mdx * cp),
+		incoming.y + (incoming.dy * mdy * cp),
+		incoming.x,
+		incoming.y
+	);
+
+	painter.setPen(QPen(m_style->anchorHighlight(), 1, Qt::DashLine));
+	painter.drawPath(path);
 }
 
 void BaseCanvasWidget::updateLayout() {
@@ -304,13 +355,18 @@ ThoughtWidget *BaseCanvasWidget::createWidget(
 	);
 
 	QObject::connect(
-		widget, SIGNAL(anchorEntered(QPoint)),
-		this, SLOT(onAnchorEntered(QPoint))
+		widget, SIGNAL(anchorEntered(ThoughtWidget*, AnchorType, QPoint)),
+		this, SLOT(onAnchorEntered(ThoughtWidget*, AnchorType, QPoint))
 	);
 
 	QObject::connect(
 		widget, SIGNAL(anchorLeft()),
 		this, SLOT(onAnchorLeft())
+	);
+
+	QObject::connect(
+		widget, SIGNAL(anchorMoved(QPoint)),
+		this, SLOT(onAnchorMoved(QPoint))
 	);
 
 	return widget;
@@ -403,7 +459,11 @@ void BaseCanvasWidget::onScrollAreaScroll(unsigned int id, int value) {
 	update();
 }
 
-void BaseCanvasWidget::onAnchorEntered(QPoint center) {
+void BaseCanvasWidget::onAnchorEntered(
+	ThoughtWidget* widget,
+	AnchorType type,
+	QPoint center
+) {
 	const QSize highlightSize(20, 20);
 
 	m_anchorHighlight.setGeometry(
@@ -415,8 +475,34 @@ void BaseCanvasWidget::onAnchorEntered(QPoint center) {
 
 	m_anchorHighlight.setParent(this);
 	m_anchorHighlight.show();
+
+	// Save the source for drawing connections.
+	m_anchorSource = new AnchorSource(widget, type);
 }
 
 void BaseCanvasWidget::onAnchorLeft() {
 	m_anchorHighlight.setParent(nullptr);
+
+	if (m_anchorSource != nullptr) {
+		delete m_anchorSource;
+		m_anchorSource = nullptr;
+	}
+
+	// Redraw.
+	update();
 }
+
+void BaseCanvasWidget::onAnchorMoved(QPoint point) {
+	const QSize highlightSize(20, 20);
+
+	m_anchorHighlight.setGeometry(
+		point.x() - highlightSize.width() / 2,
+		point.y() - highlightSize.height() / 2,
+		highlightSize.width(),
+		highlightSize.height()
+	);
+
+	// Redraw.
+	update();
+}
+

@@ -15,6 +15,12 @@
 #include "widgets/thought_widget.h"
 #include "widgets/scroll_area_widget.h"
 
+struct AnchorSource {
+	ThoughtWidget *widget;
+	AnchorType type;
+	AnchorSource(ThoughtWidget *w, AnchorType t): widget(w), type(t) {}
+};
+
 class BaseCanvasWidget: public BaseWidget {
 	Q_OBJECT
 
@@ -36,9 +42,11 @@ private:
 	std::unordered_map<unsigned int, ScrollAreaWidget*> m_scrollAreas;
 	// Anchor highlight.
 	AnchorHighlightWidget m_anchorHighlight;
+	AnchorSource *m_anchorSource = nullptr;
 	// Layout.
 	void updateLayout();
 	void layoutScrollAreas();
+	void drawAnchorConnection(QPainter&);
 	ThoughtWidget *cachedWidget(ThoughtId id);
 	ThoughtWidget *createWidget(const Thought*, bool);
 	ScrollAreaWidget *cachedScrollArea(unsigned int id);
@@ -51,8 +59,9 @@ private slots:
 	void onWidgetDeactivated(ThoughtWidget*);
 	void onWidgetScroll(ThoughtWidget*, QWheelEvent*);
 	void onScrollAreaScroll(unsigned int, int);
-	void onAnchorEntered(QPoint);
+	void onAnchorEntered(ThoughtWidget*, AnchorType, QPoint);
 	void onAnchorLeft();
+	void onAnchorMoved(QPoint);
 };
 
 #endif
