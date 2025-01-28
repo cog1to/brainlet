@@ -31,6 +31,10 @@ void DefaultLayout::reload() {
 
 	// Recalculate widget positions.
 	updateWidgets();
+	
+	// Dispatch event.
+	if (onUpdated != nullptr)
+		onUpdated();
 }
 
 void DefaultLayout::setSize(QSize size) {

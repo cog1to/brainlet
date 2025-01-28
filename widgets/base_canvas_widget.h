@@ -29,6 +29,9 @@ public:
 	~BaseCanvasWidget();
 	void setState(State*);
 
+signals:
+	void textChanged(ThoughtId, QString, std::function<void(bool)>);
+
 protected:
 	// Event overrides.
 	void paintEvent(QPaintEvent *) override;
@@ -62,6 +65,7 @@ private slots:
 	void onAnchorEntered(ThoughtWidget*, AnchorType, QPoint);
 	void onAnchorLeft();
 	void onAnchorMoved(QPoint);
+	void onTextConfirmed(ThoughtWidget*, QString, std::function<void(bool)>);
 };
 
 #endif

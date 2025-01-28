@@ -20,6 +20,9 @@ signals:
 	void mouseEnter();
 	void mouseLeave();
 	void focusLost();
+	void editStarted();
+	void editCanceled();
+	void editConfirmed(std::function<void(bool)>);
 
 protected:
 	void enterEvent(QEnterEvent *) override;

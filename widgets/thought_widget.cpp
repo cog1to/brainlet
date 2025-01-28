@@ -40,6 +40,18 @@ ThoughtWidget::ThoughtWidget(
 		&m_textEdit, SIGNAL(textChanged()),
 		this, SLOT(onTextChanged())
 	);
+	QObject::connect(
+		&m_textEdit, SIGNAL(editStarted()),
+		this, SLOT(onTextEdit())
+	);
+	QObject::connect(
+		&m_textEdit, SIGNAL(editCanceled()),
+		this, SLOT(onTextCancel())
+	);
+	QObject::connect(
+		&m_textEdit, SIGNAL(editConfirmed(std::function<void(bool)>)),
+		this, SLOT(onTextConfirmed(std::function<void(bool)>))
+	);
 
 	AnchorWidget *anchors[] = {&m_anchorLink, &m_anchorParent, &m_anchorChild};
 	for (AnchorWidget *widget: anchors) {
@@ -281,6 +293,20 @@ void ThoughtWidget::onTextChanged() {
 	// Save cursor because a resize can occur, and that will reset it.
 	m_cursor = m_textEdit.textCursor();
 	emit textChanged(this);
+}
+
+void ThoughtWidget::onTextEdit() {
+	m_originalText = m_text;
+}
+
+void ThoughtWidget::onTextCancel() {
+	m_text = m_originalText;
+	m_textEdit.setPlainText(m_text);
+	emit textChanged(this);
+}
+
+void ThoughtWidget::onTextConfirmed(std::function<void(bool)> callback) {
+	emit textConfirmed(this, m_textEdit.toPlainText(), callback);
 }
 
 // Anchor events

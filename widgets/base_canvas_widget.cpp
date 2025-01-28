@@ -25,6 +25,12 @@ BaseCanvasWidget::BaseCanvasWidget(
 			style->background().name(QColor::HexRgb)
 		)
 	);
+
+	// Update callback.
+	layout->onUpdated = [this]{
+		this->updateLayout();
+		this->update();
+	};
 }
 
 BaseCanvasWidget::~BaseCanvasWidget() {
@@ -44,8 +50,6 @@ void BaseCanvasWidget::setState(State *state) {
 	if (m_layout != nullptr) {
 		m_layout->setState(state);
 	}
-
-	updateLayout();
 }
 
 void BaseCanvasWidget::resizeEvent(QResizeEvent *event) {
@@ -54,8 +58,6 @@ void BaseCanvasWidget::resizeEvent(QResizeEvent *event) {
 	if (m_layout != nullptr) {
 		m_layout->setSize(event->size());
 	}
-
-	updateLayout();
 }
 
 void BaseCanvasWidget::paintEvent(QPaintEvent *) {
@@ -193,6 +195,8 @@ void BaseCanvasWidget::updateLayout() {
 		return;
 	}
 
+	QPoint cursor = mapFromGlobal(QCursor::pos());
+
 	// Central thought. TODO: remove this if possible, we should only use main map ideally.
 	const Thought *main = m_state->centralThought();
 	const std::unordered_map<ThoughtId, Thought*>* thoughts = m_state->thoughts();
@@ -226,6 +230,12 @@ void BaseCanvasWidget::updateLayout() {
 			layout.x, layout.y,
 			layout.w, layout.h
 		);
+		if (widget->isActive() || (
+			(cursor.x() >= layout.x) && (cursor.x() <= layout.x + layout.w) &&
+			(cursor.y() >= layout.y) && (cursor.y() <= layout.y + layout.h)
+		)) {
+			onWidgetActivated(widget);
+		}
 
 		// We raise the widget to prevent it being obstructed by scroll areas and
 		// any decorator/background view.
@@ -369,6 +379,11 @@ ThoughtWidget *BaseCanvasWidget::createWidget(
 		this, SLOT(onAnchorMoved(QPoint))
 	);
 
+	QObject::connect(
+		widget, SIGNAL(textConfirmed(ThoughtWidget*, QString, std::function<void(bool)>)),
+		this, SLOT(onTextConfirmed(ThoughtWidget*, QString, std::function<void(bool)>))
+	);
+
 	return widget;
 }
 
@@ -454,9 +469,6 @@ void BaseCanvasWidget::onScrollAreaScroll(unsigned int id, int value) {
 
 	// Reload layout to update visible widgets.
 	m_layout->onScroll(id, value);
-	updateLayout();
-	// Repaint to update connections.
-	update();
 }
 
 void BaseCanvasWidget::onAnchorEntered(
@@ -504,5 +516,14 @@ void BaseCanvasWidget::onAnchorMoved(QPoint point) {
 
 	// Redraw.
 	update();
+}
+
+void BaseCanvasWidget::onTextConfirmed(
+	ThoughtWidget *source,
+	QString text,
+	std::function<void(bool)> callback
+) {
+	ThoughtId id = source->id();
+	emit textChanged(id, text, callback);
 }
 

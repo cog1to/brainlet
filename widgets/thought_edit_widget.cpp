@@ -59,12 +59,20 @@ bool ThoughtEditWidget::eventFilter(QObject *obj, QEvent *event) {
 void ThoughtEditWidget::mousePressEvent(QMouseEvent* event) {
 	if (!isReadOnly() && !hasFocus()) {
 		setFocus();
+		emit editStarted();
 	}
 	QTextEdit::mousePressEvent(event);
 }
 
 void ThoughtEditWidget::keyPressEvent(QKeyEvent *event) {
 	if ((event->key() == Qt::Key_Return) || (event->key() == Qt::Key_Enter)) {
+		emit editConfirmed([this](bool result){
+			if (result) {
+				this->clearFocus();
+			}
+		});
+	} else if (event->key() == Qt::Key_Escape) {
+		emit editCanceled();
 		clearFocus();
 	} else {
 		QTextEdit::keyPressEvent(event);

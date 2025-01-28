@@ -1,6 +1,7 @@
 #include <QApplication>
 #include <QObject>
 #include <QColor>
+#include <QDebug>
 
 #include "widgets/widgets.h"
 #include "layout/default_layout.h"
@@ -56,7 +57,6 @@ int main(int argc, char *argv[]) {
 	Thought *parentThree = makeThought("Parent three", map, central->parents());
 	Thought *parentTwo = makeThought("Parent two with a very long long long name", map, central->parents());
 
-
 	// Child items.
 	makeThought("First child", map, central->children());
 	makeThought("Second jj child", map, central->children());
@@ -80,6 +80,20 @@ int main(int argc, char *argv[]) {
 
 	// Assign state.
 	widget.setState(&state);
+
+	// Editing callbacks.
+	QObject::connect(
+		&widget, &BaseCanvasWidget::textChanged,
+		[&layout, central](ThoughtId id, QString text, std::function<void(bool)> callback){
+			if (text.isEmpty()) {
+				callback(false);
+			}	else {
+				callback(true);
+				central->name() = text.toStdString();
+				layout.reload();
+			}
+		}
+	);
 
 	return app.exec();
 }

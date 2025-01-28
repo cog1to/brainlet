@@ -59,12 +59,16 @@ signals:
 	void anchorEntered(ThoughtWidget*, AnchorType, QPoint);
 	void anchorLeft();
 	void anchorMoved(QPoint);
+	void textConfirmed(ThoughtWidget*, QString, std::function<void(bool)>);
 
 protected slots:
 	void onTextEnter();
 	void onTextLeave();
 	void onTextClearFocus();
 	void onTextChanged();
+	void onTextEdit();
+	void onTextCancel();
+	void onTextConfirmed(std::function<void(bool)>);
 	void onAnchorEntered(AnchorWidget*);
 	void onAnchorLeft(AnchorWidget*);
 	void onAnchorMove(AnchorWidget*, QPoint);
@@ -89,6 +93,7 @@ private:
 	ThoughtId m_id;
 	bool m_hover = false;
 	QString m_text;
+	QString m_originalText;
 	QTextCursor m_cursor;
 	// Helpers.
 	void updateText();
