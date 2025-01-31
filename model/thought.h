@@ -7,6 +7,8 @@
 
 typedef uint64_t ThoughtId;
 
+enum ConnectionType { link, child };
+
 class Thought {
 public:
 	// Constructor and destructor.

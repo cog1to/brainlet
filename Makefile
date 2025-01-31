@@ -14,6 +14,7 @@ HEADERS := $(shell ls **/*.h)
 LAYOUTS := $(shell ls layout/*.cpp)
 MODELS := $(shell ls model/*.cpp)
 WIDGETS := $(shell ls widgets/*.cpp)
+REPO := $(shell ls entity/*.cpp)
 MOCS_H = $(wildcard widgets/*.h)
 MOCS_O = $(patsubst widgets/%.cpp,mocs/%.cpp,$(MOCS_H:.h=.moc.cpp))
 
@@ -36,7 +37,8 @@ debug: CFLAGS += -DDEBUG_GUI=1
 debug: tests
 
 # Tests
-tests: opts bin test_anchor test_thought test_resize test_edit test_base
+tests: opts bin test_anchor test_thought test_resize test_edit test_base \
+	test_memory
 
 test_anchor: mocs $(HEADERS) $(WIDGETS) tests/test_anchor.cpp
 	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
@@ -62,6 +64,12 @@ test_base: mocs $(HEADERS) $(WIDGETS) tests/test_base_canvas.cpp
 	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
 		$(MODELS) $(LAYOUTS) $(WIDGETS) $(MOCS_O) tests/test_base_canvas.cpp \
 		-o bin/test_base $(LIBDIRS) $(LIBS)
+
+test_memory: $(HEADERS) $(REPO) tests/test_memory_repository.cpp
+	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
+		$(MODELS) $(REPO) tests/test_memory_repository.cpp \
+		-o bin/test_memory
+
 
 # MOCs
 mocs: moc $(MOCS_O)
