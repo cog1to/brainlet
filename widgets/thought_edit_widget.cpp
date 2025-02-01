@@ -1,4 +1,5 @@
 #include <QColor>
+#include <QWindow>
 
 #include "widgets/thought_edit_widget.h"
 #include "widgets/style.h"
@@ -18,10 +19,10 @@ ThoughtEditWidget::ThoughtEditWidget(
 	setAcceptRichText(false);
 
 	QString stylesheet = QString(
-		"background-color: #00000000; padding: 0; color: %1; font: %2 %3pt \"%4\";"
+		"background-color: #00000000; padding: 0; color: %1; font: %2 %3px \"%4\";"
 	).arg(style->textColor().name(QColor::HexRgb))
 		.arg(style->font().bold() ? "bold" : "")
-		.arg(style->font().pointSize())
+		.arg(style->font().pixelSize())
 		.arg(style->font().family());
 	setStyleSheet(stylesheet);
 

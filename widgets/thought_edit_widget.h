@@ -14,7 +14,12 @@ class ThoughtEditWidget: public QTextEdit {
 	Q_OBJECT
 
 public:
-	ThoughtEditWidget(QWidget*, Style*, bool, std::string);
+	ThoughtEditWidget(
+		QWidget* parent,
+		Style* style,
+		bool ro,
+		std::string text
+	);
 
 signals:
 	void mouseEnter();

@@ -33,6 +33,9 @@ Style::Style(
 }
 
 Style& Style::defaultStyle() {
+	static QFont font = QFont("Noto Sans");
+	font.setPixelSize(12);
+
 	static Style style(
 		QColor(23, 43, 52, 255),
 		QColor(16, 31, 38, 128),
@@ -40,7 +43,7 @@ Style& Style::defaultStyle() {
 		QColor(248, 144, 87, 255),
 		2.0,
 		QColor(248, 144, 87, 255),
-		QFont("Noto Sans", 12),
+		font,
 		QColor(228, 83, 75, 255),
 		QColor(215, 221, 232, 255),
 		QColor(0, 0, 0, 192),

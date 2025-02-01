@@ -9,6 +9,15 @@ LIBS = -lQt6Core -lQt6Widgets -lQt6Gui -lQt6DBus
 CFLAGS = ${FLAGS}
 # Utils
 MOC = ${QTDIR}/libexec/moc
+# MacOS overrides
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+	CXX = /opt/homebrew/opt/llvm/bin/clang++
+	LIBDIRS = -F${QTDIR}/lib
+	LIBS = -framework QtWidgets -framework QtCore -framework QtGui -framework QtDBus
+	MOC = ${QTDIR}/share/qt/libexec/moc
+	CFLAGS += -DDARWIN=1
+endif
 # Files
 HEADERS := $(shell ls **/*.h)
 LAYOUTS := $(shell ls layout/*.cpp)
