@@ -14,6 +14,7 @@ public:
 	void reload() override;
 	void setSize(QSize) override;
 	void setState(State*) override;
+	const ThoughtId* rootId() const override;
 	const std::unordered_map<ThoughtId, ItemLayout>* items() const override;
 	const std::unordered_map<unsigned int, ScrollAreaLayout>* scrollAreas() const override;
 	const std::vector<ItemConnection>* connections() const override;

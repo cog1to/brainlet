@@ -22,6 +22,7 @@ public:
 	virtual void setStyle(Style*);
 	virtual void reload() = 0;
 	// Layout model.
+	virtual const ThoughtId* rootId() const = 0;
 	virtual const std::unordered_map<ThoughtId, ItemLayout>* items() const = 0;
 	virtual const std::unordered_map<unsigned int, ScrollAreaLayout>* scrollAreas() const = 0;
 	virtual const std::vector<ItemConnection>* connections() const = 0;

@@ -45,13 +45,6 @@ BaseCanvasWidget::~BaseCanvasWidget() {
 	}
 }
 
-void BaseCanvasWidget::setState(State *state) {
-	m_state = state;
-	if (m_layout != nullptr) {
-		m_layout->setState(state);
-	}
-}
-
 void BaseCanvasWidget::resizeEvent(QResizeEvent *event) {
 	QWidget::resizeEvent(event);
 
@@ -61,7 +54,7 @@ void BaseCanvasWidget::resizeEvent(QResizeEvent *event) {
 }
 
 void BaseCanvasWidget::paintEvent(QPaintEvent *) {
-	if (m_layout == nullptr || m_state == nullptr) {
+	if (m_layout == nullptr) {
 		return;
 	}
 
@@ -191,15 +184,14 @@ void BaseCanvasWidget::drawAnchorConnection(QPainter& painter) {
 }
 
 void BaseCanvasWidget::updateLayout() {
-	if (m_layout == nullptr || m_state == nullptr) {
+	if (m_layout == nullptr)
 		return;
-	}
+
+	const ThoughtId *main = m_layout->rootId();
+	if (main == nullptr)
+		return;
 
 	QPoint cursor = mapFromGlobal(QCursor::pos());
-
-	// Central thought. TODO: remove this if possible, we should only use main map ideally.
-	const Thought *main = m_state->centralThought();
-	const std::unordered_map<ThoughtId, Thought*>* thoughts = m_state->thoughts();
 	const std::unordered_map<ThoughtId, ItemLayout> *items = m_layout->items();
 
 	// Layout scroll areas first.
@@ -209,16 +201,11 @@ void BaseCanvasWidget::updateLayout() {
 	std::unordered_map<ThoughtId, ItemLayout>::const_iterator it;
 	for (it = items->begin(); it != items->end(); it++) {
 		ThoughtWidget *widget = cachedWidget(it->first);
-
-		// TODO: remove this. relying on central/non-central is not good.
-		if (main->id() == it->first) {
-			if (widget == nullptr) {
-				widget = createWidget(main, false);
-			}
-		} else if (auto found = thoughts->find(it->first); found != thoughts->end()) {
-			if (widget == nullptr) {
-				widget = createWidget(found->second, true);
-			}
+		if (widget == nullptr) {
+			widget = createWidget(it->second, it->first != *main);
+		} else {
+			if (widget->text() != *it->second.name)
+				widget->setText(*it->second.name);
 		}
 
 		// Save the widget to the cache.
@@ -251,7 +238,7 @@ void BaseCanvasWidget::updateLayout() {
 	// Remove unused widgets.
 	std::unordered_map<ThoughtId, ThoughtWidget*>::iterator wit;
 	for (wit = m_widgets.begin(); wit != m_widgets.end(); wit++) {
-		if (wit->first == main->id()) {
+		if (wit->first == *main) {
 			continue;
 		}
 
@@ -332,16 +319,16 @@ ThoughtWidget *BaseCanvasWidget::cachedWidget(ThoughtId id) {
 }
 
 ThoughtWidget *BaseCanvasWidget::createWidget(
-	const Thought *thought,
+	const ItemLayout& layout,
 	bool readonly
 ) {
 	ThoughtWidget *widget = new ThoughtWidget(
 		this,
 		m_style,
-		thought->id(),
+		layout.id,
 		readonly,
-		thought->name(),
-		thought->hasParents(), thought->hasChildren(), thought->hasLinks()
+		*layout.name,
+		layout.hasParents, layout.hasChildren, layout.hasLinks
 	);
 
 	QObject::connect(

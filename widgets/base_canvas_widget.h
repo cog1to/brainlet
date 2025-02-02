@@ -27,7 +27,6 @@ class BaseCanvasWidget: public BaseWidget {
 public:
 	BaseCanvasWidget(QWidget*, Style*, BaseLayout*);
 	~BaseCanvasWidget();
-	void setState(State*);
 
 signals:
 	void textChanged(ThoughtId, QString, std::function<void(bool)>);
@@ -39,7 +38,6 @@ protected:
 
 private:
 	BaseLayout *m_layout = nullptr;
-	State *m_state = nullptr;
 	// Main content widgets.
 	std::unordered_map<ThoughtId, ThoughtWidget*> m_widgets;
 	std::unordered_map<unsigned int, ScrollAreaWidget*> m_scrollAreas;
@@ -51,7 +49,7 @@ private:
 	void layoutScrollAreas();
 	void drawAnchorConnection(QPainter&);
 	ThoughtWidget *cachedWidget(ThoughtId id);
-	ThoughtWidget *createWidget(const Thought*, bool);
+	ThoughtWidget *createWidget(const ItemLayout&, bool);
 	ScrollAreaWidget *cachedScrollArea(unsigned int id);
 	ScrollAreaWidget *createScrollArea(unsigned int id, ScrollBarPos);
 	// Layout constants.

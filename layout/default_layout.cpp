@@ -31,7 +31,7 @@ void DefaultLayout::reload() {
 
 	// Recalculate widget positions.
 	updateWidgets();
-	
+
 	// Dispatch event.
 	if (onUpdated != nullptr)
 		onUpdated();
@@ -137,11 +137,16 @@ void DefaultLayout::updateWidgets() {
 	// Position the central element.
 	QSize centralSize = widgetSize(thought->name(), m_size.width() * 0.4);
 	ItemLayout centralLayout = ItemLayout(
+		thought->id(),
+		&thought->name(),
 		(m_size.width() - centralSize.width()) / 2,
 		(m_size.height() - centralSize.height()) / 2,
 		centralSize.width(),
 		centralSize.height(),
-		true
+		true,
+		thought->hasParents(),
+		thought->hasChildren(),
+		thought->hasLinks()
 	);
 
 	// Save the central element.
@@ -272,10 +277,16 @@ void DefaultLayout::layoutVerticalSide(
 		Thought *thought = sorted[idx];
 
 		ItemLayout layout(
-			rect.x() + (rect.width() - size.width()) / 2, y,
+			thought->id(),
+			&thought->name(),
+			rect.x() + (rect.width() - size.width()) / 2,
+			y,
 			size.width(),
 			size.height(),
-			true
+			true,
+			thought->hasParents(),
+			thought->hasChildren(),
+			thought->hasLinks()
 		);
 
 		m_layout.insert_or_assign(thought->id(), layout);
@@ -379,11 +390,16 @@ void DefaultLayout::layoutHorizontalSide(
 			);
 
 			ItemLayout layout(
+				thought->id(),
+				&thought->name(),
 				x + (columnWidth - size.width()) / 2,
 				y + ((rect.height() - height) / 2) + (row * m_widgetHeight),
 				size.width(),
 				size.height(),
-				true
+				true,
+				thought->hasParents(),
+				thought->hasChildren(),
+				thought->hasLinks()
 			);
 
 			m_layout.insert_or_assign(thought->id(), layout);
@@ -429,6 +445,12 @@ QSize DefaultLayout::widgetSize(std::string text, int maxWidth) {
 		actualWidth,
 		sizeHint.height()
 	);
+}
+
+const ThoughtId* DefaultLayout::rootId() const {
+	if (m_state == nullptr)
+		return nullptr;
+	return m_state->centralThought()->idPtr();
 }
 
 const std::unordered_map<ThoughtId, ItemLayout>* DefaultLayout::items() const {
