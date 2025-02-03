@@ -10,7 +10,7 @@ BaseLayout::BaseLayout(Style *style)
 	m_style = style;
 }
 
-void BaseLayout::setState(State* state) {
+void BaseLayout::setState(const State* state) {
 	m_state = state;
 	reload();
 }

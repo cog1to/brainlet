@@ -1,4 +1,5 @@
 #include <QColor>
+#include <QGuiApplication>
 
 #include "widgets/thought_edit_widget.h"
 #include "widgets/style.h"
@@ -12,6 +13,11 @@ ThoughtEditWidget::ThoughtEditWidget(
 	: QTextEdit(parent)
 {
 	setReadOnly(readOnly);
+	if (readOnly) {
+		setTextInteractionFlags(Qt::NoTextInteraction);
+		setCursor(Qt::ArrowCursor);
+	}
+
 	setFrameStyle(QFrame::NoFrame);
 	setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -34,10 +40,14 @@ ThoughtEditWidget::ThoughtEditWidget(
 }
 
 void ThoughtEditWidget::enterEvent(QEnterEvent*) {
+	// TODO: Is there a better way to do this?
+	QGuiApplication::setOverrideCursor(isReadOnly() ? Qt::ArrowCursor : Qt::IBeamCursor);
 	emit mouseEnter();
 }
 
 void ThoughtEditWidget::leaveEvent(QEvent*) {
+	// TODO: Is there a better way to do this?
+	QGuiApplication::setOverrideCursor(Qt::ArrowCursor);
 	emit mouseLeave();
 }
 
@@ -57,7 +67,9 @@ bool ThoughtEditWidget::eventFilter(QObject *obj, QEvent *event) {
 // Focus and keyboard.
 
 void ThoughtEditWidget::mousePressEvent(QMouseEvent* event) {
-	if (!isReadOnly() && !hasFocus()) {
+	if (isReadOnly()) {
+		emit clicked();
+	} else if (!isReadOnly() && !hasFocus()) {
 		setFocus();
 		emit editStarted();
 	}

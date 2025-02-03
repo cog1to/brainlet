@@ -30,11 +30,14 @@ public:
 
 signals:
 	void textChanged(ThoughtId, QString, std::function<void(bool)>);
+	void thoughtSelected(ThoughtId);
+	void onShown();
 
 protected:
 	// Event overrides.
 	void paintEvent(QPaintEvent *) override;
 	void resizeEvent(QResizeEvent *) override;
+	void showEvent(QShowEvent *) override;
 
 private:
 	BaseLayout *m_layout = nullptr;
@@ -56,6 +59,7 @@ private:
 	static constexpr qreal controlPointRatio = 0.5;
 
 private slots:
+	void onWidgetClicked(ThoughtWidget*);
 	void onWidgetActivated(ThoughtWidget*);
 	void onWidgetDeactivated(ThoughtWidget*);
 	void onWidgetScroll(ThoughtWidget*, QWheelEvent*);

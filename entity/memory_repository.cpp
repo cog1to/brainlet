@@ -20,13 +20,26 @@ MemoryRepository::~MemoryRepository() {
 }
 
 bool MemoryRepository::select(ThoughtId id) {
-	loadState(id);
 	m_currentId = id;
+	loadState(id);
 	return true;
 }
 
 const State* MemoryRepository::getState() const {
 	return m_state;
+}
+
+bool MemoryRepository::updateThought(ThoughtId id, std::string& name) {
+	if (name.empty())
+		return false;
+
+	if (auto thought = getThought(id); thought != nullptr) {
+		thought->name = name;
+		loadState(m_currentId);
+		return true;
+	}
+
+	return false;
 }
 
 // Helpers.
@@ -151,8 +164,9 @@ void MemoryRepository::loadState(ThoughtId rootId) {
 	}
 
 	// Cross-links.
-	std::vector<ThoughtId>* neighborList[] = { &children, &parents, &links, &siblingIds };
-	for (auto *list: neighborList) {
+	std::vector<ThoughtId>* neighborList[] = { &links, &siblingIds, &children, &parents };
+	for (int i = 0; i < 4; i++) {
+		auto *list = neighborList[i];
 		for (auto& id: *list) {
 			if (auto node = siblings->find(id); node != siblings->end()) {
 				Thought *thought = node->second;
@@ -164,9 +178,24 @@ void MemoryRepository::loadState(ThoughtId rootId) {
 				thought->children() = nchilds;
 
 				std::vector<ConnectionEntity> linkConns = getLinks(id);
+
 				std::vector<ThoughtId> nlinks;
-				for (auto &c: linkConns)
-					nlinks.push_back((c.to == id) ? c.from : c.to);
+				for (auto &c: linkConns) {
+					ThoughtId targetId = (c.to == id) ? c.from : c.to;
+
+					bool alreadyLinked = false;
+					for (int j = 0; j < i; j++) {
+						if (listContains(*neighborList[j], targetId)) {
+							alreadyLinked = true;
+							break;
+						}
+					}
+
+					if (!alreadyLinked) {
+						nlinks.push_back(targetId);
+					}
+				}
+
 				thought->links() = nlinks;
 			}
 		}

@@ -18,13 +18,14 @@ public:
 	~MemoryRepository();
 	bool select(ThoughtId) override;
 	const State* getState() const override;
+	bool updateThought(ThoughtId, std::string&) override;
 
 private:
 	std::vector<ThoughtEntity> m_thoughts;
 	std::vector<ConnectionEntity> m_connections;
 	ThoughtId m_rootId;
-	State *m_state = nullptr;
 	ThoughtId m_currentId;
+	State *m_state = nullptr;
 	// Helpers.
 	void loadState(ThoughtId);
 	ThoughtEntity *getThought(ThoughtId);

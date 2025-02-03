@@ -23,6 +23,7 @@ signals:
 	void editStarted();
 	void editCanceled();
 	void editConfirmed(std::function<void(bool)>);
+	void clicked();
 
 protected:
 	void enterEvent(QEnterEvent *) override;

@@ -5,6 +5,7 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QWidget>
+#include <QShowEvent>
 
 #include "layout/base_layout.h"
 #include "layout/scroll_area_layout.h"
@@ -43,6 +44,10 @@ BaseCanvasWidget::~BaseCanvasWidget() {
 	for (sc = m_scrollAreas.begin(); sc != m_scrollAreas.end(); sc++) {
 		delete sc->second;
 	}
+}
+
+void BaseCanvasWidget::showEvent(QShowEvent *) {
+	emit onShown();
 }
 
 void BaseCanvasWidget::resizeEvent(QResizeEvent *event) {
@@ -204,6 +209,7 @@ void BaseCanvasWidget::updateLayout() {
 		if (widget == nullptr) {
 			widget = createWidget(it->second, it->first != *main);
 		} else {
+			widget->setReadOnly(it->first != *main);
 			if (widget->text() != *it->second.name)
 				widget->setText(*it->second.name);
 		}
@@ -332,40 +338,37 @@ ThoughtWidget *BaseCanvasWidget::createWidget(
 	);
 
 	QObject::connect(
+		widget, SIGNAL(clicked(ThoughtWidget*)),
+		this, SLOT(onWidgetClicked(ThoughtWidget*))
+	);
+	QObject::connect(
 		widget, SIGNAL(activated(ThoughtWidget*)),
 		this, SLOT(onWidgetActivated(ThoughtWidget*))
 	);
-
 	QObject::connect(
 		widget, SIGNAL(deactivated(ThoughtWidget*)),
 		this, SLOT(onWidgetDeactivated(ThoughtWidget*))
 	);
-
 	QObject::connect(
 		widget, SIGNAL(textChanged(ThoughtWidget*)),
 		this, SLOT(onWidgetActivated(ThoughtWidget*))
 	);
-
 	QObject::connect(
 		widget, SIGNAL(mouseScroll(ThoughtWidget*, QWheelEvent*)),
 		this, SLOT(onWidgetScroll(ThoughtWidget*, QWheelEvent*))
 	);
-
 	QObject::connect(
 		widget, SIGNAL(anchorEntered(ThoughtWidget*, AnchorType, QPoint)),
 		this, SLOT(onAnchorEntered(ThoughtWidget*, AnchorType, QPoint))
 	);
-
 	QObject::connect(
 		widget, SIGNAL(anchorLeft()),
 		this, SLOT(onAnchorLeft())
 	);
-
 	QObject::connect(
 		widget, SIGNAL(anchorMoved(QPoint)),
 		this, SLOT(onAnchorMoved(QPoint))
 	);
-
 	QObject::connect(
 		widget, SIGNAL(textConfirmed(ThoughtWidget*, QString, std::function<void(bool)>)),
 		this, SLOT(onTextConfirmed(ThoughtWidget*, QString, std::function<void(bool)>))
@@ -375,6 +378,10 @@ ThoughtWidget *BaseCanvasWidget::createWidget(
 }
 
 // Slots
+
+void BaseCanvasWidget::onWidgetClicked(ThoughtWidget* widget) {
+	emit thoughtSelected(widget->id());
+}
 
 void BaseCanvasWidget::onWidgetActivated(ThoughtWidget* widget) {
 	QPoint wpos = widget->pos();

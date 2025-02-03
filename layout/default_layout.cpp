@@ -44,7 +44,7 @@ void DefaultLayout::setSize(QSize size) {
 	reload();
 }
 
-void DefaultLayout::setState(State *state) {
+void DefaultLayout::setState(const State *state) {
 	m_state = state;
 	m_connections.clear();
 	m_subconnections.clear();

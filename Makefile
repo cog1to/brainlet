@@ -13,10 +13,15 @@ MOC = ${QTDIR}/libexec/moc
 HEADERS := $(shell ls **/*.h)
 LAYOUTS := $(shell ls layout/*.cpp)
 MODELS := $(shell ls model/*.cpp)
-WIDGETS := $(shell ls widgets/*.cpp)
 REPO := $(shell ls entity/*.cpp)
+# Widgets
+WIDGETS := $(shell ls widgets/*.cpp)
 MOCS_H = $(wildcard widgets/*.h)
 MOCS_O = $(patsubst widgets/%.cpp,mocs/%.cpp,$(MOCS_H:.h=.moc.cpp))
+# Presenters
+PRESENTERS := $(shell ls presenters/*.cpp)
+PRESENTERS_MOCS_H = $(wildcard presenters/*.h)
+PRESENTERS_MOCS_O = $(patsubst presenters/%.cpp,mocs/%.cpp,$(PRESENTERS_MOCS_H:.h=.moc.cpp))
 
 # Main target
 all: tests
@@ -70,9 +75,19 @@ test_memory: $(HEADERS) $(REPO) tests/test_memory_repository.cpp
 		$(MODELS) $(REPO) tests/test_memory_repository.cpp \
 		-o bin/test_memory
 
+test_presenter: mocs $(HEADERS) $(REPO) tests/test_presenter.cpp
+	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
+		$(MODELS) $(REPO) $(WIDGETS) $(PRESENTERS) $(LAYOUTS) \
+		$(MOCS_O) $(PRESENTERS_MOCS_O) \
+		tests/test_presenter.cpp \
+		-o bin/test_presenter $(LIBDIRS) $(LIBS)
 
 # MOCs
-mocs: moc $(MOCS_O)
+mocs: moc $(MOCS_O) $(PRESENTERS_MOCS_O)
 
-mocs/%.moc.cpp: widgets/%.h
+mocs/%widget.moc.cpp: widgets/%widget.h
 	$(MOC) $< -o $@
+
+mocs/%presenter.moc.cpp: presenters/%presenter.h
+	$(MOC) $< -o $@
+

@@ -52,6 +52,10 @@ ThoughtWidget::ThoughtWidget(
 		&m_textEdit, SIGNAL(editConfirmed(std::function<void(bool)>)),
 		this, SLOT(onTextConfirmed(std::function<void(bool)>))
 	);
+	QObject::connect(
+		&m_textEdit, SIGNAL(clicked()),
+		this, SLOT(onClick())
+	);
 
 	AnchorWidget *anchors[] = {&m_anchorLink, &m_anchorParent, &m_anchorChild};
 	for (AnchorWidget *widget: anchors) {
@@ -116,7 +120,13 @@ const bool ThoughtWidget::readOnly() const {
 }
 
 void ThoughtWidget::setReadOnly(bool value) {
+	if (value == m_textEdit.isReadOnly())
+		return;
+
 	m_textEdit.setReadOnly(value);
+	m_textEdit.setTextInteractionFlags(
+		value ? Qt::NoTextInteraction : Qt::TextEditorInteraction
+	);
 }
 
 const bool ThoughtWidget::isActive() const {
@@ -256,6 +266,10 @@ QSize ThoughtWidget::sizeForWidth(int width) const {
 }
 
 // Text edit events
+
+void ThoughtWidget::onClick() {
+	emit clicked(this);
+}
 
 void ThoughtWidget::onTextEnter() {
 	m_hover = true;

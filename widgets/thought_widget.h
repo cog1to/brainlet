@@ -60,8 +60,10 @@ signals:
 	void anchorLeft();
 	void anchorMoved(QPoint);
 	void textConfirmed(ThoughtWidget*, QString, std::function<void(bool)>);
+	void clicked(ThoughtWidget*);
 
 protected slots:
+	void onClick();
 	void onTextEnter();
 	void onTextLeave();
 	void onTextClearFocus();

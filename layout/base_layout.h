@@ -17,7 +17,7 @@ class BaseLayout {
 public:
 	BaseLayout(Style*);
 	// State manipulation.
-	virtual void setState(State*);
+	virtual void setState(const State*);
 	virtual void setSize(QSize);
 	virtual void setStyle(Style*);
 	virtual void reload() = 0;
@@ -35,7 +35,7 @@ public slots:
 
 protected:
 	QSize m_size;
-	State *m_state = nullptr;
+	const State *m_state = nullptr;
 	Style *m_style = nullptr;
 	ThoughtWidget m_template;
 };
