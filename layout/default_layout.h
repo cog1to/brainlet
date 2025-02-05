@@ -19,6 +19,7 @@ public:
 	const std::unordered_map<unsigned int, ScrollAreaLayout>* scrollAreas() const override;
 	const std::vector<ItemConnection>* connections() const override;
 	const std::vector<ItemConnection>* subconnections() const override;
+	const QSize defaultWidgetSize() const override;
 	void onScroll(unsigned int, int) override;
 
 private:

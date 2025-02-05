@@ -49,11 +49,31 @@ void AnchorWidget::leaveEvent(QEvent*) {
 
 void AnchorWidget::mousePressEvent(QMouseEvent* event) {
 	m_pressed = true;
+	grabKeyboard();
 	m_dragStart = event->pos();
 }
 
-void AnchorWidget::mouseReleaseEvent(QMouseEvent*) {
+void AnchorWidget::mouseReleaseEvent(QMouseEvent* event) {
 	m_pressed = false;
+
+	QPoint point = event->pos();
+	QSize current = size();
+
+	emit mouseRelease(
+		this,
+		QPoint(
+			current.width() / 2 + point.x() - m_dragStart.x(),
+			current.height() / 2 + point.y() - m_dragStart.y()
+		)
+	);
+
+	// If we're still inside the anchor, reactivate.
+	if (
+		point.x() >= 0 && point.x() <= current.width() &&
+		point.y() >= 0 && point.y() <= current.height()
+	) {
+		emit mouseEnter(this);
+	}
 }
 
 void AnchorWidget::mouseMoveEvent(QMouseEvent *event) {
@@ -72,6 +92,14 @@ void AnchorWidget::mouseMoveEvent(QMouseEvent *event) {
 	);
 }
 
+void AnchorWidget::keyPressEvent(QKeyEvent *event) {
+	if (m_pressed && event->key() == Qt::Key_Escape) {
+		m_pressed = false;
+		releaseKeyboard();
+		emit mouseCancel(this);
+	}
+}
+
 void AnchorWidget::paintEvent(QPaintEvent *) {
 	float borderWidth = m_style->borderWidth();
 	QColor background = m_style->background();
@@ -85,7 +113,7 @@ void AnchorWidget::paintEvent(QPaintEvent *) {
 
 	painter.setRenderHint(QPainter::Antialiasing);
 
-	if (m_active) {
+	if (m_active || m_pressed) {
 		brush.setColor(active);
 		pen.setColor(active);
 	}

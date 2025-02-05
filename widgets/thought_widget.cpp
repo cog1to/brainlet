@@ -71,6 +71,14 @@ ThoughtWidget::ThoughtWidget(
 			widget, SIGNAL(mouseMove(AnchorWidget*, QPoint)),
 			this, SLOT(onAnchorMove(AnchorWidget*, QPoint))
 		);
+		QObject::connect(
+			widget, SIGNAL(mouseRelease(AnchorWidget*, QPoint)),
+			this, SLOT(onAnchorRelease(AnchorWidget*, QPoint))
+		);
+		QObject::connect(
+			widget, SIGNAL(mouseCancel(AnchorWidget*)),
+			this, SLOT(onAnchorCanceled(AnchorWidget*))
+		);
 	}
 
 	updateText();
@@ -94,7 +102,7 @@ const bool ThoughtWidget::hasChild() const {
 	return m_anchorChild.active();
 }
 
-void ThoughtWidget::sethHasChild(bool value) {
+void ThoughtWidget::setHasChild(bool value) {
 	m_anchorChild.setActive(value);
 }
 
@@ -343,6 +351,16 @@ void ThoughtWidget::onAnchorMove(AnchorWidget* widget, QPoint point) {
 	emit anchorMoved(
 		widget->mapTo(parentWidget(), point)
 	);
+}
+
+void ThoughtWidget::onAnchorRelease(AnchorWidget* widget, QPoint point) {
+	emit anchorReleased(
+		widget->mapTo(parentWidget(), point)
+	);
+}
+
+void ThoughtWidget::onAnchorCanceled(AnchorWidget* widget) {
+	emit anchorCanceled();
 }
 
 // Draw and layout

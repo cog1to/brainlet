@@ -35,7 +35,7 @@ public:
 	const bool hasParent() const;
 	void setHasParent(bool);
 	const bool hasChild() const;
-	void sethHasChild(bool);
+	void setHasChild(bool);
 	const bool hasLink() const;
 	void setHasLink(bool);
 	const std::string text() const;
@@ -59,6 +59,8 @@ signals:
 	void anchorEntered(ThoughtWidget*, AnchorType, QPoint);
 	void anchorLeft();
 	void anchorMoved(QPoint);
+	void anchorReleased(QPoint);
+	void anchorCanceled();
 	void textConfirmed(ThoughtWidget*, QString, std::function<void(bool)>);
 	void clicked(ThoughtWidget*);
 
@@ -74,6 +76,8 @@ protected slots:
 	void onAnchorEntered(AnchorWidget*);
 	void onAnchorLeft(AnchorWidget*);
 	void onAnchorMove(AnchorWidget*, QPoint);
+	void onAnchorRelease(AnchorWidget*, QPoint);
+	void onAnchorCanceled(AnchorWidget*);
 
 protected:
 	// Event overrides.

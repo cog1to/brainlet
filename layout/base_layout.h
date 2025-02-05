@@ -27,6 +27,8 @@ public:
 	virtual const std::unordered_map<unsigned int, ScrollAreaLayout>* scrollAreas() const = 0;
 	virtual const std::vector<ItemConnection>* connections() const = 0;
 	virtual const std::vector<ItemConnection>* subconnections() const = 0;
+	// Sizes.
+	virtual const QSize defaultWidgetSize() const = 0;
 	// Callback.
 	std::function<void()> onUpdated = nullptr;
 

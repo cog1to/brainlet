@@ -46,17 +46,25 @@ private:
 	std::unordered_map<unsigned int, ScrollAreaWidget*> m_scrollAreas;
 	// Anchor highlight.
 	AnchorHighlightWidget m_anchorHighlight;
+	// Thought/connection creation.
 	AnchorSource *m_anchorSource = nullptr;
+	ThoughtWidget m_newThought;
+	QWidget m_overlay;
 	// Layout.
 	void updateLayout();
 	void layoutScrollAreas();
 	void drawAnchorConnection(QPainter&);
+	void drawNewThoughtConnection(QPainter& painter);
 	ThoughtWidget *cachedWidget(ThoughtId id);
 	ThoughtWidget *createWidget(const ItemLayout&, bool);
 	ScrollAreaWidget *cachedScrollArea(unsigned int id);
 	ScrollAreaWidget *createScrollArea(unsigned int id, ScrollBarPos);
+	// Helpers.
+	void clearAnchor();
+	AnchorType reverseAnchorType(AnchorType type);
 	// Layout constants.
 	static constexpr qreal controlPointRatio = 0.5;
+	static constexpr int minAnchorDistance = 25;
 
 private slots:
 	void onWidgetClicked(ThoughtWidget*);
@@ -67,6 +75,8 @@ private slots:
 	void onAnchorEntered(ThoughtWidget*, AnchorType, QPoint);
 	void onAnchorLeft();
 	void onAnchorMoved(QPoint);
+	void onAnchorReleased(QPoint);
+	void onAnchorCanceled();
 	void onTextConfirmed(ThoughtWidget*, QString, std::function<void(bool)>);
 };
 

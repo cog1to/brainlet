@@ -32,6 +32,8 @@ signals:
 	void mouseEnter(AnchorWidget*);
 	void mouseLeave(AnchorWidget*);
 	void mouseMove(AnchorWidget*, QPoint);
+	void mouseRelease(AnchorWidget*, QPoint);
+	void mouseCancel(AnchorWidget*);
 
 protected:
 	// Event overrides.
@@ -41,6 +43,7 @@ protected:
 	void mousePressEvent(QMouseEvent*) override;
 	void mouseReleaseEvent(QMouseEvent*) override;
 	void mouseMoveEvent(QMouseEvent*) override;
+	void keyPressEvent(QKeyEvent *) override;
 
 private:
 	// Members.

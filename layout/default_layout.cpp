@@ -447,6 +447,8 @@ QSize DefaultLayout::widgetSize(std::string text, int maxWidth) {
 	);
 }
 
+// Getters.
+
 const ThoughtId* DefaultLayout::rootId() const {
 	if (m_state == nullptr)
 		return nullptr;
@@ -467,6 +469,13 @@ const std::vector<ItemConnection>* DefaultLayout::connections() const {
 
 const std::vector<ItemConnection>* DefaultLayout::subconnections() const {
 	return &m_subconnections;
+}
+
+const QSize DefaultLayout::defaultWidgetSize() const {
+	return QSize(
+		m_verticalWidgetWidth,
+		m_widgetHeight
+	);
 }
 
 // Utility functions.
