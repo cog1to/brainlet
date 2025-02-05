@@ -12,8 +12,8 @@ int main(int argc, char *argv[]) {
 
 	widget.setStyleSheet("background-color: #1b2b34");
 
-	AnchorWidget activeAnchor(&widget, &style, true);
-	AnchorWidget nonActiveAnchor(&widget, &style, false);
+	AnchorWidget activeAnchor(&widget, &style, AnchorType::Child, true);
+	AnchorWidget nonActiveAnchor(&widget, &style, AnchorType::Link, false);
 
 	QSize size = activeAnchor.sizeHint();
 	activeAnchor.move(

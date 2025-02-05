@@ -42,8 +42,8 @@ debug: CFLAGS += -DDEBUG_GUI=1
 debug: tests
 
 # Tests
-tests: opts bin test_anchor test_thought test_resize test_edit test_base \
-	test_memory
+tests: bin test_anchor test_thought test_resize test_edit test_base \
+	test_memory test_presenter
 
 test_anchor: mocs $(HEADERS) $(WIDGETS) tests/test_anchor.cpp
 	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
