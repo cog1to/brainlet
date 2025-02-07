@@ -19,11 +19,9 @@ BaseCanvasWidget::BaseCanvasWidget(
 	Style *style,
 	BaseLayout *layout
 ) : BaseWidget(parent, style),
-	m_anchorHighlight(this, style),
-	m_newThought(this, style, (uint64_t)0 - 1, false, "", false, false, false)
+	m_anchorHighlight(this, style)
 {
 	m_layout = layout;
-	m_newThought.hide();
 	m_anchorHighlight.hide();
 
 	setStyleSheet(
@@ -97,8 +95,10 @@ void BaseCanvasWidget::paintEvent(QPaintEvent *) {
 
 		path.moveTo(outgoing.x, outgoing.y);
 		path.cubicTo(
-			outgoing.x + (outgoing.dx * dx * controlPointRatio), outgoing.y + (outgoing.dy * dy * controlPointRatio),
-			incoming.x + (incoming.dx * dx * controlPointRatio), incoming.y + (incoming.dy * dy * controlPointRatio),
+			outgoing.x + (outgoing.dx * dx * controlPointRatio),
+			outgoing.y + (outgoing.dy * dy * controlPointRatio),
+			incoming.x + (incoming.dx * dx * controlPointRatio),
+			incoming.y + (incoming.dy * dy * controlPointRatio),
 			incoming.x, incoming.y
 		);
 	}
@@ -131,8 +131,10 @@ void BaseCanvasWidget::paintEvent(QPaintEvent *) {
 
 		spath.moveTo(outgoing.x, outgoing.y);
 		spath.cubicTo(
-			outgoing.x + (outgoing.dx * dx * cp), outgoing.y + (outgoing.dy * dy * cp),
-			incoming.x + (incoming.dx * dx * cp), incoming.y + (incoming.dy * dy * cp),
+			outgoing.x + (outgoing.dx * dx * cp),
+			outgoing.y + (outgoing.dy * dy * cp),
+			incoming.x + (incoming.dx * dx * cp),
+			incoming.y + (incoming.dy * dy * cp),
 			incoming.x, incoming.y
 		);
 	}
@@ -143,9 +145,11 @@ void BaseCanvasWidget::paintEvent(QPaintEvent *) {
 	painter.drawPath(spath);
 
 	if (m_anchorSource != nullptr) {
-		if (m_anchorHighlight.isVisible()) {
+		if (m_overThought != nullptr) {
+			drawOverThoughtConnection(painter);
+		} else if (m_anchorHighlight.isVisible()) {
 			drawAnchorConnection(painter);
-		} else if (m_newThought.isVisible()) {
+		} else if (m_newThought != nullptr && m_newThought->isVisible()) {
 			drawNewThoughtConnection(painter);
 		}
 	}
@@ -171,42 +175,16 @@ void BaseCanvasWidget::drawAnchorConnection(QPainter& painter) {
 		.dy = -incoming.dy,
 	};
 
-	QPainterPath path;
-
-	// Add highlight path.
-	path.moveTo(outgoing.x, outgoing.y);
-	qreal dx = std::abs(outgoing.x - incoming.x);
-	qreal dy = std::abs(outgoing.y - incoming.y);
-	qreal cp = controlPointRatio;
-
-	// TODO: Revise this math. Looks kinda ok, but constants/ratios may be
-	// modified for better look & feel.
-	qreal mdx = std::max(dx, 50.0*std::min(dx/10.0, 1.0));
-	qreal mdy = std::max(dy, 50.0*std::min(dy/10.0, 1.0));
-
-	path.moveTo(outgoing.x, outgoing.y);
-	path.cubicTo(
-		outgoing.x + (outgoing.dx * mdx * cp),
-		outgoing.y + (outgoing.dy * mdy * cp),
-		incoming.x + (incoming.dx * mdx * cp),
-		incoming.y + (incoming.dy * mdy * cp),
-		incoming.x,
-		incoming.y
-	);
-
-	painter.setPen(QPen(m_style->anchorHighlight(), 1, Qt::DashLine));
-	painter.drawPath(path);
+	drawConnection(painter, outgoing, incoming);
 }
 
 void BaseCanvasWidget::drawNewThoughtConnection(QPainter& painter) {
-	assert(m_newThought.isVisible());
+	assert(m_newThought != nullptr && m_newThought->isVisible());
 	assert(m_anchorSource !=  nullptr);
 
-	QRect highlightCenter = m_anchorHighlight.geometry();
-
-	// Incoming point is the center of the activated anchor of the ThoughtWidget.
+	// Incoming point is the widget's anchor.
 	AnchorType incomingType = reverseAnchorType(m_anchorSource->type);
-	AnchorPoint incoming = m_newThought.getAnchorFrom(
+	AnchorPoint incoming = m_newThought->getAnchorFrom(
 		incomingType
 	);
 
@@ -215,6 +193,31 @@ void BaseCanvasWidget::drawNewThoughtConnection(QPainter& painter) {
 		m_anchorSource->type
 	);
 
+	drawConnection(painter, outgoing, incoming);
+}
+
+void BaseCanvasWidget::drawOverThoughtConnection(QPainter& painter) {
+	assert(m_overThought != nullptr);
+	assert(m_anchorSource !=  nullptr);
+
+	// Incoming point is the center of the activated anchor of the ThoughtWidget.
+	AnchorType incomingType = reverseAnchorType(m_anchorSource->type);
+	AnchorPoint incoming = m_overThought->getAnchorFrom(
+		incomingType
+	);
+
+	// Outgoing point is from the source widget.
+	AnchorPoint outgoing = m_anchorSource->widget->getAnchorFrom(
+		m_anchorSource->type
+	);
+
+	drawConnection(painter, outgoing, incoming);
+}
+
+inline void BaseCanvasWidget::drawConnection(
+	QPainter& painter,
+	AnchorPoint outgoing, AnchorPoint incoming
+) {
 	QPainterPath path;
 
 	// Add highlight path.
@@ -541,10 +544,17 @@ void BaseCanvasWidget::onAnchorEntered(
 		highlightSize.height()
 	);
 
-	m_newThought.setHasParent(AnchorType::Child == type);
-	m_newThought.setHasLink(AnchorType::Link == type);
-	m_newThought.setHasChild(AnchorType::Parent == type);
-	m_newThought.raise();
+	if (m_newThought == nullptr) {
+		m_newThought = new ThoughtWidget(
+			this, m_style, (uint64_t)0 - 1, false, "",
+			false, false, false
+		);
+		m_newThought->setAttribute(Qt::WA_TransparentForMouseEvents, true);
+		m_newThought->setHasParent(AnchorType::Child == type);
+		m_newThought->setHasLink(AnchorType::Link == type);
+		m_newThought->setHasChild(AnchorType::Parent == type);
+		m_newThought->raise();
+	}
 
 	m_anchorHighlight.raise();
 	m_anchorHighlight.show();
@@ -575,22 +585,35 @@ void BaseCanvasWidget::onAnchorMoved(QPoint point) {
 
 	// Move "new thought" widget to the center of anchor.
 	const QSize defaultSize = m_layout->defaultWidgetSize();
-	m_newThought.setGeometry(
-		point.x() - defaultSize.width() / 2,
-		point.y() - defaultSize.height() / 2,
-		defaultSize.width(),
-		defaultSize.height()
-	);
+	if (m_newThought != nullptr) {
+		m_newThought->setGeometry(
+			point.x() - defaultSize.width() / 2,
+			point.y() - defaultSize.height() / 2,
+			defaultSize.width(),
+			defaultSize.height()
+		);
+	}
 
 	// If distance is enough, show new thought widget, otherwise show anchor.
 	if (
 		std::abs(point.x() - sourcePos.x) < minAnchorDistance &&
 		std::abs(point.y() - sourcePos.y) < minAnchorDistance
 	) {
-		m_newThought.hide();
+		m_newThought->hide();
 		m_anchorHighlight.show();
+	} else if (auto *under = widgetUnder(point); under != nullptr && under != m_anchorSource->widget) {
+		if (m_overThought == nullptr) {
+			m_overThought = under;
+			m_newThought->hide();
+			m_anchorHighlight.hide();
+			m_overThought->setHighlight(true);
+		}
 	} else {
-		m_newThought.show();
+		if (m_overThought != nullptr) {
+			m_overThought->setHighlight(false);
+			m_overThought = nullptr;
+		}
+		m_newThought->show();
 		m_anchorHighlight.hide();
 	}
 
@@ -636,7 +659,11 @@ void BaseCanvasWidget::onTextConfirmed(
 
 void BaseCanvasWidget::clearAnchor() {
 	m_anchorHighlight.hide();
-	m_newThought.hide();
+
+	if (m_newThought != nullptr) {
+		delete m_newThought;
+		m_newThought = nullptr;
+	}
 
 	if (m_anchorSource != nullptr) {
 		delete m_anchorSource;
@@ -659,5 +686,25 @@ inline AnchorType BaseCanvasWidget::reverseAnchorType(AnchorType type) {
 	// Should not reach here.
 	assert(false);
 	return AnchorType::Link;
+}
+
+ThoughtWidget *BaseCanvasWidget::widgetUnder(QPoint point) {
+	QRect geometry;
+	std::unordered_map<ThoughtId, ThoughtWidget*>::iterator it;
+
+	for (it = m_widgets.begin(); it != m_widgets.end(); it++) {
+		if (it->second->parent() == nullptr)
+			continue;
+
+		geometry = it->second->geometry();
+		if (
+			point.x() >= geometry.x() && point.x() <= geometry.x() + geometry.width() &&
+			point.y() >= geometry.y() && point.y() <= geometry.y() + geometry.height()
+		) {
+			return it->second;
+		}
+	}
+
+	return nullptr;
 }
 

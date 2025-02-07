@@ -46,6 +46,7 @@ public:
 	QSize sizeForWidth(int width) const;
 	// Current state.
 	const bool isActive() const;
+	void setHighlight(bool);
 	// Anchor ponts for connections.
 	AnchorPoint getAnchorFrom(ConnectionType);
 	AnchorPoint getAnchorTo(ConnectionType);
@@ -98,6 +99,7 @@ private:
 	// State.
 	ThoughtId m_id;
 	bool m_hover = false;
+	bool m_highlight = false;
 	QString m_text;
 	QString m_originalText;
 	QTextCursor m_cursor;

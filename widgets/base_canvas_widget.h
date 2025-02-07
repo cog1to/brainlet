@@ -48,13 +48,16 @@ private:
 	AnchorHighlightWidget m_anchorHighlight;
 	// Thought/connection creation.
 	AnchorSource *m_anchorSource = nullptr;
-	ThoughtWidget m_newThought;
+	ThoughtWidget *m_newThought = nullptr;
+	ThoughtWidget *m_overThought = nullptr;
 	QWidget m_overlay;
 	// Layout.
 	void updateLayout();
 	void layoutScrollAreas();
 	void drawAnchorConnection(QPainter&);
 	void drawNewThoughtConnection(QPainter& painter);
+	void drawOverThoughtConnection(QPainter& painter);
+	void drawConnection(QPainter& painter, AnchorPoint outgoing, AnchorPoint incoming);
 	ThoughtWidget *cachedWidget(ThoughtId id);
 	ThoughtWidget *createWidget(const ItemLayout&, bool);
 	ScrollAreaWidget *cachedScrollArea(unsigned int id);
@@ -62,6 +65,7 @@ private:
 	// Helpers.
 	void clearAnchor();
 	AnchorType reverseAnchorType(AnchorType type);
+	ThoughtWidget *widgetUnder(QPoint);
 	// Layout constants.
 	static constexpr qreal controlPointRatio = 0.5;
 	static constexpr int minAnchorDistance = 25;

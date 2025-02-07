@@ -49,7 +49,7 @@ void AnchorWidget::leaveEvent(QEvent*) {
 
 void AnchorWidget::mousePressEvent(QMouseEvent* event) {
 	m_pressed = true;
-	grabKeyboard();
+	//grabKeyboard();
 	m_dragStart = event->pos();
 }
 

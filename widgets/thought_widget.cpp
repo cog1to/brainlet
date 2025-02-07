@@ -138,7 +138,11 @@ void ThoughtWidget::setReadOnly(bool value) {
 }
 
 const bool ThoughtWidget::isActive() const {
-	return m_hover || m_textEdit.hasFocus();
+	return m_highlight || m_hover || m_textEdit.hasFocus();
+}
+
+void ThoughtWidget::setHighlight(bool value) {
+	m_highlight = value;
 }
 
 // Anchor coordinates.
@@ -377,7 +381,7 @@ void ThoughtWidget::paintEvent(QPaintEvent *event) {
 
 	QPainter painter(this);
 
-	if (m_hover || m_textEdit.hasFocus()) {
+	if (m_highlight || m_hover || m_textEdit.hasFocus()) {
 		pen.setWidth(hoverWidth);
 		QBrush brush(m_style->hoverBackground());
 		painter.setBrush(brush);
