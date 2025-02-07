@@ -13,7 +13,8 @@ public:
 		int x, int y,
 		int w, int h,
 		bool visible,
-		bool hasParents, bool hasChildren, bool hasLinks
+		bool hasParents, bool hasChildren, bool hasLinks,
+		bool rightSideLink
 	);
 	ThoughtId id;
 	const std::string *name;
@@ -22,6 +23,7 @@ public:
 	bool hasParents;
 	bool hasChildren;
 	bool hasLinks;
+	bool rightSideLink;
 };
 
 #endif

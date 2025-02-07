@@ -14,7 +14,8 @@ ThoughtWidget::ThoughtWidget(
 	std::string text,
 	bool hasParent,
 	bool hasChild,
-	bool hasLink
+	bool hasLink,
+	bool rightSideLink
 ): BaseWidget(parent, style),
 	m_anchorLink(this, style, AnchorType::Link, hasLink),
 	m_anchorParent(this, style, AnchorType::Parent, hasParent),
@@ -23,6 +24,7 @@ ThoughtWidget::ThoughtWidget(
 {
 	m_id = id;
 	m_text = QString::fromStdString(text);
+	m_rightSideLink = rightSideLink;
 
 	QObject::connect(
 		&m_textEdit, SIGNAL(mouseEnter()),
@@ -137,6 +139,14 @@ void ThoughtWidget::setReadOnly(bool value) {
 	);
 }
 
+const bool ThoughtWidget::rightSideLink() const {
+	return m_rightSideLink;
+}
+
+void ThoughtWidget::setRightSideLink(bool value) {
+	m_rightSideLink = value;
+}
+
 const bool ThoughtWidget::isActive() const {
 	return m_highlight || m_hover || m_textEdit.hasFocus();
 }
@@ -162,13 +172,14 @@ AnchorPoint ThoughtWidget::getAnchorFrom(ConnectionType type) {
 				.dx = 0, .dy = 1.0
 			};
 		case ConnectionType::link:
-			point = mapToParent(QPointF(
-				(float)anchorSize.width() / 2.0,
-				(float)size().height() / 2.0
+			QRect linkRect = m_anchorLink.geometry();
+			point = mapToParent(QPoint(
+				linkRect.x() + linkRect.width() / 2,
+				linkRect.y() + linkRect.height() / 2
 			));
 			return AnchorPoint {
 				.x = point.x(), .y = point.y(),
-				.dx = -1.0, .dy = 0
+				.dx = m_rightSideLink ? 1.0 : -1.0, .dy = 0
 			};
 	}
 
@@ -205,13 +216,14 @@ AnchorPoint ThoughtWidget::getAnchorTo(ConnectionType type) {
 				.dx = 0, .dy = -1.0
 			};
 		case ConnectionType::link:
-			point = mapToParent(QPointF(
-				(float)size().width() - (float)anchorSize.width() / 2.0,
-				(float)size().height() / 2.0
+			QRect linkRect = m_anchorLink.geometry();
+			point = mapToParent(QPoint(
+				linkRect.x() + linkRect.width() / 2,
+				linkRect.y() + linkRect.height() / 2
 			));
 			return AnchorPoint {
 				.x = point.x(), .y = point.y(),
-				.dx = 1.0, .dy = 0
+				.dx = m_rightSideLink ? 1.0 : -1.0, .dy = 0
 			};
 	}
 
@@ -411,8 +423,17 @@ void ThoughtWidget::paintEvent(QPaintEvent *event) {
 }
 
 void ThoughtWidget::resizeEvent(QResizeEvent *event) {
+	updateLayout(event->size());
+}
+
+void ThoughtWidget::wheelEvent(QWheelEvent *event) {
+	emit mouseScroll(this, event);
+}
+
+// Private
+
+void ThoughtWidget::updateLayout(QSize size) {
 	const QSize anchorSize = AnchorWidget::defaultSize;
-	const QSize size = event->size();
 
 	QRect parent(
 		(int)((float)size.width() - (float)size.width() * parentRightOffset) - anchorSize.width(),
@@ -427,9 +448,10 @@ void ThoughtWidget::resizeEvent(QResizeEvent *event) {
 	m_anchorChild.setGeometry(child);
 
 	QRect link(
-		0,
+		m_rightSideLink ? (size.width() - anchorSize.width()) : 0,
 		(int)((float)(size.height() - anchorSize.height()) / 2.0),
-		anchorSize.width(), anchorSize.height());
+		anchorSize.width(), anchorSize.height()
+	);
 	m_anchorLink.setGeometry(link);
 
 	QRect textRect(
@@ -453,12 +475,6 @@ void ThoughtWidget::resizeEvent(QResizeEvent *event) {
 		updateText();
 	}
 }
-
-void ThoughtWidget::wheelEvent(QWheelEvent *event) {
-	emit mouseScroll(this, event);
-}
-
-// Private
 
 void ThoughtWidget::updateText() {
 	const QSize anchorSize = AnchorWidget::defaultSize;

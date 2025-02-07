@@ -146,7 +146,8 @@ void DefaultLayout::updateWidgets() {
 		true,
 		thought->hasParents(),
 		thought->hasChildren(),
-		thought->hasLinks()
+		thought->hasLinks(),
+		false
 	);
 
 	// Save the central element.
@@ -162,7 +163,8 @@ void DefaultLayout::updateWidgets() {
 				m_leftSideWidth,
 				m_size.height() - (m_topSideHeight + m_sidePadding) * 2
 			),
-			ScrollBarPos::Left
+			ScrollBarPos::Left,
+			true
 		);
 	}
 
@@ -204,7 +206,8 @@ void DefaultLayout::updateWidgets() {
 				m_leftSideWidth,
 				m_size.height() - (m_topSideHeight + m_sidePadding) * 2
 			),
-			ScrollBarPos::Right
+			ScrollBarPos::Right,
+			false
 		);
 	}
 }
@@ -212,7 +215,8 @@ void DefaultLayout::updateWidgets() {
 void DefaultLayout::layoutVerticalSide(
 	const std::vector<Thought*>& sorted,
 	QRect rect,
-	ScrollBarPos scrollPos
+	ScrollBarPos scrollPos,
+	bool rightSideLink
 ) {
 	// Not enough space to layout anything, just return.
 	if (rect.width() < m_minWidgetWidth)
@@ -286,7 +290,8 @@ void DefaultLayout::layoutVerticalSide(
 			true,
 			thought->hasParents(),
 			thought->hasChildren(),
-			thought->hasLinks()
+			thought->hasLinks(),
+			rightSideLink
 		);
 
 		m_layout.insert_or_assign(thought->id(), layout);
@@ -399,7 +404,8 @@ void DefaultLayout::layoutHorizontalSide(
 				true,
 				thought->hasParents(),
 				thought->hasChildren(),
-				thought->hasLinks()
+				thought->hasLinks(),
+				false
 			);
 
 			m_layout.insert_or_assign(thought->id(), layout);

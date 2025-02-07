@@ -39,7 +39,7 @@ private:
 	void updateWidgets();
 	void loadSiblings();
 	void layoutHorizontalSide(const std::vector<Thought*>&, QRect, ScrollBarPos);
-	void layoutVerticalSide(const std::vector<Thought*>&, QRect, ScrollBarPos);
+	void layoutVerticalSide(const std::vector<Thought*>&, QRect, ScrollBarPos, bool);
 	// Sizing helpers.
 	QSize widgetSize(std::string text, int);
 	// State.

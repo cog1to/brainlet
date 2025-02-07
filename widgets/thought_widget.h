@@ -25,7 +25,15 @@ class ThoughtWidget: public BaseWidget {
 
 public:
 	// Constructor and destructor.
-	ThoughtWidget(QWidget*, Style*, ThoughtId, bool, std::string, bool, bool, bool);
+	ThoughtWidget(
+		QWidget *parent,
+		Style *style,
+		ThoughtId id,
+		bool readOnly,
+		std::string name,
+		bool hasParent, bool hasChild, bool hasLink,
+		bool rightSideLink = false
+	);
 	~ThoughtWidget();
 	// Id.
 	const ThoughtId id() const;
@@ -40,6 +48,8 @@ public:
 	void setHasLink(bool);
 	const std::string text() const;
 	void setText(std::string);
+	const bool rightSideLink() const;
+	void setRightSideLink(bool);
 	// Method override.
 	QSize sizeHint() const override;
 	// Calculates bounding rect for given width without height restriction.
@@ -100,11 +110,13 @@ private:
 	ThoughtId m_id;
 	bool m_hover = false;
 	bool m_highlight = false;
+	bool m_rightSideLink = false;
 	QString m_text;
 	QString m_originalText;
 	QTextCursor m_cursor;
 	// Helpers.
 	void updateText();
+	void updateLayout(QSize);
 };
 
 #endif

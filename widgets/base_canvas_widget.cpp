@@ -274,8 +274,12 @@ void BaseCanvasWidget::updateLayout() {
 		// Save the widget to the cache.
 		m_widgets.insert_or_assign(it->first, widget);
 
-		// Place the widget in the canvas.
 		const ItemLayout& layout = it->second;
+
+		// Set widget's link orientation.
+		widget->setRightSideLink(layout.rightSideLink);
+
+		// Place the widget in the canvas.
 		widget->setGeometry(
 			layout.x, layout.y,
 			layout.w, layout.h
