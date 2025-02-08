@@ -571,6 +571,7 @@ void BaseCanvasWidget::onAnchorEntered(
 		m_newThought->setHasParent(AnchorType::Child == type);
 		m_newThought->setHasLink(AnchorType::Link == type);
 		m_newThought->setHasChild(AnchorType::Parent == type);
+		m_newThought->setRightSideLink(type == AnchorType::Link && widget->id() == *m_layout->rootId());
 
 		// Connect signals.
 		QObject::connect(
