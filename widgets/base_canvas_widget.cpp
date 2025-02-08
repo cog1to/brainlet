@@ -228,6 +228,14 @@ inline void BaseCanvasWidget::drawConnection(
 	qreal cp2x = (incoming.dx * mdx * cp);
 	qreal cp2y = (incoming.dy * mdy * cp);
 
+	// Special case for connections that have 'left link to left link' anchor
+	// and are located on a line parallel to Ox. It avoids the connection going
+	// straight through one of the widgets.
+	if (dx > minAnchorDistance && dy < minAnchorDistance && incoming.dx == outgoing.dx) {
+		cp1y = -minAnchorDistance;
+		cp2y = -minAnchorDistance;
+	}
+
 	path.moveTo(outgoing.x, outgoing.y);
 	path.cubicTo(
 		outgoing.x + cp1x,
@@ -743,7 +751,10 @@ void BaseCanvasWidget::clearAnchor() {
 		m_anchorSource = nullptr;
 	}
 
-	m_overThought = nullptr;
+	if (m_overThought != nullptr) {
+		m_overThought->setHighlight(false);
+		m_overThought = nullptr;
+	}
 
 	update();
 }
