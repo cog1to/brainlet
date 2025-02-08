@@ -228,12 +228,30 @@ inline void BaseCanvasWidget::drawConnection(
 	qreal cp2x = (incoming.dx * mdx * cp);
 	qreal cp2y = (incoming.dy * mdy * cp);
 
-	// Special case for connections that have 'left link to left link' anchor
-	// and are located on a line parallel to Ox. It avoids the connection going
-	// straight through one of the widgets.
-	if (dx > minAnchorDistance && dy < minAnchorDistance && incoming.dx == outgoing.dx) {
+	// Special case for connections that are aligned on lines parallel to axes.
+	// It avoids the connection going straight through one of the widgets.
+	// TODO: This is really ugly. Need to think about the underlying math.
+	if (
+		dx > minAnchorDistance &&
+		dy < minAnchorDistance &&
+		incoming.dx != 0 && incoming.dx == outgoing.dx
+	) {
 		cp1y = -minAnchorDistance;
 		cp2y = -minAnchorDistance;
+	} else if (
+		dx > minAnchorDistance &&
+		dy < minAnchorDistance &&
+		incoming.dy != 0 && incoming.dy == -outgoing.dy
+	) {
+		cp1y = outgoing.dy*minAnchorDistance;
+		cp2y = incoming.dy*minAnchorDistance;
+	} else if (
+		dy > minAnchorDistance &&
+		dx < minAnchorDistance &&
+		incoming.dx != 0 && incoming.dx == outgoing.dx
+	) {
+		cp1x = outgoing.dx*minAnchorDistance;
+		cp2x = incoming.dx*minAnchorDistance;
 	}
 
 	path.moveTo(outgoing.x, outgoing.y);
@@ -453,8 +471,10 @@ void BaseCanvasWidget::connectWidget(ThoughtWidget *widget) {
 		this, SLOT(onAnchorCanceled())
 	);
 	QObject::connect(
-		widget, SIGNAL(textConfirmed(ThoughtWidget*, QString, std::function<void(bool)>)),
-		this, SLOT(onTextConfirmed(ThoughtWidget*, QString, std::function<void(bool)>))
+		widget,
+		SIGNAL(textConfirmed(ThoughtWidget*, QString, std::function<void(bool)>)),
+		this,
+		SLOT(onTextConfirmed(ThoughtWidget*, QString, std::function<void(bool)>))
 	);
 }
 
@@ -520,7 +540,10 @@ void BaseCanvasWidget::onWidgetDeactivated(ThoughtWidget* widget) {
 	update();
 }
 
-void BaseCanvasWidget::onWidgetScroll(ThoughtWidget* widget, QWheelEvent* event) {
+void BaseCanvasWidget::onWidgetScroll(
+	ThoughtWidget* widget,
+	QWheelEvent* event
+) {
 	QPointF position = event->position();
 	QPointF globalPos = widget->mapToParent(position);
 
@@ -571,7 +594,9 @@ void BaseCanvasWidget::onAnchorEntered(
 		m_newThought->setHasParent(AnchorType::Child == type);
 		m_newThought->setHasLink(AnchorType::Link == type);
 		m_newThought->setHasChild(AnchorType::Parent == type);
-		m_newThought->setRightSideLink(type == AnchorType::Link && widget->id() == *m_layout->rootId());
+		m_newThought->setRightSideLink(
+			type == AnchorType::Link && widget->id() == *m_layout->rootId()
+		);
 
 		// Connect signals.
 		QObject::connect(
@@ -579,8 +604,10 @@ void BaseCanvasWidget::onAnchorEntered(
 			this, SLOT(onCreateCanceled(ThoughtWidget*))
 		);
 		QObject::connect(
-			m_newThought, SIGNAL(textConfirmed(ThoughtWidget*, QString, std::function<void(bool)>)),
-			this, SLOT(onCreateConfirmed(ThoughtWidget*, QString, std::function<void(bool)>))
+			m_newThought,
+			SIGNAL(textConfirmed(ThoughtWidget*, QString, std::function<void(bool)>)),
+			this,
+			SLOT(onCreateConfirmed(ThoughtWidget*, QString, std::function<void(bool)>))
 		);
 		QObject::connect(
 			m_newThought, SIGNAL(textChanged(ThoughtWidget*)),
@@ -611,7 +638,9 @@ void BaseCanvasWidget::onAnchorMoved(QPoint point) {
 
 	const QSize highlightSize(20, 20);
 	// Position of the source anchor.
-	AnchorPoint sourcePos = m_anchorSource->widget->getAnchorFrom(m_anchorSource->type);
+	AnchorPoint sourcePos = m_anchorSource->widget->getAnchorFrom(
+		m_anchorSource->type
+	);
 
 	// Move higlight.
 	m_anchorHighlight.setGeometry(
@@ -639,7 +668,10 @@ void BaseCanvasWidget::onAnchorMoved(QPoint point) {
 	) {
 		m_newThought->hide();
 		m_anchorHighlight.show();
-	} else if (auto *under = widgetUnder(point); under != nullptr && under != m_anchorSource->widget) {
+	} else if (
+		auto *under = widgetUnder(point);
+		under != nullptr && under != m_anchorSource->widget
+	) {
 		if (m_overThought == nullptr) {
 			m_overThought = under;
 			m_newThought->hide();
@@ -670,7 +702,9 @@ void BaseCanvasWidget::onAnchorReleased(QPoint centerPos) {
 	// Position of the dragged anchor.
 	QRect highlightRect = m_anchorHighlight.geometry();
 	// Position of the source anchor.
-	AnchorPoint sourcePos = m_anchorSource->widget->getAnchorFrom(m_anchorSource->type);
+	AnchorPoint sourcePos = m_anchorSource->widget->getAnchorFrom(
+		m_anchorSource->type
+	);
 
 	// Don't create new thought if the diff between current point and source is
 	// too small.
@@ -785,8 +819,10 @@ ThoughtWidget *BaseCanvasWidget::widgetUnder(QPoint point) {
 
 		geometry = it->second->geometry();
 		if (
-			point.x() >= geometry.x() && point.x() <= geometry.x() + geometry.width() &&
-			point.y() >= geometry.y() && point.y() <= geometry.y() + geometry.height()
+			point.x() >= geometry.x() &&
+			point.x() <= geometry.x() + geometry.width() &&
+			point.y() >= geometry.y() &&
+			point.y() <= geometry.y() + geometry.height()
 		) {
 			return it->second;
 		}
