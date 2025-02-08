@@ -18,6 +18,13 @@ public:
 private slots:
 	void onThoughtSelected(ThoughtId);
 	void onThoughtChanged(ThoughtId, QString, std::function<void(bool)>);
+	void onThoughtCreated(
+		ThoughtId fromId,
+		ConnectionType type,
+		bool incoming,
+		QString text,
+		std::function<void(bool, ThoughtId)> callback
+	);
 	void onShown();
 
 private:

@@ -16,6 +16,11 @@ CanvasPresenter::CanvasPresenter(
 	);
 
 	QObject::connect(
+		view, SIGNAL(thoughtCreated(ThoughtId, ConnectionType, bool, QString, std::function<void(bool, ThoughtId)>)),
+		this, SLOT(onThoughtCreated(ThoughtId, ConnectionType, bool, QString, std::function<void(bool, ThoughtId)>))
+	);
+
+	QObject::connect(
 		view, SIGNAL(onShown()),
 		this, SLOT(onShown())
 	);
@@ -47,6 +52,22 @@ void CanvasPresenter::onThoughtChanged(
 	callback(result);
 
 	if (result) {
+		reloadState();
+	}
+}
+
+void CanvasPresenter::onThoughtCreated(
+	ThoughtId fromId,
+	ConnectionType connection,
+	bool incoming,
+	QString text,
+	std::function<void(bool, ThoughtId)> callback
+) {
+	std::string value = text.toStdString();
+	CreateResult result = m_repo->createThought(fromId, connection, incoming, value);
+	callback(result.success, result.id);
+
+	if (result.success) {
 		reloadState();
 	}
 }

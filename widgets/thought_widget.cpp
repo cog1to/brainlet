@@ -92,6 +92,10 @@ const ThoughtId ThoughtWidget::id() const {
 	return m_id;
 }
 
+void ThoughtWidget::setId(ThoughtId id) {
+	m_id = id;
+}
+
 const bool ThoughtWidget::hasParent() const {
 	return m_anchorParent.active();
 }
@@ -145,6 +149,7 @@ const bool ThoughtWidget::rightSideLink() const {
 
 void ThoughtWidget::setRightSideLink(bool value) {
 	m_rightSideLink = value;
+	updateLayout(size());
 }
 
 const bool ThoughtWidget::isActive() const {
@@ -153,6 +158,10 @@ const bool ThoughtWidget::isActive() const {
 
 void ThoughtWidget::setHighlight(bool value) {
 	m_highlight = value;
+}
+
+void ThoughtWidget::activate() {
+	m_textEdit.setFocus();
 }
 
 // Anchor coordinates.
@@ -341,6 +350,7 @@ void ThoughtWidget::onTextCancel() {
 	m_text = m_originalText;
 	m_textEdit.setPlainText(m_text);
 	emit textChanged(this);
+	emit textCanceled(this);
 }
 
 void ThoughtWidget::onTextConfirmed(std::function<void(bool)> callback) {

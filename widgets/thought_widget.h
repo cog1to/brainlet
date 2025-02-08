@@ -37,6 +37,7 @@ public:
 	~ThoughtWidget();
 	// Id.
 	const ThoughtId id() const;
+	void setId(ThoughtId);
 	// Properties.
 	const bool readOnly() const;
 	void setReadOnly(bool);
@@ -57,6 +58,7 @@ public:
 	// Current state.
 	const bool isActive() const;
 	void setHighlight(bool);
+	void activate();
 	// Anchor ponts for connections.
 	AnchorPoint getAnchorFrom(ConnectionType);
 	AnchorPoint getAnchorTo(ConnectionType);
@@ -74,6 +76,7 @@ signals:
 	void anchorCanceled();
 	void textConfirmed(ThoughtWidget*, QString, std::function<void(bool)>);
 	void clicked(ThoughtWidget*);
+	void textCanceled(ThoughtWidget*);
 
 protected slots:
 	void onClick();

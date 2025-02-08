@@ -273,8 +273,11 @@ void BaseCanvasWidget::updateLayout() {
 
 		const ItemLayout& layout = it->second;
 
-		// Set widget's link orientation.
+		// Set widget's link orientation and connection markers.
 		widget->setRightSideLink(layout.rightSideLink);
+		widget->setHasParent(layout.hasParents);
+		widget->setHasChild(layout.hasChildren);
+		widget->setHasLink(layout.hasLinks);
 
 		// Place the widget in the canvas.
 		widget->setGeometry(
@@ -395,6 +398,12 @@ ThoughtWidget *BaseCanvasWidget::createWidget(
 		layout.hasParents, layout.hasChildren, layout.hasLinks
 	);
 
+	connectWidget(widget);
+
+	return widget;
+}
+
+void BaseCanvasWidget::connectWidget(ThoughtWidget *widget) {
 	QObject::connect(
 		widget, SIGNAL(clicked(ThoughtWidget*)),
 		this, SLOT(onWidgetClicked(ThoughtWidget*))
@@ -439,8 +448,6 @@ ThoughtWidget *BaseCanvasWidget::createWidget(
 		widget, SIGNAL(textConfirmed(ThoughtWidget*, QString, std::function<void(bool)>)),
 		this, SLOT(onTextConfirmed(ThoughtWidget*, QString, std::function<void(bool)>))
 	);
-
-	return widget;
 }
 
 // Slots
@@ -550,10 +557,28 @@ void BaseCanvasWidget::onAnchorEntered(
 			this, m_style, (uint64_t)0 - 1, false, "",
 			false, false, false
 		);
+
+		// Initial setup.
 		m_newThought->setAttribute(Qt::WA_TransparentForMouseEvents, true);
 		m_newThought->setHasParent(AnchorType::Child == type);
 		m_newThought->setHasLink(AnchorType::Link == type);
 		m_newThought->setHasChild(AnchorType::Parent == type);
+
+		// Connect signals.
+		QObject::connect(
+			m_newThought, SIGNAL(textCanceled(ThoughtWidget*)),
+			this, SLOT(onCreateCanceled(ThoughtWidget*))
+		);
+		QObject::connect(
+			m_newThought, SIGNAL(textConfirmed(ThoughtWidget*, QString, std::function<void(bool)>)),
+			this, SLOT(onCreateConfirmed(ThoughtWidget*, QString, std::function<void(bool)>))
+		);
+		QObject::connect(
+			m_newThought, SIGNAL(textChanged(ThoughtWidget*)),
+			this, SLOT(onWidgetActivated(ThoughtWidget*))
+		);
+
+		// Draw over everything else.
 		m_newThought->raise();
 	}
 
@@ -565,7 +590,10 @@ void BaseCanvasWidget::onAnchorEntered(
 }
 
 void BaseCanvasWidget::onAnchorLeft() {
-	clearAnchor();
+	// Only clear anchors if we're not creating a new thought.
+	if (m_newThought == nullptr || !m_newThought->isVisible()) {
+		clearAnchor();
+	}
 }
 
 void BaseCanvasWidget::onAnchorMoved(QPoint point) {
@@ -644,7 +672,12 @@ void BaseCanvasWidget::onAnchorReleased(QPoint centerPos) {
 		return clearAnchor();
 	}
 
-	std::cout << "Create new thought\n";
+	if (m_overThought != nullptr) {
+		// TODO:  Implement connections.
+		std::cout << "Connect thought\n";
+	} else if (m_newThought != nullptr) {
+		setupNewThought();
+	}
 }
 
 void BaseCanvasWidget::onTextConfirmed(
@@ -656,10 +689,49 @@ void BaseCanvasWidget::onTextConfirmed(
 	emit textChanged(id, text, callback);
 }
 
+// Creation slots.
+
+void BaseCanvasWidget::onCreateCanceled(ThoughtWidget *widget) {
+	clearAnchor();
+}
+
+void BaseCanvasWidget::onCreateConfirmed(
+	ThoughtWidget *widget,
+	QString text,
+	std::function<void(bool)> checkCallback
+) {
+	if (m_anchorSource == nullptr)
+		return;
+
+	auto onCreateCallback = [this, widget, checkCallback](bool result, ThoughtId id){
+		checkCallback(result);
+		if (result) {
+			// Connect signals.
+			QObject::disconnect(widget, nullptr, this, nullptr);
+			this->connectWidget(widget);
+			// Set widget's ID and add it to the list of widgets.
+			widget->setId(id);
+			this->m_widgets.insert_or_assign(id, widget);
+			this->m_newThought = nullptr;
+			// Clear editing widgets and connections.
+			clearAnchor();
+		}
+	};
+
+	emit thoughtCreated(
+		m_anchorSource->widget->id(),
+		m_anchorSource->type == AnchorType::Link ? ConnectionType::link : ConnectionType::child,
+		m_anchorSource->type == AnchorType::Parent ? true : false,
+		text,
+		onCreateCallback
+	);
+}
+
 // Helpers.
 
 void BaseCanvasWidget::clearAnchor() {
 	m_anchorHighlight.hide();
+	m_overlay.lower();
 
 	if (m_newThought != nullptr) {
 		delete m_newThought;
@@ -711,3 +783,13 @@ ThoughtWidget *BaseCanvasWidget::widgetUnder(QPoint point) {
 	return nullptr;
 }
 
+void BaseCanvasWidget::setupNewThought() {
+	assert(m_newThought != nullptr);
+	// Activate overlay.
+	m_overlay.setGeometry(rect());
+	m_overlay.raise();
+	// Activate new thought widget.
+	m_newThought->setAttribute(Qt::WA_TransparentForMouseEvents, false);
+	m_newThought->raise();
+	m_newThought->activate();
+}

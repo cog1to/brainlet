@@ -19,6 +19,12 @@ public:
 	bool select(ThoughtId) override;
 	const State* getState() const override;
 	bool updateThought(ThoughtId, std::string&) override;
+	CreateResult createThought(
+		ThoughtId fromId,
+		ConnectionType type,
+		bool incoming,
+		std::string text
+	) override;
 
 private:
 	std::vector<ThoughtEntity> m_thoughts;

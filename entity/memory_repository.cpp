@@ -1,5 +1,6 @@
 #include <vector>
 #include <unordered_map>
+#include <ctime>
 
 #include "entity/memory_repository.h"
 #include "entity/thought_entity.h"
@@ -40,6 +41,28 @@ bool MemoryRepository::updateThought(ThoughtId id, std::string& name) {
 	}
 
 	return false;
+}
+
+CreateResult MemoryRepository::createThought(
+	ThoughtId fromId,
+	ConnectionType type,
+	bool incoming,
+	std::string name
+) {
+	if (name.empty())
+		return CreateResult(false, 0);
+
+	std::time_t result = std::time(nullptr);
+	m_thoughts.push_back(ThoughtEntity(result, name));
+
+	if (incoming) {
+		m_connections.push_back(ConnectionEntity(result, fromId, type));
+	} else {
+		m_connections.push_back(ConnectionEntity(fromId, result, type));
+	}
+
+	loadState(m_currentId);
+	return CreateResult(true, result);
 }
 
 // Helpers.

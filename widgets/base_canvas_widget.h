@@ -31,6 +31,7 @@ public:
 signals:
 	void textChanged(ThoughtId, QString, std::function<void(bool)>);
 	void thoughtSelected(ThoughtId);
+	void thoughtCreated(ThoughtId, ConnectionType, bool, QString, std::function<void(bool, ThoughtId)>);
 	void onShown();
 
 protected:
@@ -64,12 +65,14 @@ private:
 	);
 	ThoughtWidget *cachedWidget(ThoughtId id);
 	ThoughtWidget *createWidget(const ItemLayout&, bool);
+	void connectWidget(ThoughtWidget*);
 	ScrollAreaWidget *cachedScrollArea(unsigned int id);
 	ScrollAreaWidget *createScrollArea(unsigned int id, ScrollBarPos);
 	// Helpers.
 	void clearAnchor();
 	AnchorType reverseAnchorType(AnchorType type);
 	ThoughtWidget *widgetUnder(QPoint);
+	void setupNewThought();
 	// Layout constants.
 	static constexpr qreal controlPointRatio = 0.5;
 	static constexpr int minAnchorDistance = 25;
@@ -86,6 +89,8 @@ private slots:
 	void onAnchorReleased(QPoint);
 	void onAnchorCanceled();
 	void onTextConfirmed(ThoughtWidget*, QString, std::function<void(bool)>);
+	void onCreateCanceled(ThoughtWidget*);
+	void onCreateConfirmed(ThoughtWidget*, QString, std::function<void(bool)>);
 };
 
 #endif
