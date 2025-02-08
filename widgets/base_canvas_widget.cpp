@@ -76,8 +76,7 @@ void BaseCanvasWidget::paintEvent(QPaintEvent *) {
 	painter.setRenderHint(QPainter::Antialiasing, true);
 
 	QColor color = m_style->activeAnchorColor();
-
-	QPainterPath path;
+	QPen pen = QPen(color, 1);
 
 	for (auto& connection: *connections) {
 		auto fromIt = m_widgets.find(connection.from);
@@ -90,21 +89,9 @@ void BaseCanvasWidget::paintEvent(QPaintEvent *) {
 
 		AnchorPoint outgoing = fromIt->second->getAnchorFrom(connection.type);
 		AnchorPoint incoming = toIt->second->getAnchorTo(connection.type);
-		qreal dx = std::abs(outgoing.x - incoming.x);
-		qreal dy = std::abs(outgoing.y - incoming.y);
 
-		path.moveTo(outgoing.x, outgoing.y);
-		path.cubicTo(
-			outgoing.x + (outgoing.dx * dx * controlPointRatio),
-			outgoing.y + (outgoing.dy * dy * controlPointRatio),
-			incoming.x + (incoming.dx * dx * controlPointRatio),
-			incoming.y + (incoming.dy * dy * controlPointRatio),
-			incoming.x, incoming.y
-		);
+		drawConnection(painter, outgoing, incoming, pen);
 	}
-
-	painter.setPen(QPen(color, 1));
-	painter.drawPath(path);
 
 	// These connect nodes placed around the main node with each other.
 	const std::vector<ItemConnection> *subconnections = m_layout->subconnections();
@@ -112,7 +99,7 @@ void BaseCanvasWidget::paintEvent(QPaintEvent *) {
 		return;
 	}
 
-	QPainterPath spath;
+	QPen subPen = QPen(color, 0.5);
 
 	for (auto& connection: *subconnections) {
 		auto fromIt = m_widgets.find(connection.from);
@@ -125,24 +112,9 @@ void BaseCanvasWidget::paintEvent(QPaintEvent *) {
 
 		AnchorPoint outgoing = fromIt->second->getAnchorFrom(connection.type);
 		AnchorPoint incoming = toIt->second->getAnchorTo(connection.type);
-		qreal dx = std::abs(outgoing.x - incoming.x);
-		qreal dy = std::abs(outgoing.y - incoming.y);
-		qreal cp = controlPointRatio;
 
-		spath.moveTo(outgoing.x, outgoing.y);
-		spath.cubicTo(
-			outgoing.x + (outgoing.dx * dx * cp),
-			outgoing.y + (outgoing.dy * dy * cp),
-			incoming.x + (incoming.dx * dx * cp),
-			incoming.y + (incoming.dy * dy * cp),
-			incoming.x, incoming.y
-		);
+		drawConnection(painter, outgoing, incoming, subPen);
 	}
-
-	QColor subColor = color;
-	subColor.setAlpha(128);
-	painter.setPen(QPen(color, 0.5));
-	painter.drawPath(spath);
 
 	if (m_anchorSource != nullptr) {
 		if (m_overThought != nullptr) {
@@ -175,7 +147,13 @@ void BaseCanvasWidget::drawAnchorConnection(QPainter& painter) {
 		.dy = -incoming.dy,
 	};
 
-	drawConnection(painter, outgoing, incoming);
+	QPen pen(m_style->anchorHighlight(), 1, Qt::DashLine);
+
+	drawConnection(
+		painter,
+		outgoing, incoming,
+		pen
+	);
 }
 
 void BaseCanvasWidget::drawNewThoughtConnection(QPainter& painter) {
@@ -193,7 +171,13 @@ void BaseCanvasWidget::drawNewThoughtConnection(QPainter& painter) {
 		m_anchorSource->type
 	);
 
-	drawConnection(painter, outgoing, incoming);
+	QPen pen(m_style->anchorHighlight(), 1, Qt::DashLine);
+
+	drawConnection(
+		painter,
+		outgoing, incoming,
+		pen
+	);
 }
 
 void BaseCanvasWidget::drawOverThoughtConnection(QPainter& painter) {
@@ -211,14 +195,24 @@ void BaseCanvasWidget::drawOverThoughtConnection(QPainter& painter) {
 		m_anchorSource->type
 	);
 
-	drawConnection(painter, outgoing, incoming);
+	QPen pen(m_style->anchorHighlight(), 1, Qt::DashLine);
+
+	drawConnection(
+		painter,
+		outgoing, incoming,
+		pen
+	);
 }
 
 inline void BaseCanvasWidget::drawConnection(
 	QPainter& painter,
-	AnchorPoint outgoing, AnchorPoint incoming
+	AnchorPoint outgoing, AnchorPoint incoming,
+	QPen& pen
 ) {
 	QPainterPath path;
+
+	// TODO: Revise this math. Looks kinda ok, but constants/ratios may be
+	// modified for better look & feel.
 
 	// Add highlight path.
 	path.moveTo(outgoing.x, outgoing.y);
@@ -226,22 +220,25 @@ inline void BaseCanvasWidget::drawConnection(
 	qreal dy = std::abs(outgoing.y - incoming.y);
 	qreal cp = controlPointRatio;
 
-	// TODO: Revise this math. Looks kinda ok, but constants/ratios may be
-	// modified for better look & feel.
 	qreal mdx = std::max(dx, 50.0*std::min(dx/10.0, 1.0));
 	qreal mdy = std::max(dy, 50.0*std::min(dy/10.0, 1.0));
 
+	qreal cp1x = (outgoing.dx * mdx * cp);
+	qreal cp1y = (outgoing.dy * mdy * cp);
+	qreal cp2x = (incoming.dx * mdx * cp);
+	qreal cp2y = (incoming.dy * mdy * cp);
+
 	path.moveTo(outgoing.x, outgoing.y);
 	path.cubicTo(
-		outgoing.x + (outgoing.dx * mdx * cp),
-		outgoing.y + (outgoing.dy * mdy * cp),
-		incoming.x + (incoming.dx * mdx * cp),
-		incoming.y + (incoming.dy * mdy * cp),
+		outgoing.x + cp1x,
+		outgoing.y + cp1y,
+		incoming.x + cp2x,
+		incoming.y + cp2y,
 		incoming.x,
 		incoming.y
 	);
 
-	painter.setPen(QPen(m_style->anchorHighlight(), 1, Qt::DashLine));
+	painter.setPen(pen);
 	painter.drawPath(path);
 }
 
@@ -673,6 +670,8 @@ void BaseCanvasWidget::clearAnchor() {
 		delete m_anchorSource;
 		m_anchorSource = nullptr;
 	}
+
+	m_overThought = nullptr;
 
 	update();
 }

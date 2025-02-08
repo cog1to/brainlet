@@ -57,7 +57,11 @@ private:
 	void drawAnchorConnection(QPainter&);
 	void drawNewThoughtConnection(QPainter& painter);
 	void drawOverThoughtConnection(QPainter& painter);
-	void drawConnection(QPainter& painter, AnchorPoint outgoing, AnchorPoint incoming);
+	void drawConnection(
+		QPainter& painter,
+		AnchorPoint outgoing, AnchorPoint incoming,
+		QPen& pen
+	);
 	ThoughtWidget *cachedWidget(ThoughtId id);
 	ThoughtWidget *createWidget(const ItemLayout&, bool);
 	ScrollAreaWidget *cachedScrollArea(unsigned int id);
