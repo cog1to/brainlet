@@ -25,6 +25,11 @@ private slots:
 		QString text,
 		std::function<void(bool, ThoughtId)> callback
 	);
+	void onThoughtConnected(
+		ThoughtId fromId,
+		ThoughtId toId,
+		ConnectionType type
+	);
 	void onShown();
 
 private:

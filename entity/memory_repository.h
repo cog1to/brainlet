@@ -25,6 +25,11 @@ public:
 		bool incoming,
 		std::string text
 	) override;
+	bool connect(
+		ThoughtId fromId,
+		ThoughtId toId,
+		ConnectionType type
+	) override;
 
 private:
 	std::vector<ThoughtEntity> m_thoughts;

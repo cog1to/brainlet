@@ -65,6 +65,32 @@ CreateResult MemoryRepository::createThought(
 	return CreateResult(true, result);
 }
 
+bool MemoryRepository::connect(
+	ThoughtId fromId,
+	ThoughtId toId,
+	ConnectionType type
+) {
+	bool found = false;
+
+	std::vector<ConnectionEntity>::iterator it;
+	for (it = m_connections.begin(); it != m_connections.end(); it++) {
+		if (((*it).from == fromId && (*it).to == toId) || ((*it).to == fromId && (*it).from == toId)) {
+			(*it).type = type;
+			(*it).from = fromId;
+			(*it).to = toId;
+			found = true;
+			break;
+		}
+	}
+
+	if (!found) {
+		m_connections.push_back(ConnectionEntity(fromId, toId, type));
+	}
+
+	loadState(m_currentId);
+	return true;
+}
+
 // Helpers.
 
 void MemoryRepository::loadState(ThoughtId rootId) {

@@ -32,6 +32,7 @@ signals:
 	void textChanged(ThoughtId, QString, std::function<void(bool)>);
 	void thoughtSelected(ThoughtId);
 	void thoughtCreated(ThoughtId, ConnectionType, bool, QString, std::function<void(bool, ThoughtId)>);
+	void thoughtConnected(ThoughtId, ThoughtId, ConnectionType);
 	void onShown();
 
 protected:
@@ -73,6 +74,7 @@ private:
 	AnchorType reverseAnchorType(AnchorType type);
 	ThoughtWidget *widgetUnder(QPoint);
 	void setupNewThought();
+	void updateConnection();
 	// Layout constants.
 	static constexpr qreal controlPointRatio = 0.5;
 	static constexpr int minAnchorDistance = 25;

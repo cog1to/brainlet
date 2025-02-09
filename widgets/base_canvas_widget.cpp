@@ -716,8 +716,7 @@ void BaseCanvasWidget::onAnchorReleased(QPoint centerPos) {
 	}
 
 	if (m_overThought != nullptr) {
-		// TODO:  Implement connections.
-		std::cout << "Connect thought\n";
+		updateConnection();
 	} else if (m_newThought != nullptr) {
 		setupNewThought();
 	}
@@ -840,4 +839,29 @@ void BaseCanvasWidget::setupNewThought() {
 	m_newThought->setAttribute(Qt::WA_TransparentForMouseEvents, false);
 	m_newThought->raise();
 	m_newThought->activate();
+}
+
+void BaseCanvasWidget::updateConnection() {
+	assert(m_overThought != nullptr);
+	assert(m_anchorSource != nullptr);
+
+	ThoughtId from = m_anchorSource->widget->id();
+	ThoughtId to = m_overThought->id();
+	ConnectionType type;
+
+	switch (m_anchorSource->type) {
+		case AnchorType::Link:
+			type = ConnectionType::link;
+			break;
+		case AnchorType::Parent:
+			type = ConnectionType::child;
+			to = from;
+			from = m_overThought->id();
+			break;
+		case AnchorType::Child:
+			type = ConnectionType::child;
+			break;
+	}
+
+	emit thoughtConnected(from, to, type);
 }

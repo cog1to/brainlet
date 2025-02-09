@@ -21,6 +21,11 @@ CanvasPresenter::CanvasPresenter(
 	);
 
 	QObject::connect(
+		view, SIGNAL(thoughtConnected(ThoughtId, ThoughtId, ConnectionType)),
+		this, SLOT(onThoughtConnected(ThoughtId, ThoughtId, ConnectionType))
+	);
+
+	QObject::connect(
 		view, SIGNAL(onShown()),
 		this, SLOT(onShown())
 	);
@@ -68,6 +73,17 @@ void CanvasPresenter::onThoughtCreated(
 	callback(result.success, result.id);
 
 	if (result.success) {
+		reloadState();
+	}
+}
+
+void CanvasPresenter::onThoughtConnected(
+	ThoughtId fromId,
+	ThoughtId toId,
+	ConnectionType type
+) {
+	bool result = m_repo->connect(fromId, toId, type);
+	if (result) {
 		reloadState();
 	}
 }
