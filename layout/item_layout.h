@@ -14,7 +14,8 @@ public:
 		int w, int h,
 		bool visible,
 		bool hasParents, bool hasChildren, bool hasLinks,
-		bool rightSideLink
+		bool rightSideLink,
+		bool canDelete
 	);
 	ThoughtId id;
 	const std::string *name;
@@ -24,6 +25,7 @@ public:
 	bool hasChildren;
 	bool hasLinks;
 	bool rightSideLink;
+	bool canDelete;
 };
 
 #endif

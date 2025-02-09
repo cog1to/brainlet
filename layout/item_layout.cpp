@@ -7,7 +7,8 @@ ItemLayout::ItemLayout(
 	int _w, int _h,
 	bool _visible,
 	bool _hasParents, bool _hasChildren, bool _hasLinks,
-	bool _rightSideLink
+	bool _rightSideLink,
+	bool _canDelete
 ) {
 	id = _id;
 	name = _name;
@@ -20,4 +21,5 @@ ItemLayout::ItemLayout(
 	hasChildren = _hasChildren;
 	hasLinks = _hasLinks;
 	rightSideLink = _rightSideLink;
+	canDelete = _canDelete;
 }

@@ -4,7 +4,12 @@
 #include "model/thought.h"
 #include "model/state.h"
 
-State::State(Thought *center, std::unordered_map<ThoughtId, Thought*> *thoughts) {
+State::State(
+	ThoughtId root,
+	Thought *center,
+	std::unordered_map<ThoughtId, Thought*> *thoughts
+) {
+	m_rootId = root;
 	m_centralThought = center;
 	m_thoughts = thoughts;
 }

@@ -36,7 +36,14 @@ ThoughtEditWidget::ThoughtEditWidget(
 	setPlainText(QString::fromStdString(text));
 	setAlignment(Qt::AlignCenter);
 	setFocusPolicy(Qt::NoFocus);
+	setContextMenuPolicy(Qt::CustomContextMenu);
+
 	installEventFilter(this);
+
+	QObject::connect(
+		this, SIGNAL(customContextMenuRequested(const QPoint&)),
+		this, SIGNAL(menuRequested(const QPoint&))
+	);
 }
 
 void ThoughtEditWidget::enterEvent(QEnterEvent*) {
@@ -67,13 +74,15 @@ bool ThoughtEditWidget::eventFilter(QObject *obj, QEvent *event) {
 // Focus and keyboard.
 
 void ThoughtEditWidget::mousePressEvent(QMouseEvent* event) {
-	if (isReadOnly()) {
-		emit clicked();
-	} else if (!isReadOnly() && !hasFocus()) {
-		setFocus();
-		emit editStarted();
+	if (event->button() == Qt::LeftButton) {
+		if (isReadOnly()) {
+			emit clicked();
+		} else if (!isReadOnly() && !hasFocus()) {
+			setFocus();
+			emit editStarted();
+		}
+		QTextEdit::mousePressEvent(event);
 	}
-	QTextEdit::mousePressEvent(event);
 }
 
 void ThoughtEditWidget::keyPressEvent(QKeyEvent *event) {

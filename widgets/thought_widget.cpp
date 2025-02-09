@@ -15,7 +15,8 @@ ThoughtWidget::ThoughtWidget(
 	bool hasParent,
 	bool hasChild,
 	bool hasLink,
-	bool rightSideLink
+	bool rightSideLink,
+	bool canDelete
 ): BaseWidget(parent, style),
 	m_anchorLink(this, style, AnchorType::Link, hasLink),
 	m_anchorParent(this, style, AnchorType::Parent, hasParent),
@@ -57,6 +58,10 @@ ThoughtWidget::ThoughtWidget(
 	QObject::connect(
 		&m_textEdit, SIGNAL(clicked()),
 		this, SLOT(onClick())
+	);
+	QObject::connect(
+		&m_textEdit, SIGNAL(menuRequested(const QPoint&)),
+		this, SLOT(onMenuRequested(const QPoint&))
 	);
 
 	AnchorWidget *anchors[] = {&m_anchorLink, &m_anchorParent, &m_anchorChild};
@@ -150,6 +155,14 @@ const bool ThoughtWidget::rightSideLink() const {
 void ThoughtWidget::setRightSideLink(bool value) {
 	m_rightSideLink = value;
 	updateLayout(size());
+}
+
+const bool ThoughtWidget::canDelete() const {
+	return m_canDelete;
+}
+
+void ThoughtWidget::setCanDelete(bool value) {
+	m_canDelete = value;
 }
 
 const bool ThoughtWidget::isActive() const {
@@ -302,6 +315,10 @@ QSize ThoughtWidget::sizeForWidth(int width) const {
 
 void ThoughtWidget::onClick() {
 	emit clicked(this);
+}
+
+void ThoughtWidget::onMenuRequested(const QPoint& point) {
+	emit menuRequested(this, m_textEdit.mapTo(parentWidget(), point));
 }
 
 void ThoughtWidget::onTextEnter() {

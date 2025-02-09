@@ -6,6 +6,8 @@
 #include <QPainterPath>
 #include <QWidget>
 #include <QShowEvent>
+#include <QMenu>
+#include <QTranslator>
 
 #include "layout/base_layout.h"
 #include "layout/scroll_area_layout.h"
@@ -304,6 +306,7 @@ void BaseCanvasWidget::updateLayout() {
 		widget->setHasParent(layout.hasParents);
 		widget->setHasChild(layout.hasChildren);
 		widget->setHasLink(layout.hasLinks);
+		widget->setCanDelete(layout.canDelete);
 
 		// Place the widget in the canvas.
 		widget->setGeometry(
@@ -475,6 +478,10 @@ void BaseCanvasWidget::connectWidget(ThoughtWidget *widget) {
 		SIGNAL(textConfirmed(ThoughtWidget*, QString, std::function<void(bool)>)),
 		this,
 		SLOT(onTextConfirmed(ThoughtWidget*, QString, std::function<void(bool)>))
+	);
+	QObject::connect(
+		widget, SIGNAL(menuRequested(ThoughtWidget*, const QPoint&)),
+		this, SLOT(onMenuRequested(ThoughtWidget*, const QPoint&))
 	);
 }
 
@@ -769,6 +776,57 @@ void BaseCanvasWidget::onCreateConfirmed(
 	);
 }
 
+void BaseCanvasWidget::onMenuRequested(
+	ThoughtWidget *widget,
+	const QPoint& point
+) {
+	if (m_layout == nullptr)
+		return;
+	if (!widget->canDelete())
+		return;
+
+	m_menuThought = widget;
+
+	QMenu contextMenu(this);
+
+	// TODO: Move menu styling to Style.
+	QString stylesheet = QString(
+		"QMenu {\
+			color: %1;\
+			font: %2 %3pt \"%4\";\
+		}\
+		QMenu::item {\
+			padding-top: 5px;\
+			padding-left: 15px;\
+			padding-right: 15px;\
+			padding-bottom: 9px;\
+		}\
+		QMenu::item:selected {\
+			color: #ffffff;\
+		}"
+	).arg(m_style->textColor().name(QColor::HexRgb))
+		.arg(m_style->font().bold() ? "bold" : "")
+		.arg(m_style->font().pointSize())
+		.arg(m_style->font().family());
+	contextMenu.setStyleSheet(stylesheet);
+
+	QString thoughtName = QString::fromStdString(m_menuThought->text());
+	if (thoughtName.size() > 15)
+		thoughtName = thoughtName.left(12) + "...";
+
+	QString forgetMenu = tr("Forget") + " \"" + thoughtName + "\"";
+	QAction action(forgetMenu, this);
+	connect(&action, SIGNAL(triggered()), this, SLOT(onDeleteThought()));
+
+	contextMenu.addAction(&action);
+	contextMenu.exec(mapToGlobal(point));
+}
+
+void BaseCanvasWidget::onDeleteThought() {
+	if (m_menuThought == nullptr)
+		return;
+	std::cout << "delete " << m_menuThought->id() << "\n";
+}
 // Helpers.
 
 void BaseCanvasWidget::clearAnchor() {

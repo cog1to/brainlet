@@ -147,6 +147,7 @@ void DefaultLayout::updateWidgets() {
 		thought->hasParents(),
 		thought->hasChildren(),
 		thought->hasLinks(),
+		false,
 		false
 	);
 
@@ -218,6 +219,8 @@ void DefaultLayout::layoutVerticalSide(
 	ScrollBarPos scrollPos,
 	bool rightSideLink
 ) {
+	ThoughtId rootId = m_state->rootId();
+
 	// Not enough space to layout anything, just return.
 	if (rect.width() < m_minWidgetWidth)
 		return;
@@ -291,7 +294,8 @@ void DefaultLayout::layoutVerticalSide(
 			thought->hasParents(),
 			thought->hasChildren(),
 			thought->hasLinks(),
-			rightSideLink
+			rightSideLink,
+			thought->id() != rootId
 		);
 
 		m_layout.insert_or_assign(thought->id(), layout);
@@ -323,6 +327,8 @@ void DefaultLayout::layoutHorizontalSide(
 	QRect rect,
 	ScrollBarPos scrollPos
 ) {
+	ThoughtId rootId = m_state->rootId();
+
 	// Total column count from available space.
 	int visibleColumnCount, w = m_verticalWidgetWidth;
 	for (visibleColumnCount = 0; w < rect.width(); visibleColumnCount++) {
@@ -405,7 +411,8 @@ void DefaultLayout::layoutHorizontalSide(
 				thought->hasParents(),
 				thought->hasChildren(),
 				thought->hasLinks(),
-				false
+				false,
+				thought->id() != rootId
 			);
 
 			m_layout.insert_or_assign(thought->id(), layout);

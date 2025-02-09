@@ -52,6 +52,7 @@ private:
 	AnchorSource *m_anchorSource = nullptr;
 	ThoughtWidget *m_newThought = nullptr;
 	ThoughtWidget *m_overThought = nullptr;
+	ThoughtWidget *m_menuThought = nullptr;
 	QWidget m_overlay;
 	// Layout.
 	void updateLayout();
@@ -93,6 +94,8 @@ private slots:
 	void onTextConfirmed(ThoughtWidget*, QString, std::function<void(bool)>);
 	void onCreateCanceled(ThoughtWidget*);
 	void onCreateConfirmed(ThoughtWidget*, QString, std::function<void(bool)>);
+	void onMenuRequested(ThoughtWidget*, const QPoint&);
+	void onDeleteThought();
 };
 
 #endif

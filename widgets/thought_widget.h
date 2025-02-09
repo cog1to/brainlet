@@ -32,7 +32,8 @@ public:
 		bool readOnly,
 		std::string name,
 		bool hasParent, bool hasChild, bool hasLink,
-		bool rightSideLink = false
+		bool rightSideLink = false,
+		bool canDelete = true
 	);
 	~ThoughtWidget();
 	// Id.
@@ -51,6 +52,8 @@ public:
 	void setText(std::string);
 	const bool rightSideLink() const;
 	void setRightSideLink(bool);
+	const bool canDelete() const;
+	void setCanDelete(bool);
 	// Method override.
 	QSize sizeHint() const override;
 	// Calculates bounding rect for given width without height restriction.
@@ -77,6 +80,7 @@ signals:
 	void textConfirmed(ThoughtWidget*, QString, std::function<void(bool)>);
 	void clicked(ThoughtWidget*);
 	void textCanceled(ThoughtWidget*);
+	void menuRequested(ThoughtWidget*, const QPoint&);
 
 protected slots:
 	void onClick();
@@ -92,6 +96,7 @@ protected slots:
 	void onAnchorMove(AnchorWidget*, QPoint);
 	void onAnchorRelease(AnchorWidget*, QPoint);
 	void onAnchorCanceled(AnchorWidget*);
+	void onMenuRequested(const QPoint&);
 
 protected:
 	// Event overrides.
@@ -114,6 +119,7 @@ private:
 	bool m_hover = false;
 	bool m_highlight = false;
 	bool m_rightSideLink = false;
+	bool m_canDelete = true;
 	QString m_text;
 	QString m_originalText;
 	QTextCursor m_cursor;

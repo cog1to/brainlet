@@ -251,7 +251,7 @@ void MemoryRepository::loadState(ThoughtId rootId) {
 	}
 
 	// Construct state.
-	State *state = new State(center, siblings);
+	State *state = new State(m_rootId, center, siblings);
 	m_state = state;
 }
 
