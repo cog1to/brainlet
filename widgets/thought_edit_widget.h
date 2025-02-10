@@ -28,6 +28,8 @@ signals:
 	void editStarted();
 	void editCanceled();
 	void editConfirmed(std::function<void(bool)>);
+	void clicked();
+	void menuRequested(const QPoint&);
 
 protected:
 	void enterEvent(QEnterEvent *) override;

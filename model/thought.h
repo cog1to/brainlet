@@ -7,6 +7,8 @@
 
 typedef uint64_t ThoughtId;
 
+enum ConnectionType { link, child };
+
 class Thought {
 public:
 	// Constructor and destructor.
@@ -23,6 +25,7 @@ public:
 	std::string& name() { return m_name; }
 	// Id.
 	const ThoughtId id() const { return m_id; }
+	const ThoughtId* idPtr() const { return &m_id; }
 	// Connections.
 	bool& hasParents() { return m_conn_up; }
 	const bool hasParents() const { return m_conn_up; }

@@ -27,37 +27,61 @@ class BaseCanvasWidget: public BaseWidget {
 public:
 	BaseCanvasWidget(QWidget*, Style*, BaseLayout*);
 	~BaseCanvasWidget();
-	void setState(State*);
 
 signals:
 	void textChanged(ThoughtId, QString, std::function<void(bool)>);
+	void thoughtSelected(ThoughtId);
+	void thoughtCreated(ThoughtId, ConnectionType, bool, QString, std::function<void(bool, ThoughtId)>);
+	void thoughtConnected(ThoughtId, ThoughtId, ConnectionType);
+	void onShown();
 
 protected:
 	// Event overrides.
 	void paintEvent(QPaintEvent *) override;
 	void resizeEvent(QResizeEvent *) override;
+	void showEvent(QShowEvent *) override;
 
 private:
 	BaseLayout *m_layout = nullptr;
-	State *m_state = nullptr;
 	// Main content widgets.
 	std::unordered_map<ThoughtId, ThoughtWidget*> m_widgets;
 	std::unordered_map<unsigned int, ScrollAreaWidget*> m_scrollAreas;
 	// Anchor highlight.
 	AnchorHighlightWidget m_anchorHighlight;
+	// Thought/connection creation.
 	AnchorSource *m_anchorSource = nullptr;
+	ThoughtWidget *m_newThought = nullptr;
+	ThoughtWidget *m_overThought = nullptr;
+	ThoughtWidget *m_menuThought = nullptr;
+	QWidget m_overlay;
 	// Layout.
 	void updateLayout();
 	void layoutScrollAreas();
 	void drawAnchorConnection(QPainter&);
+	void drawNewThoughtConnection(QPainter& painter);
+	void drawOverThoughtConnection(QPainter& painter);
+	void drawConnection(
+		QPainter& painter,
+		AnchorPoint outgoing, AnchorPoint incoming,
+		QPen& pen
+	);
 	ThoughtWidget *cachedWidget(ThoughtId id);
-	ThoughtWidget *createWidget(const Thought*, bool);
+	ThoughtWidget *createWidget(const ItemLayout&, bool);
+	void connectWidget(ThoughtWidget*);
 	ScrollAreaWidget *cachedScrollArea(unsigned int id);
 	ScrollAreaWidget *createScrollArea(unsigned int id, ScrollBarPos);
+	// Helpers.
+	void clearAnchor();
+	AnchorType reverseAnchorType(AnchorType type);
+	ThoughtWidget *widgetUnder(QPoint);
+	void setupNewThought();
+	void updateConnection();
 	// Layout constants.
 	static constexpr qreal controlPointRatio = 0.5;
+	static constexpr int minAnchorDistance = 25;
 
 private slots:
+	void onWidgetClicked(ThoughtWidget*);
 	void onWidgetActivated(ThoughtWidget*);
 	void onWidgetDeactivated(ThoughtWidget*);
 	void onWidgetScroll(ThoughtWidget*, QWheelEvent*);
@@ -65,7 +89,13 @@ private slots:
 	void onAnchorEntered(ThoughtWidget*, AnchorType, QPoint);
 	void onAnchorLeft();
 	void onAnchorMoved(QPoint);
+	void onAnchorReleased(QPoint);
+	void onAnchorCanceled();
 	void onTextConfirmed(ThoughtWidget*, QString, std::function<void(bool)>);
+	void onCreateCanceled(ThoughtWidget*);
+	void onCreateConfirmed(ThoughtWidget*, QString, std::function<void(bool)>);
+	void onMenuRequested(ThoughtWidget*, const QPoint&);
+	void onDeleteThought();
 };
 
 #endif

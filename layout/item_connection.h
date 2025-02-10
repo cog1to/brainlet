@@ -3,8 +3,6 @@
 
 #include "model/thought.h"
 
-enum ConnectionType { link, child };
-
 typedef struct {
 	ThoughtId from;
 	ThoughtId to;

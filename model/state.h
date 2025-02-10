@@ -13,13 +13,15 @@
 class State {
 public:
 	// Constructor and destructor.
-	State(Thought*, std::unordered_map<ThoughtId, Thought*>*);
+	State(ThoughtId, Thought*, std::unordered_map<ThoughtId, Thought*>*);
 	~State();
 	// Properties.
+	const ThoughtId rootId() const { return m_rootId; }
 	const Thought *centralThought() const { return m_centralThought; }
 	const std::unordered_map<ThoughtId, Thought*>* thoughts() const { return m_thoughts; }
 
 private:
+	ThoughtId m_rootId;
 	Thought *m_centralThought = nullptr;
 	std::unordered_map<ThoughtId, Thought*> *m_thoughts = nullptr;
 };

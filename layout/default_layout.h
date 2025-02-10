@@ -13,11 +13,13 @@ public:
 	DefaultLayout(Style*);
 	void reload() override;
 	void setSize(QSize) override;
-	void setState(State*) override;
+	void setState(const State*) override;
+	const ThoughtId* rootId() const override;
 	const std::unordered_map<ThoughtId, ItemLayout>* items() const override;
 	const std::unordered_map<unsigned int, ScrollAreaLayout>* scrollAreas() const override;
 	const std::vector<ItemConnection>* connections() const override;
 	const std::vector<ItemConnection>* subconnections() const override;
+	const QSize defaultWidgetSize() const override;
 	void onScroll(unsigned int, int) override;
 
 private:
@@ -37,7 +39,7 @@ private:
 	void updateWidgets();
 	void loadSiblings();
 	void layoutHorizontalSide(const std::vector<Thought*>&, QRect, ScrollBarPos);
-	void layoutVerticalSide(const std::vector<Thought*>&, QRect, ScrollBarPos);
+	void layoutVerticalSide(const std::vector<Thought*>&, QRect, ScrollBarPos, bool);
 	// Sizing helpers.
 	QSize widgetSize(std::string text, int);
 	// State.

@@ -25,27 +25,43 @@ class ThoughtWidget: public BaseWidget {
 
 public:
 	// Constructor and destructor.
-	ThoughtWidget(QWidget*, Style*, ThoughtId, bool, std::string, bool, bool, bool);
+	ThoughtWidget(
+		QWidget *parent,
+		Style *style,
+		ThoughtId id,
+		bool readOnly,
+		std::string name,
+		bool hasParent, bool hasChild, bool hasLink,
+		bool rightSideLink = false,
+		bool canDelete = true
+	);
 	~ThoughtWidget();
 	// Id.
 	const ThoughtId id() const;
+	void setId(ThoughtId);
 	// Properties.
 	const bool readOnly() const;
 	void setReadOnly(bool);
 	const bool hasParent() const;
 	void setHasParent(bool);
 	const bool hasChild() const;
-	void sethHasChild(bool);
+	void setHasChild(bool);
 	const bool hasLink() const;
 	void setHasLink(bool);
 	const std::string text() const;
 	void setText(std::string);
+	const bool rightSideLink() const;
+	void setRightSideLink(bool);
+	const bool canDelete() const;
+	void setCanDelete(bool);
 	// Method override.
 	QSize sizeHint() const override;
 	// Calculates bounding rect for given width without height restriction.
 	QSize sizeForWidth(int width) const;
 	// Current state.
 	const bool isActive() const;
+	void setHighlight(bool);
+	void activate();
 	// Anchor ponts for connections.
 	AnchorPoint getAnchorFrom(ConnectionType);
 	AnchorPoint getAnchorTo(ConnectionType);
@@ -59,9 +75,15 @@ signals:
 	void anchorEntered(ThoughtWidget*, AnchorType, QPoint);
 	void anchorLeft();
 	void anchorMoved(QPoint);
+	void anchorReleased(QPoint);
+	void anchorCanceled();
 	void textConfirmed(ThoughtWidget*, QString, std::function<void(bool)>);
+	void clicked(ThoughtWidget*);
+	void textCanceled(ThoughtWidget*);
+	void menuRequested(ThoughtWidget*, const QPoint&);
 
 protected slots:
+	void onClick();
 	void onTextEnter();
 	void onTextLeave();
 	void onTextClearFocus();
@@ -72,6 +94,9 @@ protected slots:
 	void onAnchorEntered(AnchorWidget*);
 	void onAnchorLeft(AnchorWidget*);
 	void onAnchorMove(AnchorWidget*, QPoint);
+	void onAnchorRelease(AnchorWidget*, QPoint);
+	void onAnchorCanceled(AnchorWidget*);
+	void onMenuRequested(const QPoint&);
 
 protected:
 	// Event overrides.
@@ -92,11 +117,15 @@ private:
 	// State.
 	ThoughtId m_id;
 	bool m_hover = false;
+	bool m_highlight = false;
+	bool m_rightSideLink = false;
+	bool m_canDelete = true;
 	QString m_text;
 	QString m_originalText;
 	QTextCursor m_cursor;
 	// Helpers.
 	void updateText();
+	void updateLayout(QSize);
 };
 
 #endif

@@ -31,7 +31,7 @@ void DefaultLayout::reload() {
 
 	// Recalculate widget positions.
 	updateWidgets();
-	
+
 	// Dispatch event.
 	if (onUpdated != nullptr)
 		onUpdated();
@@ -44,7 +44,7 @@ void DefaultLayout::setSize(QSize size) {
 	reload();
 }
 
-void DefaultLayout::setState(State *state) {
+void DefaultLayout::setState(const State *state) {
 	m_state = state;
 	m_connections.clear();
 	m_subconnections.clear();
@@ -137,11 +137,18 @@ void DefaultLayout::updateWidgets() {
 	// Position the central element.
 	QSize centralSize = widgetSize(thought->name(), m_size.width() * 0.4);
 	ItemLayout centralLayout = ItemLayout(
+		thought->id(),
+		&thought->name(),
 		(m_size.width() - centralSize.width()) / 2,
 		(m_size.height() - centralSize.height()) / 2,
 		centralSize.width(),
 		centralSize.height(),
-		true
+		true,
+		thought->hasParents(),
+		thought->hasChildren(),
+		thought->hasLinks(),
+		false,
+		false
 	);
 
 	// Save the central element.
@@ -157,7 +164,8 @@ void DefaultLayout::updateWidgets() {
 				m_leftSideWidth,
 				m_size.height() - (m_topSideHeight + m_sidePadding) * 2
 			),
-			ScrollBarPos::Left
+			ScrollBarPos::Left,
+			true
 		);
 	}
 
@@ -199,7 +207,8 @@ void DefaultLayout::updateWidgets() {
 				m_leftSideWidth,
 				m_size.height() - (m_topSideHeight + m_sidePadding) * 2
 			),
-			ScrollBarPos::Right
+			ScrollBarPos::Right,
+			false
 		);
 	}
 }
@@ -207,8 +216,11 @@ void DefaultLayout::updateWidgets() {
 void DefaultLayout::layoutVerticalSide(
 	const std::vector<Thought*>& sorted,
 	QRect rect,
-	ScrollBarPos scrollPos
+	ScrollBarPos scrollPos,
+	bool rightSideLink
 ) {
+	ThoughtId rootId = m_state->rootId();
+
 	// Not enough space to layout anything, just return.
 	if (rect.width() < m_minWidgetWidth)
 		return;
@@ -272,10 +284,18 @@ void DefaultLayout::layoutVerticalSide(
 		Thought *thought = sorted[idx];
 
 		ItemLayout layout(
-			rect.x() + (rect.width() - size.width()) / 2, y,
+			thought->id(),
+			&thought->name(),
+			rect.x() + (rect.width() - size.width()) / 2,
+			y,
 			size.width(),
 			size.height(),
-			true
+			true,
+			thought->hasParents(),
+			thought->hasChildren(),
+			thought->hasLinks(),
+			rightSideLink,
+			thought->id() != rootId
 		);
 
 		m_layout.insert_or_assign(thought->id(), layout);
@@ -307,6 +327,8 @@ void DefaultLayout::layoutHorizontalSide(
 	QRect rect,
 	ScrollBarPos scrollPos
 ) {
+	ThoughtId rootId = m_state->rootId();
+
 	// Total column count from available space.
 	int visibleColumnCount, w = m_verticalWidgetWidth;
 	for (visibleColumnCount = 0; w < rect.width(); visibleColumnCount++) {
@@ -379,11 +401,18 @@ void DefaultLayout::layoutHorizontalSide(
 			);
 
 			ItemLayout layout(
+				thought->id(),
+				&thought->name(),
 				x + (columnWidth - size.width()) / 2,
 				y + ((rect.height() - height) / 2) + (row * m_widgetHeight),
 				size.width(),
 				size.height(),
-				true
+				true,
+				thought->hasParents(),
+				thought->hasChildren(),
+				thought->hasLinks(),
+				false,
+				thought->id() != rootId
 			);
 
 			m_layout.insert_or_assign(thought->id(), layout);
@@ -431,6 +460,14 @@ QSize DefaultLayout::widgetSize(std::string text, int maxWidth) {
 	);
 }
 
+// Getters.
+
+const ThoughtId* DefaultLayout::rootId() const {
+	if (m_state == nullptr)
+		return nullptr;
+	return m_state->centralThought()->idPtr();
+}
+
 const std::unordered_map<ThoughtId, ItemLayout>* DefaultLayout::items() const {
 	return &m_layout;
 }
@@ -445,6 +482,13 @@ const std::vector<ItemConnection>* DefaultLayout::connections() const {
 
 const std::vector<ItemConnection>* DefaultLayout::subconnections() const {
 	return &m_subconnections;
+}
+
+const QSize DefaultLayout::defaultWidgetSize() const {
+	return QSize(
+		m_verticalWidgetWidth,
+		m_widgetHeight
+	);
 }
 
 // Utility functions.

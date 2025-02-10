@@ -13,6 +13,11 @@ ThoughtEditWidget::ThoughtEditWidget(
 	: QTextEdit(parent)
 {
 	setReadOnly(readOnly);
+	if (readOnly) {
+		setTextInteractionFlags(Qt::NoTextInteraction);
+		setCursor(Qt::ArrowCursor);
+	}
+
 	setFrameStyle(QFrame::NoFrame);
 	setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -31,14 +36,25 @@ ThoughtEditWidget::ThoughtEditWidget(
 	setPlainText(QString::fromStdString(text));
 	setAlignment(Qt::AlignCenter);
 	setFocusPolicy(Qt::NoFocus);
+	setContextMenuPolicy(Qt::CustomContextMenu);
+
 	installEventFilter(this);
+
+	QObject::connect(
+		this, SIGNAL(customContextMenuRequested(const QPoint&)),
+		this, SIGNAL(menuRequested(const QPoint&))
+	);
 }
 
 void ThoughtEditWidget::enterEvent(QEnterEvent*) {
+	// TODO: Is there a better way to do this?
+	QGuiApplication::setOverrideCursor(isReadOnly() ? Qt::ArrowCursor : Qt::IBeamCursor);
 	emit mouseEnter();
 }
 
 void ThoughtEditWidget::leaveEvent(QEvent*) {
+	// TODO: Is there a better way to do this?
+	QGuiApplication::setOverrideCursor(Qt::ArrowCursor);
 	emit mouseLeave();
 }
 
@@ -58,11 +74,15 @@ bool ThoughtEditWidget::eventFilter(QObject *obj, QEvent *event) {
 // Focus and keyboard.
 
 void ThoughtEditWidget::mousePressEvent(QMouseEvent* event) {
-	if (!isReadOnly() && !hasFocus()) {
-		setFocus();
-		emit editStarted();
+	if (event->button() == Qt::LeftButton) {
+		if (isReadOnly()) {
+			emit clicked();
+		} else if (!isReadOnly() && !hasFocus()) {
+			setFocus();
+			emit editStarted();
+		}
+		QTextEdit::mousePressEvent(event);
 	}
-	QTextEdit::mousePressEvent(event);
 }
 
 void ThoughtEditWidget::keyPressEvent(QKeyEvent *event) {

@@ -14,7 +14,9 @@ ThoughtWidget::ThoughtWidget(
 	std::string text,
 	bool hasParent,
 	bool hasChild,
-	bool hasLink
+	bool hasLink,
+	bool rightSideLink,
+	bool canDelete
 ): BaseWidget(parent, style),
 	m_anchorLink(this, style, AnchorType::Link, hasLink),
 	m_anchorParent(this, style, AnchorType::Parent, hasParent),
@@ -23,6 +25,7 @@ ThoughtWidget::ThoughtWidget(
 {
 	m_id = id;
 	m_text = QString::fromStdString(text);
+	m_rightSideLink = rightSideLink;
 
 	QObject::connect(
 		&m_textEdit, SIGNAL(mouseEnter()),
@@ -52,6 +55,14 @@ ThoughtWidget::ThoughtWidget(
 		&m_textEdit, SIGNAL(editConfirmed(std::function<void(bool)>)),
 		this, SLOT(onTextConfirmed(std::function<void(bool)>))
 	);
+	QObject::connect(
+		&m_textEdit, SIGNAL(clicked()),
+		this, SLOT(onClick())
+	);
+	QObject::connect(
+		&m_textEdit, SIGNAL(menuRequested(const QPoint&)),
+		this, SLOT(onMenuRequested(const QPoint&))
+	);
 
 	AnchorWidget *anchors[] = {&m_anchorLink, &m_anchorParent, &m_anchorChild};
 	for (AnchorWidget *widget: anchors) {
@@ -67,6 +78,14 @@ ThoughtWidget::ThoughtWidget(
 			widget, SIGNAL(mouseMove(AnchorWidget*, QPoint)),
 			this, SLOT(onAnchorMove(AnchorWidget*, QPoint))
 		);
+		QObject::connect(
+			widget, SIGNAL(mouseRelease(AnchorWidget*, QPoint)),
+			this, SLOT(onAnchorRelease(AnchorWidget*, QPoint))
+		);
+		QObject::connect(
+			widget, SIGNAL(mouseCancel(AnchorWidget*)),
+			this, SLOT(onAnchorCanceled(AnchorWidget*))
+		);
 	}
 
 	updateText();
@@ -76,6 +95,10 @@ ThoughtWidget::~ThoughtWidget() {}
 
 const ThoughtId ThoughtWidget::id() const {
 	return m_id;
+}
+
+void ThoughtWidget::setId(ThoughtId id) {
+	m_id = id;
 }
 
 const bool ThoughtWidget::hasParent() const {
@@ -90,7 +113,7 @@ const bool ThoughtWidget::hasChild() const {
 	return m_anchorChild.active();
 }
 
-void ThoughtWidget::sethHasChild(bool value) {
+void ThoughtWidget::setHasChild(bool value) {
 	m_anchorChild.setActive(value);
 }
 
@@ -116,11 +139,42 @@ const bool ThoughtWidget::readOnly() const {
 }
 
 void ThoughtWidget::setReadOnly(bool value) {
+	if (value == m_textEdit.isReadOnly())
+		return;
+
 	m_textEdit.setReadOnly(value);
+	m_textEdit.setTextInteractionFlags(
+		value ? Qt::NoTextInteraction : Qt::TextEditorInteraction
+	);
+}
+
+const bool ThoughtWidget::rightSideLink() const {
+	return m_rightSideLink;
+}
+
+void ThoughtWidget::setRightSideLink(bool value) {
+	m_rightSideLink = value;
+	updateLayout(size());
+}
+
+const bool ThoughtWidget::canDelete() const {
+	return m_canDelete;
+}
+
+void ThoughtWidget::setCanDelete(bool value) {
+	m_canDelete = value;
 }
 
 const bool ThoughtWidget::isActive() const {
-	return m_hover || m_textEdit.hasFocus();
+	return m_highlight || m_hover || m_textEdit.hasFocus();
+}
+
+void ThoughtWidget::setHighlight(bool value) {
+	m_highlight = value;
+}
+
+void ThoughtWidget::activate() {
+	m_textEdit.setFocus();
 }
 
 // Anchor coordinates.
@@ -140,13 +194,14 @@ AnchorPoint ThoughtWidget::getAnchorFrom(ConnectionType type) {
 				.dx = 0, .dy = 1.0
 			};
 		case ConnectionType::link:
-			point = mapToParent(QPointF(
-				(float)anchorSize.width() / 2.0,
-				(float)size().height() / 2.0
+			QRect linkRect = m_anchorLink.geometry();
+			point = mapToParent(QPoint(
+				linkRect.x() + linkRect.width() / 2,
+				linkRect.y() + linkRect.height() / 2
 			));
 			return AnchorPoint {
 				.x = point.x(), .y = point.y(),
-				.dx = -1.0, .dy = 0
+				.dx = m_rightSideLink ? 1.0 : -1.0, .dy = 0
 			};
 	}
 
@@ -183,13 +238,14 @@ AnchorPoint ThoughtWidget::getAnchorTo(ConnectionType type) {
 				.dx = 0, .dy = -1.0
 			};
 		case ConnectionType::link:
-			point = mapToParent(QPointF(
-				(float)size().width() - (float)anchorSize.width() / 2.0,
-				(float)size().height() / 2.0
+			QRect linkRect = m_anchorLink.geometry();
+			point = mapToParent(QPoint(
+				linkRect.x() + linkRect.width() / 2,
+				linkRect.y() + linkRect.height() / 2
 			));
 			return AnchorPoint {
 				.x = point.x(), .y = point.y(),
-				.dx = 1.0, .dy = 0
+				.dx = m_rightSideLink ? 1.0 : -1.0, .dy = 0
 			};
 	}
 
@@ -257,6 +313,14 @@ QSize ThoughtWidget::sizeForWidth(int width) const {
 
 // Text edit events
 
+void ThoughtWidget::onClick() {
+	emit clicked(this);
+}
+
+void ThoughtWidget::onMenuRequested(const QPoint& point) {
+	emit menuRequested(this, m_textEdit.mapTo(parentWidget(), point));
+}
+
 void ThoughtWidget::onTextEnter() {
 	m_hover = true;
 	update();
@@ -303,6 +367,7 @@ void ThoughtWidget::onTextCancel() {
 	m_text = m_originalText;
 	m_textEdit.setPlainText(m_text);
 	emit textChanged(this);
+	emit textCanceled(this);
 }
 
 void ThoughtWidget::onTextConfirmed(std::function<void(bool)> callback) {
@@ -331,6 +396,16 @@ void ThoughtWidget::onAnchorMove(AnchorWidget* widget, QPoint point) {
 	);
 }
 
+void ThoughtWidget::onAnchorRelease(AnchorWidget* widget, QPoint point) {
+	emit anchorReleased(
+		widget->mapTo(parentWidget(), point)
+	);
+}
+
+void ThoughtWidget::onAnchorCanceled(AnchorWidget* widget) {
+	emit anchorCanceled();
+}
+
 // Draw and layout
 
 void ThoughtWidget::paintEvent(QPaintEvent *event) {
@@ -345,7 +420,7 @@ void ThoughtWidget::paintEvent(QPaintEvent *event) {
 
 	QPainter painter(this);
 
-	if (m_hover || m_textEdit.hasFocus()) {
+	if (m_highlight || m_hover || m_textEdit.hasFocus()) {
 		pen.setWidth(hoverWidth);
 		QBrush brush(m_style->hoverBackground());
 		painter.setBrush(brush);
@@ -375,8 +450,17 @@ void ThoughtWidget::paintEvent(QPaintEvent *event) {
 }
 
 void ThoughtWidget::resizeEvent(QResizeEvent *event) {
+	updateLayout(event->size());
+}
+
+void ThoughtWidget::wheelEvent(QWheelEvent *event) {
+	emit mouseScroll(this, event);
+}
+
+// Private
+
+void ThoughtWidget::updateLayout(QSize size) {
 	const QSize anchorSize = AnchorWidget::defaultSize;
-	const QSize size = event->size();
 
 	QRect parent(
 		(int)((float)size.width() - (float)size.width() * parentRightOffset) - anchorSize.width(),
@@ -391,9 +475,10 @@ void ThoughtWidget::resizeEvent(QResizeEvent *event) {
 	m_anchorChild.setGeometry(child);
 
 	QRect link(
-		0,
+		m_rightSideLink ? (size.width() - anchorSize.width()) : 0,
 		(int)((float)(size.height() - anchorSize.height()) / 2.0),
-		anchorSize.width(), anchorSize.height());
+		anchorSize.width(), anchorSize.height()
+	);
 	m_anchorLink.setGeometry(link);
 
 	QRect textRect(
@@ -417,12 +502,6 @@ void ThoughtWidget::resizeEvent(QResizeEvent *event) {
 		updateText();
 	}
 }
-
-void ThoughtWidget::wheelEvent(QWheelEvent *event) {
-	emit mouseScroll(this, event);
-}
-
-// Private
 
 void ThoughtWidget::updateText() {
 	const QSize anchorSize = AnchorWidget::defaultSize;

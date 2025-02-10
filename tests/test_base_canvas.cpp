@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
 	State state(central, map);
 
 	// Assign state.
-	widget.setState(&state);
+	layout.setState(&state);
 
 	// Editing callbacks.
 	QObject::connect(
