@@ -27,7 +27,8 @@ public:
 		ThoughtId toId,
 		ConnectionType type
 	) = 0;
-	//virtual bool deleteThought(ThoughtId) = 0;
+	virtual bool deleteThought(ThoughtId) = 0;
+	// virtual void disconnect(ThoughtId, ThoughtId) = 0;
 };
 
 #endif

@@ -793,7 +793,7 @@ void BaseCanvasWidget::onMenuRequested(
 	QString stylesheet = QString(
 		"QMenu {\
 			color: %1;\
-			font: %2 %3pt \"%4\";\
+			font: %2 %3px \"%4\";\
 		}\
 		QMenu::item {\
 			padding-top: 5px;\
@@ -806,7 +806,7 @@ void BaseCanvasWidget::onMenuRequested(
 		}"
 	).arg(m_style->textColor().name(QColor::HexRgb))
 		.arg(m_style->font().bold() ? "bold" : "")
-		.arg(m_style->font().pointSize())
+		.arg(m_style->font().pixelSize())
 		.arg(m_style->font().family());
 	contextMenu.setStyleSheet(stylesheet);
 
@@ -825,8 +825,9 @@ void BaseCanvasWidget::onMenuRequested(
 void BaseCanvasWidget::onDeleteThought() {
 	if (m_menuThought == nullptr)
 		return;
-	std::cout << "delete " << m_menuThought->id() << "\n";
+	emit thoughtDeleted(m_menuThought->id());
 }
+
 // Helpers.
 
 void BaseCanvasWidget::clearAnchor() {

@@ -26,6 +26,11 @@ CanvasPresenter::CanvasPresenter(
 	);
 
 	QObject::connect(
+		view, SIGNAL(thoughtDeleted(ThoughtId)),
+		this, SLOT(onThoughtDeleted(ThoughtId))
+	);
+
+	QObject::connect(
 		view, SIGNAL(onShown()),
 		this, SLOT(onShown())
 	);
@@ -83,6 +88,13 @@ void CanvasPresenter::onThoughtConnected(
 	ConnectionType type
 ) {
 	bool result = m_repo->connect(fromId, toId, type);
+	if (result) {
+		reloadState();
+	}
+}
+
+void CanvasPresenter::onThoughtDeleted(ThoughtId id) {
+	bool result = m_repo->deleteThought(id);
 	if (result) {
 		reloadState();
 	}

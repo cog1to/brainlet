@@ -33,6 +33,7 @@ signals:
 	void thoughtSelected(ThoughtId);
 	void thoughtCreated(ThoughtId, ConnectionType, bool, QString, std::function<void(bool, ThoughtId)>);
 	void thoughtConnected(ThoughtId, ThoughtId, ConnectionType);
+	void thoughtDeleted(ThoughtId);
 	void onShown();
 
 protected:

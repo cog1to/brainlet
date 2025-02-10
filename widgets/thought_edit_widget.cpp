@@ -94,7 +94,6 @@ void ThoughtEditWidget::keyPressEvent(QKeyEvent *event) {
 		});
 	} else if (event->key() == Qt::Key_Escape) {
 		emit editCanceled();
-		clearFocus();
 	} else {
 		QTextEdit::keyPressEvent(event);
 	}

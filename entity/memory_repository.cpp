@@ -91,6 +91,25 @@ bool MemoryRepository::connect(
 	return true;
 }
 
+bool MemoryRepository::deleteThought(ThoughtId id) {
+	std::vector<ThoughtEntity> newList;
+	for (auto it = m_thoughts.begin(); it != m_thoughts.end(); it++) {
+		if ((*it).id == id) continue;
+		newList.push_back(*it);
+	}
+
+	std::vector<ConnectionEntity> newConns;
+	for (auto it = m_connections.begin(); it != m_connections.end(); it++) {
+		if (((*it).from == id) || ((*it).to == id)) continue;
+		newConns.push_back(*it);
+	}
+
+	m_thoughts = newList;
+	m_connections = newConns;
+	loadState(m_currentId);
+	return true;
+}
+
 // Helpers.
 
 void MemoryRepository::loadState(ThoughtId rootId) {

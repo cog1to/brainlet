@@ -49,12 +49,13 @@ void AnchorWidget::leaveEvent(QEvent*) {
 
 void AnchorWidget::mousePressEvent(QMouseEvent* event) {
 	m_pressed = true;
-	//grabKeyboard();
 	m_dragStart = event->pos();
+	setFocus();
 }
 
 void AnchorWidget::mouseReleaseEvent(QMouseEvent* event) {
 	m_pressed = false;
+	clearFocus();
 
 	QPoint point = event->pos();
 	QSize current = size();
