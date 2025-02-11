@@ -21,10 +21,15 @@ BaseCanvasWidget::BaseCanvasWidget(
 	Style *style,
 	BaseLayout *layout
 ) : BaseWidget(parent, style),
-	m_anchorHighlight(this, style)
+	m_anchorHighlight(this, style),
+	m_overlay(this)
 {
 	m_layout = layout;
 	m_anchorHighlight.hide();
+	m_overlay.setStyleSheet("background-color: #00000000");
+
+	// Enable mouse tracking for highlighting connections.
+	setMouseTracking(true);
 
 	setStyleSheet(
 		QString("background-color: %1").arg(
@@ -55,6 +60,49 @@ void BaseCanvasWidget::showEvent(QShowEvent *) {
 	emit onShown();
 }
 
+void BaseCanvasWidget::mouseMoveEvent(QMouseEvent *event) {
+	if (m_anchorSource != nullptr || m_menuThought != nullptr) {
+		return;
+	}
+
+	QPoint pos = event->pos();
+
+	// Rectangle around cursor to capture connections.
+	QRectF activeRect = QRectF(
+		pos.x() - 10,
+		pos.y() - 10,
+		20,
+		20		
+	);
+
+	std::vector<Path> intersects;
+	for (auto& p: m_paths) {
+		// Not very smart. We just sample the curve along the path and check if
+		// some point gets inside the capture rectangle. But it still might be
+		// better than trying to solve a polinomial equation of fifth order...
+		//
+		// As a potential optimization, pre-sample the curve at the point of
+		// construction, i. e. in makePath() method.
+		for (int i = 0; i <= 25; i++) {
+			qreal percent = (qreal)i / 25.0;
+			QPointF point = p.path.pointAtPercent(percent);
+			if (activeRect.contains(point)) {
+				intersects.push_back(p);
+			}
+		}
+	}
+
+	if (intersects.size() == 0 && m_pathHighlight.has_value()) {
+		m_pathHighlight = std::nullopt;
+		update();
+	} else if (intersects.size() > 0 && (!m_pathHighlight.has_value() || m_pathHighlight.value().path != intersects[0].path)) {
+		// TODO: take closest.
+		QPen pen(m_style->anchorHighlight(), 1, Qt::DashLine);
+		m_pathHighlight = Path(pen, intersects[0].path);	
+		update();
+	}
+}
+
 void BaseCanvasWidget::resizeEvent(QResizeEvent *event) {
 	QWidget::resizeEvent(event);
 
@@ -77,6 +125,7 @@ void BaseCanvasWidget::paintEvent(QPaintEvent *) {
 		drawConnection(painter, path);
 	}
 
+	// Editing.
 	if (m_anchorSource != nullptr) {
 		if (m_overThought != nullptr) {
 			drawOverThoughtConnection(painter);
@@ -85,6 +134,11 @@ void BaseCanvasWidget::paintEvent(QPaintEvent *) {
 		} else if (m_newThought != nullptr && m_newThought->isVisible()) {
 			drawNewThoughtConnection(painter);
 		}
+	}
+
+	// Highlight.
+	if (m_pathHighlight.has_value()) {
+		drawConnection(painter, m_pathHighlight.value());
 	}
 }
 
@@ -656,6 +710,12 @@ void BaseCanvasWidget::onAnchorEntered(
 
 	// Save the source for drawing connections.
 	m_anchorSource = new AnchorSource(widget, type);
+
+	// Deselect higlighted path.
+	if (m_pathHighlight.has_value()) {
+		m_pathHighlight = std::nullopt;
+		update();
+	}
 }
 
 void BaseCanvasWidget::onAnchorLeft() {
@@ -858,7 +918,7 @@ void BaseCanvasWidget::onDeleteThought() {
 
 void BaseCanvasWidget::clearAnchor() {
 	m_anchorHighlight.hide();
-	m_overlay.lower();
+	m_overlay.setParent(nullptr);
 
 	if (m_newThought != nullptr) {
 		delete m_newThought;
@@ -918,7 +978,9 @@ ThoughtWidget *BaseCanvasWidget::widgetUnder(QPoint point) {
 void BaseCanvasWidget::setupNewThought() {
 	assert(m_newThought != nullptr);
 	// Activate overlay.
+	m_overlay.setParent(this);
 	m_overlay.setGeometry(rect());
+	m_overlay.show();
 	m_overlay.raise();
 	// Activate new thought widget.
 	m_newThought->setAttribute(Qt::WA_TransparentForMouseEvents, false);

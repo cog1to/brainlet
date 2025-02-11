@@ -8,6 +8,7 @@
 #include <QResizeEvent>
 #include <QWheelEvent>
 #include <QPainterPath>
+#include <QMouseEvent>
 
 #include "layout/base_layout.h"
 #include "widgets/style.h"
@@ -48,6 +49,7 @@ protected:
 	void paintEvent(QPaintEvent *) override;
 	void resizeEvent(QResizeEvent *) override;
 	void showEvent(QShowEvent *) override;
+	void mouseMoveEvent(QMouseEvent *) override;
 
 private:
 	BaseLayout *m_layout = nullptr;
@@ -64,6 +66,7 @@ private:
 	ThoughtWidget *m_overThought = nullptr;
 	ThoughtWidget *m_menuThought = nullptr;
 	QWidget m_overlay;
+	std::optional<Path> m_pathHighlight;
 	// Layout.
 	void updateLayout();
 	void updatePaths();
