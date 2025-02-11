@@ -69,53 +69,12 @@ void BaseCanvasWidget::paintEvent(QPaintEvent *) {
 	}
 
 	// Main connections.
-	const std::vector<ItemConnection> *connections = m_layout->connections();
-	if (connections == nullptr || connections->size() == 0) {
-		return;
-	}
 
 	QPainter painter(this);
 	painter.setRenderHint(QPainter::Antialiasing, true);
 
-	QColor color = m_style->activeAnchorColor();
-	QPen pen = QPen(color, 1);
-
-	for (auto& connection: *connections) {
-		auto fromIt = m_widgets.find(connection.from);
-		if (fromIt == m_widgets.end() || fromIt->second->parent() == nullptr)
-			continue;
-
-		auto toIt = m_widgets.find(connection.to);
-		if (toIt == m_widgets.end() || toIt->second->parent() == nullptr)
-			continue;
-
-		AnchorPoint outgoing = fromIt->second->getAnchorFrom(connection.type);
-		AnchorPoint incoming = toIt->second->getAnchorTo(connection.type);
-
-		drawConnection(painter, outgoing, incoming, pen);
-	}
-
-	// These connect nodes placed around the main node with each other.
-	const std::vector<ItemConnection> *subconnections = m_layout->subconnections();
-	if (subconnections == nullptr || subconnections->size() == 0) {
-		return;
-	}
-
-	QPen subPen = QPen(color, 0.5);
-
-	for (auto& connection: *subconnections) {
-		auto fromIt = m_widgets.find(connection.from);
-		if (fromIt == m_widgets.end() || fromIt->second->parent() == nullptr)
-			continue;
-
-		auto toIt = m_widgets.find(connection.to);
-		if (toIt == m_widgets.end() || toIt->second->parent() == nullptr)
-			continue;
-
-		AnchorPoint outgoing = fromIt->second->getAnchorFrom(connection.type);
-		AnchorPoint incoming = toIt->second->getAnchorTo(connection.type);
-
-		drawConnection(painter, outgoing, incoming, subPen);
+	for (auto& path: m_paths) {
+		drawConnection(painter, path);
 	}
 
 	if (m_anchorSource != nullptr) {
@@ -150,11 +109,11 @@ void BaseCanvasWidget::drawAnchorConnection(QPainter& painter) {
 	};
 
 	QPen pen(m_style->anchorHighlight(), 1, Qt::DashLine);
+	Path path = makePath(outgoing, incoming, pen);
 
 	drawConnection(
 		painter,
-		outgoing, incoming,
-		pen
+		path
 	);
 }
 
@@ -174,11 +133,11 @@ void BaseCanvasWidget::drawNewThoughtConnection(QPainter& painter) {
 	);
 
 	QPen pen(m_style->anchorHighlight(), 1, Qt::DashLine);
+	Path path = makePath(outgoing, incoming, pen);
 
 	drawConnection(
 		painter,
-		outgoing, incoming,
-		pen
+		path
 	);
 }
 
@@ -198,16 +157,15 @@ void BaseCanvasWidget::drawOverThoughtConnection(QPainter& painter) {
 	);
 
 	QPen pen(m_style->anchorHighlight(), 1, Qt::DashLine);
+	Path path = makePath(outgoing, incoming, pen);
 
 	drawConnection(
 		painter,
-		outgoing, incoming,
-		pen
+		path
 	);
 }
 
-inline void BaseCanvasWidget::drawConnection(
-	QPainter& painter,
+Path BaseCanvasWidget::makePath(
 	AnchorPoint outgoing, AnchorPoint incoming,
 	QPen& pen
 ) {
@@ -266,8 +224,15 @@ inline void BaseCanvasWidget::drawConnection(
 		incoming.y
 	);
 
-	painter.setPen(pen);
-	painter.drawPath(path);
+	return Path(pen, path);
+}
+
+inline void BaseCanvasWidget::drawConnection(
+	QPainter& painter,
+	Path& path
+) {
+	painter.setPen(path.pen);
+	painter.drawPath(path.path);
 }
 
 void BaseCanvasWidget::updateLayout() {
@@ -343,6 +308,67 @@ void BaseCanvasWidget::updateLayout() {
 		}
 
 		wit->second->setParent(nullptr);
+	}
+
+	// Recalculate paths.
+	updatePaths();
+}
+
+void BaseCanvasWidget::updatePaths() {
+	if (m_layout == nullptr) {
+		return;
+	}
+
+	// Main connections.
+	const std::vector<ItemConnection> *connections = m_layout->connections();
+	if (connections == nullptr || connections->size() == 0) {
+		return;
+	}
+
+	// Clear old paths.
+	m_paths.clear();
+
+	QColor color = m_style->activeAnchorColor();
+	QPen pen = QPen(color, 1);
+
+	for (auto& connection: *connections) {
+		auto fromIt = m_widgets.find(connection.from);
+		if (fromIt == m_widgets.end() || fromIt->second->parent() == nullptr)
+			continue;
+
+		auto toIt = m_widgets.find(connection.to);
+		if (toIt == m_widgets.end() || toIt->second->parent() == nullptr)
+			continue;
+
+		AnchorPoint outgoing = fromIt->second->getAnchorFrom(connection.type);
+		AnchorPoint incoming = toIt->second->getAnchorTo(connection.type);
+
+		Path path = makePath(outgoing, incoming, pen);
+		m_paths.push_back(path);
+	}
+
+	// These connect nodes placed around the main node with each other.
+	const std::vector<ItemConnection> *subconnections = m_layout->subconnections();
+	if (subconnections == nullptr || subconnections->size() == 0) {
+		return;
+	}
+
+	QPen subPen = QPen(color, 0.5);
+
+	for (auto& connection: *subconnections) {
+		auto fromIt = m_widgets.find(connection.from);
+		if (fromIt == m_widgets.end() || fromIt->second->parent() == nullptr)
+			continue;
+
+		auto toIt = m_widgets.find(connection.to);
+		if (toIt == m_widgets.end() || toIt->second->parent() == nullptr)
+			continue;
+
+		AnchorPoint outgoing = fromIt->second->getAnchorFrom(connection.type);
+		AnchorPoint incoming = toIt->second->getAnchorTo(connection.type);
+
+		Path path = makePath(outgoing, incoming, subPen);
+		m_paths.push_back(path);
 	}
 }
 

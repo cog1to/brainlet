@@ -7,6 +7,7 @@
 #include <QWidget>
 #include <QResizeEvent>
 #include <QWheelEvent>
+#include <QPainterPath>
 
 #include "layout/base_layout.h"
 #include "widgets/style.h"
@@ -19,6 +20,12 @@ struct AnchorSource {
 	ThoughtWidget *widget;
 	AnchorType type;
 	AnchorSource(ThoughtWidget *w, AnchorType t): widget(w), type(t) {}
+};
+
+struct Path {
+	QPen pen;
+	QPainterPath path;
+	Path(QPen& _pen, QPainterPath& _path): pen(_pen), path(_path) {}
 };
 
 class BaseCanvasWidget: public BaseWidget {
@@ -47,6 +54,8 @@ private:
 	// Main content widgets.
 	std::unordered_map<ThoughtId, ThoughtWidget*> m_widgets;
 	std::unordered_map<unsigned int, ScrollAreaWidget*> m_scrollAreas;
+	// Connections.
+	std::vector<Path> m_paths;
 	// Anchor highlight.
 	AnchorHighlightWidget m_anchorHighlight;
 	// Thought/connection creation.
@@ -57,15 +66,13 @@ private:
 	QWidget m_overlay;
 	// Layout.
 	void updateLayout();
+	void updatePaths();
+	Path makePath(AnchorPoint, AnchorPoint, QPen&);
 	void layoutScrollAreas();
 	void drawAnchorConnection(QPainter&);
 	void drawNewThoughtConnection(QPainter& painter);
 	void drawOverThoughtConnection(QPainter& painter);
-	void drawConnection(
-		QPainter& painter,
-		AnchorPoint outgoing, AnchorPoint incoming,
-		QPen& pen
-	);
+	void drawConnection(QPainter& painter, Path&);
 	ThoughtWidget *cachedWidget(ThoughtId id);
 	ThoughtWidget *createWidget(const ItemLayout&, bool);
 	void connectWidget(ThoughtWidget*);
