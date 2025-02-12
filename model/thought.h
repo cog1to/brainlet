@@ -6,6 +6,7 @@
 #include <vector>
 
 typedef uint64_t ThoughtId;
+const uint64_t InvalidThoughtId = 0 - 1;
 
 enum ConnectionType { link, child };
 

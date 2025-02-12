@@ -110,6 +110,26 @@ bool MemoryRepository::deleteThought(ThoughtId id) {
 	return true;
 }
 
+bool MemoryRepository::disconnect(ThoughtId from, ThoughtId to) {
+	std::vector<ConnectionEntity>::iterator it;
+
+	bool found = false;
+	for (it = m_connections.begin(); it != m_connections.end();) {
+		if (((*it).from == from && (*it).to == to) || ((*it).from == to && (*it).to == from)) {
+			it = m_connections.erase(it);
+			found = true;
+		} else {
+			it += 1;
+		}
+	}
+
+	if (found) {
+		loadState(m_currentId);
+	}
+
+	return found;
+}
+
 // Helpers.
 
 void MemoryRepository::loadState(ThoughtId rootId) {

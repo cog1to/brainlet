@@ -60,6 +60,8 @@ public:
 	// Anchor highlight.
 	const QColor anchorHighlight() const;
 	void setAnchorHighlight(QColor);
+	// Menu style.
+	QString menuStyle();
 
 signals:
 	void styleChanged(Style*);

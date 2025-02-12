@@ -24,9 +24,11 @@ struct AnchorSource {
 };
 
 struct Path {
+	ThoughtWidget *from, *to;
 	QPen pen;
 	QPainterPath path;
-	Path(QPen& _pen, QPainterPath& _path): pen(_pen), path(_path) {}
+	Path(ThoughtWidget *_l, ThoughtWidget *_r, QPen& _pen, QPainterPath& _path)
+		: from(_l), to(_r), pen(_pen), path(_path) {}
 };
 
 class BaseCanvasWidget: public BaseWidget {
@@ -42,6 +44,7 @@ signals:
 	void thoughtCreated(ThoughtId, ConnectionType, bool, QString, std::function<void(bool, ThoughtId)>);
 	void thoughtConnected(ThoughtId, ThoughtId, ConnectionType);
 	void thoughtDeleted(ThoughtId);
+	void thoughtsDisconnected(ThoughtId, ThoughtId);
 	void onShown();
 
 protected:
@@ -50,6 +53,7 @@ protected:
 	void resizeEvent(QResizeEvent *) override;
 	void showEvent(QShowEvent *) override;
 	void mouseMoveEvent(QMouseEvent *) override;
+	void mousePressEvent(QMouseEvent *) override;
 
 private:
 	BaseLayout *m_layout = nullptr;
@@ -70,7 +74,7 @@ private:
 	// Layout.
 	void updateLayout();
 	void updatePaths();
-	Path makePath(AnchorPoint, AnchorPoint, QPen&);
+	Path makePath(ThoughtWidget*, ThoughtWidget*, AnchorPoint, AnchorPoint, QPen&);
 	void layoutScrollAreas();
 	void drawAnchorConnection(QPainter&);
 	void drawNewThoughtConnection(QPainter& painter);
@@ -107,6 +111,7 @@ private slots:
 	void onCreateConfirmed(ThoughtWidget*, QString, std::function<void(bool)>);
 	void onMenuRequested(ThoughtWidget*, const QPoint&);
 	void onDeleteThought();
+	void onDisconnect();
 };
 
 #endif

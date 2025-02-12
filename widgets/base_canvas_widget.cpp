@@ -72,7 +72,7 @@ void BaseCanvasWidget::mouseMoveEvent(QMouseEvent *event) {
 		pos.x() - 10,
 		pos.y() - 10,
 		20,
-		20		
+		20
 	);
 
 	std::vector<Path> intersects;
@@ -98,9 +98,29 @@ void BaseCanvasWidget::mouseMoveEvent(QMouseEvent *event) {
 	} else if (intersects.size() > 0 && (!m_pathHighlight.has_value() || m_pathHighlight.value().path != intersects[0].path)) {
 		// TODO: take closest.
 		QPen pen(m_style->anchorHighlight(), 1, Qt::DashLine);
-		m_pathHighlight = Path(pen, intersects[0].path);	
+		m_pathHighlight = Path(intersects[0].from, intersects[0].to, pen, intersects[0].path);
 		update();
 	}
+}
+
+void BaseCanvasWidget::mousePressEvent(QMouseEvent *event) {
+	if (event->button() != Qt::RightButton || !m_pathHighlight.has_value()) {
+		return;
+	}
+
+	QPoint point = event->pos();
+
+	QMenu contextMenu(this);
+	if (m_style != nullptr) {
+		contextMenu.setStyleSheet(m_style->menuStyle());
+	}
+
+	QString disconnectMenu = tr("Disconnect");
+	QAction action(disconnectMenu, this);
+	connect(&action, SIGNAL(triggered()), this, SLOT(onDisconnect()));
+
+	contextMenu.addAction(&action);
+	contextMenu.exec(mapToGlobal(point));
 }
 
 void BaseCanvasWidget::resizeEvent(QResizeEvent *event) {
@@ -163,7 +183,7 @@ void BaseCanvasWidget::drawAnchorConnection(QPainter& painter) {
 	};
 
 	QPen pen(m_style->anchorHighlight(), 1, Qt::DashLine);
-	Path path = makePath(outgoing, incoming, pen);
+	Path path = makePath(m_anchorSource->widget, nullptr, outgoing, incoming, pen);
 
 	drawConnection(
 		painter,
@@ -187,7 +207,7 @@ void BaseCanvasWidget::drawNewThoughtConnection(QPainter& painter) {
 	);
 
 	QPen pen(m_style->anchorHighlight(), 1, Qt::DashLine);
-	Path path = makePath(outgoing, incoming, pen);
+	Path path = makePath(m_anchorSource->widget, m_newThought, outgoing, incoming, pen);
 
 	drawConnection(
 		painter,
@@ -211,7 +231,7 @@ void BaseCanvasWidget::drawOverThoughtConnection(QPainter& painter) {
 	);
 
 	QPen pen(m_style->anchorHighlight(), 1, Qt::DashLine);
-	Path path = makePath(outgoing, incoming, pen);
+	Path path = makePath(m_anchorSource->widget, m_overThought, outgoing, incoming, pen);
 
 	drawConnection(
 		painter,
@@ -220,6 +240,7 @@ void BaseCanvasWidget::drawOverThoughtConnection(QPainter& painter) {
 }
 
 Path BaseCanvasWidget::makePath(
+	ThoughtWidget *from, ThoughtWidget *to,
 	AnchorPoint outgoing, AnchorPoint incoming,
 	QPen& pen
 ) {
@@ -278,7 +299,7 @@ Path BaseCanvasWidget::makePath(
 		incoming.y
 	);
 
-	return Path(pen, path);
+	return Path(from, to, pen, path);
 }
 
 inline void BaseCanvasWidget::drawConnection(
@@ -397,7 +418,7 @@ void BaseCanvasWidget::updatePaths() {
 		AnchorPoint outgoing = fromIt->second->getAnchorFrom(connection.type);
 		AnchorPoint incoming = toIt->second->getAnchorTo(connection.type);
 
-		Path path = makePath(outgoing, incoming, pen);
+		Path path = makePath(fromIt->second, toIt->second, outgoing, incoming, pen);
 		m_paths.push_back(path);
 	}
 
@@ -421,7 +442,7 @@ void BaseCanvasWidget::updatePaths() {
 		AnchorPoint outgoing = fromIt->second->getAnchorFrom(connection.type);
 		AnchorPoint incoming = toIt->second->getAnchorTo(connection.type);
 
-		Path path = makePath(outgoing, incoming, subPen);
+		Path path = makePath(fromIt->second, toIt->second, outgoing, incoming, subPen);
 		m_paths.push_back(path);
 	}
 }
@@ -672,7 +693,7 @@ void BaseCanvasWidget::onAnchorEntered(
 
 	if (m_newThought == nullptr) {
 		m_newThought = new ThoughtWidget(
-			this, m_style, (uint64_t)0 - 1, false, "",
+			this, m_style, InvalidThoughtId, false, "",
 			false, false, false
 		);
 
@@ -875,26 +896,9 @@ void BaseCanvasWidget::onMenuRequested(
 
 	QMenu contextMenu(this);
 
-	// TODO: Move menu styling to Style.
-	QString stylesheet = QString(
-		"QMenu {\
-			color: %1;\
-			font: %2 %3px \"%4\";\
-		}\
-		QMenu::item {\
-			padding-top: 5px;\
-			padding-left: 15px;\
-			padding-right: 15px;\
-			padding-bottom: 9px;\
-		}\
-		QMenu::item:selected {\
-			color: #ffffff;\
-		}"
-	).arg(m_style->textColor().name(QColor::HexRgb))
-		.arg(m_style->font().bold() ? "bold" : "")
-		.arg(m_style->font().pixelSize())
-		.arg(m_style->font().family());
-	contextMenu.setStyleSheet(stylesheet);
+	if (m_style != nullptr) {
+		contextMenu.setStyleSheet(m_style->menuStyle());
+	}
 
 	QString thoughtName = QString::fromStdString(m_menuThought->text());
 	if (thoughtName.size() > 15)
@@ -912,6 +916,23 @@ void BaseCanvasWidget::onDeleteThought() {
 	if (m_menuThought == nullptr)
 		return;
 	emit thoughtDeleted(m_menuThought->id());
+}
+
+void BaseCanvasWidget::onDisconnect() {
+	if (!m_pathHighlight.has_value()) {
+		return;
+	}
+
+	Path path = m_pathHighlight.value();
+	if (path.from == nullptr || path.to == nullptr) {
+		return;
+	}
+
+	emit thoughtsDisconnected(path.from->id(), path.to->id());
+
+	// Cleanup.
+	m_pathHighlight = std::nullopt;
+	update();
 }
 
 // Helpers.

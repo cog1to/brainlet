@@ -31,6 +31,7 @@ public:
 		ConnectionType type
 	) override;
 	bool deleteThought(ThoughtId) override;
+	bool disconnect(ThoughtId, ThoughtId) override;
 
 private:
 	std::vector<ThoughtEntity> m_thoughts;

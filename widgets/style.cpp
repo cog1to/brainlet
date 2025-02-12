@@ -162,3 +162,25 @@ void Style::setAnchorHighlight(QColor value) {
 	emit styleChanged(this);
 }
 
+QString Style::menuStyle() {
+	QString stylesheet = QString(
+		"QMenu {\
+			color: %1;\
+			font: %2 %3px \"%4\";\
+		}\
+		QMenu::item {\
+			padding-top: 5px;\
+			padding-left: 15px;\
+			padding-right: 15px;\
+			padding-bottom: 9px;\
+		}\
+		QMenu::item:selected {\
+			color: #ffffff;\
+		}"
+	).arg(m_textColor.name(QColor::HexRgb))
+	.arg(m_font.bold() ? "bold" : "")
+	.arg(m_font.pixelSize())
+	.arg(m_font.family());
+
+	return stylesheet;
+}

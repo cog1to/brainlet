@@ -31,6 +31,7 @@ private slots:
 		ConnectionType type
 	);
 	void onThoughtDeleted(ThoughtId);
+	void onThoughtsDisconnected(ThoughtId, ThoughtId);
 	void onShown();
 
 private:
