@@ -3,7 +3,7 @@
 CanvasPresenter::CanvasPresenter(
 	BaseLayout *layout,
 	Repository *repo,
-	BaseCanvasWidget *view
+	CanvasWidget *view
 ) : m_layout(layout), m_repo(repo), m_view(view) {
 	QObject::connect(
 		view, SIGNAL(textChanged(ThoughtId, QString, std::function<void(bool)>)),

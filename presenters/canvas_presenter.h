@@ -6,13 +6,13 @@
 
 #include "layout/base_layout.h"
 #include "entity/repository.h"
-#include "widgets/base_canvas_widget.h"
+#include "widgets/canvas_widget.h"
 
 class CanvasPresenter: public QObject {
 Q_OBJECT
 
 public:
-	CanvasPresenter(BaseLayout*, Repository*, BaseCanvasWidget*);
+	CanvasPresenter(BaseLayout*, Repository*, CanvasWidget*);
 	~CanvasPresenter();
 
 private slots:
@@ -38,7 +38,7 @@ private:
 	// State.
 	BaseLayout *m_layout;
 	Repository *m_repo;
-	BaseCanvasWidget *m_view;
+	CanvasWidget *m_view;
 	// Helpers.
 	void reloadState();
 };

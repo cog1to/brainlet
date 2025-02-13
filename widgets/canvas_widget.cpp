@@ -12,11 +12,11 @@
 #include "layout/base_layout.h"
 #include "layout/scroll_area_layout.h"
 #include "layout/item_connection.h"
-#include "widgets/base_canvas_widget.h"
+#include "widgets/canvas_widget.h"
 #include "widgets/scroll_area_widget.h"
 #include "widgets/thought_widget.h"
 
-BaseCanvasWidget::BaseCanvasWidget(
+CanvasWidget::CanvasWidget(
 	QWidget *parent,
 	Style *style,
 	BaseLayout *layout
@@ -44,7 +44,7 @@ BaseCanvasWidget::BaseCanvasWidget(
 	};
 }
 
-BaseCanvasWidget::~BaseCanvasWidget() {
+CanvasWidget::~CanvasWidget() {
 	std::unordered_map<ThoughtId, ThoughtWidget*>::iterator wi;
 	for (wi = m_widgets.begin(); wi != m_widgets.end(); wi++) {
 		delete wi->second;
@@ -56,11 +56,11 @@ BaseCanvasWidget::~BaseCanvasWidget() {
 	}
 }
 
-void BaseCanvasWidget::showEvent(QShowEvent *) {
+void CanvasWidget::showEvent(QShowEvent *) {
 	emit onShown();
 }
 
-void BaseCanvasWidget::mouseMoveEvent(QMouseEvent *event) {
+void CanvasWidget::mouseMoveEvent(QMouseEvent *event) {
 	if (m_anchorSource != nullptr || m_menuThought != nullptr) {
 		return;
 	}
@@ -103,7 +103,7 @@ void BaseCanvasWidget::mouseMoveEvent(QMouseEvent *event) {
 	}
 }
 
-void BaseCanvasWidget::mousePressEvent(QMouseEvent *event) {
+void CanvasWidget::mousePressEvent(QMouseEvent *event) {
 	if (event->button() != Qt::RightButton || !m_pathHighlight.has_value()) {
 		return;
 	}
@@ -123,7 +123,7 @@ void BaseCanvasWidget::mousePressEvent(QMouseEvent *event) {
 	contextMenu.exec(mapToGlobal(point));
 }
 
-void BaseCanvasWidget::resizeEvent(QResizeEvent *event) {
+void CanvasWidget::resizeEvent(QResizeEvent *event) {
 	QWidget::resizeEvent(event);
 
 	if (m_layout != nullptr) {
@@ -131,7 +131,7 @@ void BaseCanvasWidget::resizeEvent(QResizeEvent *event) {
 	}
 }
 
-void BaseCanvasWidget::paintEvent(QPaintEvent *) {
+void CanvasWidget::paintEvent(QPaintEvent *) {
 	if (m_layout == nullptr) {
 		return;
 	}
@@ -162,7 +162,7 @@ void BaseCanvasWidget::paintEvent(QPaintEvent *) {
 	}
 }
 
-void BaseCanvasWidget::drawAnchorConnection(QPainter& painter) {
+void CanvasWidget::drawAnchorConnection(QPainter& painter) {
 	assert(m_anchorHighlight.isVisible());
 	assert(m_anchorSource !=  nullptr);
 
@@ -191,7 +191,7 @@ void BaseCanvasWidget::drawAnchorConnection(QPainter& painter) {
 	);
 }
 
-void BaseCanvasWidget::drawNewThoughtConnection(QPainter& painter) {
+void CanvasWidget::drawNewThoughtConnection(QPainter& painter) {
 	assert(m_newThought != nullptr && m_newThought->isVisible());
 	assert(m_anchorSource !=  nullptr);
 
@@ -215,7 +215,7 @@ void BaseCanvasWidget::drawNewThoughtConnection(QPainter& painter) {
 	);
 }
 
-void BaseCanvasWidget::drawOverThoughtConnection(QPainter& painter) {
+void CanvasWidget::drawOverThoughtConnection(QPainter& painter) {
 	assert(m_overThought != nullptr);
 	assert(m_anchorSource !=  nullptr);
 
@@ -239,7 +239,7 @@ void BaseCanvasWidget::drawOverThoughtConnection(QPainter& painter) {
 	);
 }
 
-Path BaseCanvasWidget::makePath(
+Path CanvasWidget::makePath(
 	ThoughtWidget *from, ThoughtWidget *to,
 	AnchorPoint outgoing, AnchorPoint incoming,
 	QPen& pen
@@ -302,7 +302,7 @@ Path BaseCanvasWidget::makePath(
 	return Path(from, to, pen, path);
 }
 
-inline void BaseCanvasWidget::drawConnection(
+inline void CanvasWidget::drawConnection(
 	QPainter& painter,
 	Path& path
 ) {
@@ -310,7 +310,7 @@ inline void BaseCanvasWidget::drawConnection(
 	painter.drawPath(path.path);
 }
 
-void BaseCanvasWidget::updateLayout() {
+void CanvasWidget::updateLayout() {
 	if (m_layout == nullptr)
 		return;
 
@@ -389,7 +389,7 @@ void BaseCanvasWidget::updateLayout() {
 	updatePaths();
 }
 
-void BaseCanvasWidget::updatePaths() {
+void CanvasWidget::updatePaths() {
 	if (m_layout == nullptr) {
 		return;
 	}
@@ -449,7 +449,7 @@ void BaseCanvasWidget::updatePaths() {
 
 // Scroll areas.
 
-void BaseCanvasWidget::layoutScrollAreas() {
+void CanvasWidget::layoutScrollAreas() {
 	const std::unordered_map<unsigned int, ScrollAreaLayout> *scrolls = m_layout->scrollAreas();
 	std::unordered_map<unsigned int, ScrollAreaLayout>::const_iterator it;
 
@@ -487,14 +487,14 @@ void BaseCanvasWidget::layoutScrollAreas() {
 
 // Caching widgets.
 
-ScrollAreaWidget *BaseCanvasWidget::cachedScrollArea(unsigned int id) {
+ScrollAreaWidget *CanvasWidget::cachedScrollArea(unsigned int id) {
 	if (auto search = m_scrollAreas.find(id); search != m_scrollAreas.end()) {
 		return search->second;
 	}
 	return nullptr;
 }
 
-ScrollAreaWidget *BaseCanvasWidget::createScrollArea(
+ScrollAreaWidget *CanvasWidget::createScrollArea(
 	unsigned int id,
 	ScrollBarPos pos
 ) {
@@ -508,14 +508,14 @@ ScrollAreaWidget *BaseCanvasWidget::createScrollArea(
 	return widget;
 }
 
-ThoughtWidget *BaseCanvasWidget::cachedWidget(ThoughtId id) {
+ThoughtWidget *CanvasWidget::cachedWidget(ThoughtId id) {
 	if (auto search = m_widgets.find(id); search != m_widgets.end()) {
 		return search->second;
 	}
 	return nullptr;
 }
 
-ThoughtWidget *BaseCanvasWidget::createWidget(
+ThoughtWidget *CanvasWidget::createWidget(
 	const ItemLayout& layout,
 	bool readonly
 ) {
@@ -533,7 +533,7 @@ ThoughtWidget *BaseCanvasWidget::createWidget(
 	return widget;
 }
 
-void BaseCanvasWidget::connectWidget(ThoughtWidget *widget) {
+void CanvasWidget::connectWidget(ThoughtWidget *widget) {
 	QObject::connect(
 		widget, SIGNAL(clicked(ThoughtWidget*)),
 		this, SLOT(onWidgetClicked(ThoughtWidget*))
@@ -588,11 +588,11 @@ void BaseCanvasWidget::connectWidget(ThoughtWidget *widget) {
 
 // Slots
 
-void BaseCanvasWidget::onWidgetClicked(ThoughtWidget* widget) {
+void CanvasWidget::onWidgetClicked(ThoughtWidget* widget) {
 	emit thoughtSelected(widget->id());
 }
 
-void BaseCanvasWidget::onWidgetActivated(ThoughtWidget* widget) {
+void CanvasWidget::onWidgetActivated(ThoughtWidget* widget) {
 	QPoint wpos = widget->pos();
 	QSize wsize = widget->size();
 	QSize center = QSize(
@@ -631,7 +631,7 @@ void BaseCanvasWidget::onWidgetActivated(ThoughtWidget* widget) {
 	update();
 }
 
-void BaseCanvasWidget::onWidgetDeactivated(ThoughtWidget* widget) {
+void CanvasWidget::onWidgetDeactivated(ThoughtWidget* widget) {
 	if (m_layout == nullptr)
 		return;
 
@@ -648,7 +648,7 @@ void BaseCanvasWidget::onWidgetDeactivated(ThoughtWidget* widget) {
 	update();
 }
 
-void BaseCanvasWidget::onWidgetScroll(
+void CanvasWidget::onWidgetScroll(
 	ThoughtWidget* widget,
 	QWheelEvent* event
 ) {
@@ -669,7 +669,7 @@ void BaseCanvasWidget::onWidgetScroll(
 	}
 }
 
-void BaseCanvasWidget::onScrollAreaScroll(unsigned int id, int value) {
+void CanvasWidget::onScrollAreaScroll(unsigned int id, int value) {
 	if (m_layout == nullptr)
 		return;
 
@@ -677,7 +677,7 @@ void BaseCanvasWidget::onScrollAreaScroll(unsigned int id, int value) {
 	m_layout->onScroll(id, value);
 }
 
-void BaseCanvasWidget::onAnchorEntered(
+void CanvasWidget::onAnchorEntered(
 	ThoughtWidget* widget,
 	AnchorType type,
 	QPoint center
@@ -739,14 +739,14 @@ void BaseCanvasWidget::onAnchorEntered(
 	}
 }
 
-void BaseCanvasWidget::onAnchorLeft() {
+void CanvasWidget::onAnchorLeft() {
 	// Only clear anchors if we're not creating a new thought.
 	if (m_newThought == nullptr || !m_newThought->isVisible()) {
 		clearAnchor();
 	}
 }
 
-void BaseCanvasWidget::onAnchorMoved(QPoint point) {
+void CanvasWidget::onAnchorMoved(QPoint point) {
 	if (m_anchorSource == nullptr)
 		return;
 
@@ -805,11 +805,11 @@ void BaseCanvasWidget::onAnchorMoved(QPoint point) {
 	update();
 }
 
-void BaseCanvasWidget::onAnchorCanceled() {
+void CanvasWidget::onAnchorCanceled() {
 	clearAnchor();
 }
 
-void BaseCanvasWidget::onAnchorReleased(QPoint centerPos) {
+void CanvasWidget::onAnchorReleased(QPoint centerPos) {
 	if (m_anchorSource == nullptr)
 		return;
 
@@ -836,7 +836,7 @@ void BaseCanvasWidget::onAnchorReleased(QPoint centerPos) {
 	}
 }
 
-void BaseCanvasWidget::onTextConfirmed(
+void CanvasWidget::onTextConfirmed(
 	ThoughtWidget *source,
 	QString text,
 	std::function<void(bool)> callback
@@ -847,11 +847,11 @@ void BaseCanvasWidget::onTextConfirmed(
 
 // Creation slots.
 
-void BaseCanvasWidget::onCreateCanceled(ThoughtWidget *widget) {
+void CanvasWidget::onCreateCanceled(ThoughtWidget *widget) {
 	clearAnchor();
 }
 
-void BaseCanvasWidget::onCreateConfirmed(
+void CanvasWidget::onCreateConfirmed(
 	ThoughtWidget *widget,
 	QString text,
 	std::function<void(bool)> checkCallback
@@ -883,7 +883,7 @@ void BaseCanvasWidget::onCreateConfirmed(
 	);
 }
 
-void BaseCanvasWidget::onMenuRequested(
+void CanvasWidget::onMenuRequested(
 	ThoughtWidget *widget,
 	const QPoint& point
 ) {
@@ -912,13 +912,13 @@ void BaseCanvasWidget::onMenuRequested(
 	contextMenu.exec(mapToGlobal(point));
 }
 
-void BaseCanvasWidget::onDeleteThought() {
+void CanvasWidget::onDeleteThought() {
 	if (m_menuThought == nullptr)
 		return;
 	emit thoughtDeleted(m_menuThought->id());
 }
 
-void BaseCanvasWidget::onDisconnect() {
+void CanvasWidget::onDisconnect() {
 	if (!m_pathHighlight.has_value()) {
 		return;
 	}
@@ -937,7 +937,7 @@ void BaseCanvasWidget::onDisconnect() {
 
 // Helpers.
 
-void BaseCanvasWidget::clearAnchor() {
+void CanvasWidget::clearAnchor() {
 	m_anchorHighlight.hide();
 	m_overlay.setParent(nullptr);
 
@@ -959,7 +959,7 @@ void BaseCanvasWidget::clearAnchor() {
 	update();
 }
 
-inline AnchorType BaseCanvasWidget::reverseAnchorType(AnchorType type) {
+inline AnchorType CanvasWidget::reverseAnchorType(AnchorType type) {
 	switch (type) {
 		case AnchorType::Parent:
 			return AnchorType::Child;
@@ -974,7 +974,7 @@ inline AnchorType BaseCanvasWidget::reverseAnchorType(AnchorType type) {
 	return AnchorType::Link;
 }
 
-ThoughtWidget *BaseCanvasWidget::widgetUnder(QPoint point) {
+ThoughtWidget *CanvasWidget::widgetUnder(QPoint point) {
 	QRect geometry;
 	std::unordered_map<ThoughtId, ThoughtWidget*>::iterator it;
 
@@ -996,7 +996,7 @@ ThoughtWidget *BaseCanvasWidget::widgetUnder(QPoint point) {
 	return nullptr;
 }
 
-void BaseCanvasWidget::setupNewThought() {
+void CanvasWidget::setupNewThought() {
 	assert(m_newThought != nullptr);
 	// Activate overlay.
 	m_overlay.setParent(this);
@@ -1009,7 +1009,7 @@ void BaseCanvasWidget::setupNewThought() {
 	m_newThought->activate();
 }
 
-void BaseCanvasWidget::updateConnection() {
+void CanvasWidget::updateConnection() {
 	assert(m_overThought != nullptr);
 	assert(m_anchorSource != nullptr);
 

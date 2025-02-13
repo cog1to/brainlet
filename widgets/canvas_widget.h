@@ -31,12 +31,12 @@ struct Path {
 		: from(_l), to(_r), pen(_pen), path(_path) {}
 };
 
-class BaseCanvasWidget: public BaseWidget {
+class CanvasWidget: public BaseWidget {
 	Q_OBJECT
 
 public:
-	BaseCanvasWidget(QWidget*, Style*, BaseLayout*);
-	~BaseCanvasWidget();
+	CanvasWidget(QWidget*, Style*, BaseLayout*);
+	~CanvasWidget();
 
 signals:
 	void textChanged(ThoughtId, QString, std::function<void(bool)>);

@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
 	QApplication app(argc, argv);
 
 	DefaultLayout layout(&style);
-	BaseCanvasWidget widget(nullptr, &style, &layout);
+	CanvasWidget widget(nullptr, &style, &layout);
 	widget.resize(800, 800);
 
 	widget.show();
@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
 
 	// Editing callbacks.
 	QObject::connect(
-		&widget, &BaseCanvasWidget::textChanged,
+		&widget, &CanvasWidget::textChanged,
 		[&layout, central](ThoughtId id, QString text, std::function<void(bool)> callback){
 			if (text.isEmpty()) {
 				callback(false);

@@ -1,6 +1,6 @@
 #include <QApplication>
 
-#include "widgets/base_canvas_widget.h"
+#include "widgets/canvas_widget.h"
 #include "layout/default_layout.h"
 #include "entity/thought_entity.h"
 #include "entity/connection_entity.h"
@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
 	DefaultLayout layout(&style);
 
 	// Make widget.
-	BaseCanvasWidget widget(nullptr, &style, &layout);
+	CanvasWidget widget(nullptr, &style, &layout);
 	widget.resize(800, 800);
 
 	// Make presenter.
