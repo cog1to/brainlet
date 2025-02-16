@@ -52,7 +52,7 @@ debug: tests
 
 # Tests
 tests: bin test_anchor test_thought test_resize test_edit test_base \
-	test_memory test_presenter
+	test_memory test_presenter test_markdown
 
 test_anchor: mocs $(HEADERS) $(WIDGETS) tests/test_anchor.cpp
 	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
@@ -90,6 +90,11 @@ test_presenter: mocs $(HEADERS) $(REPO) tests/test_presenter.cpp
 		$(MOCS_O) $(PRESENTERS_MOCS_O) \
 		tests/test_presenter.cpp \
 		-o bin/test_presenter $(LIBDIRS) $(LIBS)
+
+test_markdown: mocs $(HEADERS) $(WIDGETS) tests/test_markdown.cpp
+	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
+		$(MODELS) $(LAYOUTS) $(WIDGETS) $(MOCS_O) tests/test_markdown.cpp \
+		-o bin/test_markdown $(LIBDIRS) $(LIBS)
 
 # MOCs
 mocs: moc $(MOCS_O) $(PRESENTERS_MOCS_O)
