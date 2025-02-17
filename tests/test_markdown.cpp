@@ -5,6 +5,7 @@
 #include <QFile>
 #include <QIODevice>
 
+#include "model/text_model.h"
 #include "widgets/markdown_widget.h"
 
 int main(int argc, char *argv[]) {
@@ -27,6 +28,9 @@ int main(int argc, char *argv[]) {
 	QString string = QString::fromUtf8(content);
 	file.close();
 
+	// Prepare model.
+	QStringList lines = string.split("\n");
+
 	MarkdownWidget widget(nullptr, &style);
 	widget.resize(600, 600);
 
@@ -34,7 +38,7 @@ int main(int argc, char *argv[]) {
 	widget.show();
 
 	// Set text.
-	widget.setPlainText(string);
+	widget.load(string);
 
 	// Run app.
 	return app.exec();

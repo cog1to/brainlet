@@ -16,7 +16,8 @@ Style::Style(
 	QColor textColor,
 	QColor hoverBackground,
 	int scrollWidth,
-	QColor anchorHighlight
+	QColor anchorHighlight,
+	QFont textFont
 ) {
 	m_background = background;
 	m_nodeBackground = nodeBackground;
@@ -30,11 +31,15 @@ Style::Style(
 	m_hoverBackground = hoverBackground;
 	m_scrollWidth = scrollWidth;
 	m_anchorHighlight = anchorHighlight;
+	m_textFont = textFont;
 }
 
 Style& Style::defaultStyle() {
 	static QFont font = QFont("Noto Sans");
 	font.setPixelSize(12);
+
+	static QFont textFont = QFont("Noto Sans Mono");
+	textFont.setPixelSize(12);
 
 	static Style style(
 		QColor(23, 43, 52, 255),
@@ -48,7 +53,8 @@ Style& Style::defaultStyle() {
 		QColor(215, 221, 232, 255),
 		QColor(0, 0, 0, 192),
 		12,
-		QColor(255, 255, 255, 255)
+		QColor(255, 255, 255, 255),
+		textFont
 	);
 
 	return style;
@@ -159,6 +165,15 @@ const QColor Style::anchorHighlight() const {
 
 void Style::setAnchorHighlight(QColor value) {
 	m_anchorHighlight = value;
+	emit styleChanged(this);
+}
+
+const QFont Style::textFont() const {
+	return m_textFont;
+}
+
+void Style::setTextFont(QFont font) {
+	m_textFont = font;
 	emit styleChanged(this);
 }
 

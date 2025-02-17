@@ -22,7 +22,8 @@ public:
 		QColor textColor,
 		QColor hoverBackground,
 		int scrollWidth,
-		QColor anchorHighlight
+		QColor anchorHighlight,
+		QFont textFont
 	);
 	// Default style.
 	static Style& defaultStyle();
@@ -60,6 +61,9 @@ public:
 	// Anchor highlight.
 	const QColor anchorHighlight() const;
 	void setAnchorHighlight(QColor);
+	// Text font.
+	const QFont textFont() const;
+	void setTextFont(QFont);
 	// Menu style.
 	QString menuStyle();
 
@@ -76,6 +80,7 @@ private:
 	QColor m_hoverBackground;
 	QColor m_anchorHighlight;
 	QFont m_font;
+	QFont m_textFont;
 	float m_borderWidth;
 	float m_hoverBorderWidth;
 	int m_scrollWidth;
