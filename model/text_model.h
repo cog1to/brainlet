@@ -11,9 +11,13 @@ enum BlockFormat {
 	Heading1,
 	Heading2,
 	Heading3,
+	Heading4,
+	Heading5,
+	Heading6,
 	Italic,
 	Bold,
-	BoldItalic
+	BoldItalic,
+	Code
 };
 
 struct FormatRange {

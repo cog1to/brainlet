@@ -13,12 +13,20 @@ inline int blockStartOffset(BlockFormat format) {
 			return 3;
 		case Heading3:
 			return 4;
+		case Heading4:
+			return 5;
+		case Heading5:
+			return 6;
+		case Heading6:
+			return 7;
 		case Italic:
 			return 1;
 		case Bold:
 			return 2;
 		case BoldItalic:
 			return 3;
+		case Code:
+			return 1;
 	}
 
 	assert(false); // Should be unreachable.
@@ -30,6 +38,9 @@ inline int blockEndOffset(BlockFormat format) {
 		case Heading1:
 		case Heading2:
 		case Heading3:
+		case Heading4:
+		case Heading5:
+		case Heading6:
 			return 0;
 		case Italic:
 			return 1;
@@ -37,6 +48,8 @@ inline int blockEndOffset(BlockFormat format) {
 			return 2;
 		case BoldItalic:
 			return 3;
+		case Code:
+			return 1;
 	}
 
 	assert(false); // Should be unreachable.
@@ -59,6 +72,18 @@ QTextCharFormat FormatRange::qtFormat(Style *style, QTextCharFormat fmt) {
 			fmt.setFontPointSize(style->textFont().pixelSize() * 1.6);
 			fmt.setFontWeight(QFont::Bold);
 			break;
+		case Heading4:
+			fmt.setFontPointSize(style->textFont().pixelSize() * 1.4);
+			fmt.setFontWeight(QFont::Bold);
+			break;
+		case Heading5:
+			fmt.setFontPointSize(style->textFont().pixelSize() * 1.2);
+			fmt.setFontWeight(QFont::Bold);
+			break;
+		case Heading6:
+			fmt.setFontPointSize(style->textFont().pixelSize() * 1.1);
+			fmt.setFontWeight(QFont::Bold);
+			break;
 		case Italic:
 			fmt.setFontItalic(true);
 			break;
@@ -68,6 +93,10 @@ QTextCharFormat FormatRange::qtFormat(Style *style, QTextCharFormat fmt) {
 		case BoldItalic:
 			fmt.setFontItalic(true);
 			fmt.setFontWeight(QFont::Bold);
+			break;
+		case Code:
+			fmt.setBackground(style->codeBackground());
+			fmt.setFont(style->codeFont());
 			break;
 	}
 
@@ -100,13 +129,33 @@ Line::Line(QString& input): text(input), folded(input) {
 		folded = folded.right(folded.size() - 4);
 		foldedFormats.push_back(FormatRange(0, folded.size(), BlockFormat::Heading3));
 		formats.push_back(FormatRange(0, input.size(), BlockFormat::Heading3));
+	} else if (folded.startsWith("#### ")) {
+		folded = folded.right(folded.size() - 5);
+		foldedFormats.push_back(FormatRange(0, folded.size(), BlockFormat::Heading4));
+		formats.push_back(FormatRange(0, input.size(), BlockFormat::Heading4));
+	} else if (folded.startsWith("##### ")) {
+		folded = folded.right(folded.size() - 6);
+		foldedFormats.push_back(FormatRange(0, folded.size(), BlockFormat::Heading5));
+		formats.push_back(FormatRange(0, input.size(), BlockFormat::Heading5));
+	} else if (folded.startsWith("###### ")) {
+		folded = folded.right(folded.size() - 7);
+		foldedFormats.push_back(FormatRange(0, folded.size(), BlockFormat::Heading6));
+		formats.push_back(FormatRange(0, input.size(), BlockFormat::Heading6));
 	}
+
+	// Code.
+	apply(
+		&text,
+		BlockFormat::Code,
+		QRegularExpression("()`[^\n]*?`()"),
+		1		
+	);
 
 	// Bold italic.
 	apply(
 		&text,
 		BlockFormat::BoldItalic,
-		QRegularExpression("(^|[^\\*])\\*\\*\\*[^\n]+?\\*\\*\\*($|[^\\*])"),
+		QRegularExpression("(^|[^\\*])\\*\\*\\*\\w[^\n]*?\\*\\*\\*($|[^\\*])"),
 		3
 	);
 
@@ -114,7 +163,7 @@ Line::Line(QString& input): text(input), folded(input) {
 	apply(
 		&text,
 		BlockFormat::Bold,
-		QRegularExpression("(^|[^\\*])\\*\\*[^\\*][^\n]+?\\*\\*($|[^\\*])"),
+		QRegularExpression("(^|[^\\*])\\*\\*\\w[^\n]*?\\*\\*($|[^\\*])"),
 		2
 	);
 
@@ -122,7 +171,7 @@ Line::Line(QString& input): text(input), folded(input) {
 	apply(
 		&text,
 		BlockFormat::Italic,
-		QRegularExpression("(^|[^\\*])\\*[^\\*\n]+?\\*($|[^\\*])"),
+		QRegularExpression("(^|[^\\*])\\*\\w[^\n]*?\\*($|[^\\*])"),
 		1
 	);
 }
