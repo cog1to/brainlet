@@ -8,7 +8,12 @@
 #include "widgets/style.h"
 
 enum BlockFormat {
-	Heading1
+	Heading1,
+	Heading2,
+	Heading3,
+	Italic,
+	Bold,
+	BoldItalic
 };
 
 struct FormatRange {
@@ -18,7 +23,7 @@ struct FormatRange {
 	FormatRange(int _from, int _to, BlockFormat _format)
 		: from(_from), to(_to), format(_format) {};
 	// Convert to QTextCharFormat
-	QTextCharFormat qtFormat(Style*);
+	QTextCharFormat qtFormat(Style*, QTextCharFormat);
 	// Symbolic offset due to formatting symbols.
 	int startOffset();
 	int endOffset();
@@ -31,6 +36,9 @@ struct Line {
 	std::vector<FormatRange> foldedFormats;
 	// Constructor
 	Line(QString&);
+
+private:
+	void apply(QString *input, BlockFormat format, QRegularExpression expr, int size);
 };
 
 class TextModel {

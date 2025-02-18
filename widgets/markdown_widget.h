@@ -16,7 +16,7 @@
 
 class MarkdownHighlighter: public QSyntaxHighlighter {
 public:
-	MarkdownHighlighter(QTextDocument*);
+	MarkdownHighlighter(Style*, QTextDocument*);
 	// Model.
 	void setModel(TextModel*);
 	// Highlighting.
@@ -26,6 +26,7 @@ public:
 
 private:
 	TextModel *m_model = nullptr;
+	Style *m_style;
 	int m_activeBlock = -1;
 };
 

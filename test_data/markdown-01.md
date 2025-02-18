@@ -1,8 +1,8 @@
 # HEADER 1
 
-First paragraph: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed lobortis velit vel lorem elementum accumsan. Maecenas turpis tortor, imperdiet in turpis sed, varius cursus mi. Quisque ut semper ipsum. Nullam posuere neque ut urna tincidunt varius. Donec pellentesque vulputate sodales. Quisque dignissim bibendum velit, in pharetra neque venenatis vitae. Phasellus vitae libero sit amet magna egestas fringilla. Etiam tempus velit vel lacus vulputate ultricies. Quisque tincidunt vestibulum sapien nec viverra. Nam hendrerit maximus blandit.
+First ***paragraph***: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed lobortis velit vel lorem elementum accumsan. Maecenas turpis tortor, imperdiet in turpis sed, varius cursus mi. Quisque ut semper ipsum. Nullam posuere neque ut urna tincidunt varius. Donec pellentesque vulputate sodales. Quisque dignissim bibendum velit, in pharetra neque venenatis vitae. Phasellus vitae libero sit amet magna egestas fringilla. Etiam tempus velit vel lacus vulputate ultricies. Quisque tincidunt vestibulum sapien nec viverra. Nam hendrerit maximus blandit.
 
-# HEADER 1.1
+# HEADER 1.1 with *italic* text
 
 afsaf
 
@@ -27,7 +27,9 @@ Numerated list:
 2. Two
 1. Three
 
-Text **with bold** and *italic* and ***bold and italic***.
+Text with *italic* text *again* and **bold** after *italic*
+
+Text with **bold** text and **bold** text.
 
 [x] asdfsadfsd
 [ ] as340 304u t093uw0

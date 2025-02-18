@@ -26,7 +26,7 @@ MarkdownWidget::MarkdownWidget(QWidget *parent, Style *style)
 	);
 
 	// Install highlighter.
-	m_highlighter = new MarkdownHighlighter(document());
+	m_highlighter = new MarkdownHighlighter(style, document());
 
 	// Cursor movement.
 	connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
@@ -52,6 +52,7 @@ void MarkdownWidget::resizeEvent(QResizeEvent* event) {
 void MarkdownWidget::onCursorMoved() {
 	QTextCursor cursor = textCursor();
 	int position = cursor.position();
+	int posInBlock = cursor.positionInBlock();
 	if (m_prevCursor.has_value() && m_prevCursor.value().block() == cursor.block())
 		return;
 
@@ -71,7 +72,7 @@ void MarkdownWidget::onCursorMoved() {
 		if (number > prevBlock.blockNumber())
 			position -= prev.text.size() - prev.folded.size();
 	}
-	
+
 	// Save prev cursor.
 	m_prevCursor = cursor;
 
@@ -79,7 +80,7 @@ void MarkdownWidget::onCursorMoved() {
 	if (number >= 0) {
 		Line line = m_model.lines()[number];
 		formatBlock(cursor.block(), &line.text, &line.formats);
-		position += adjustForUnfolding(&line.folded, &line.foldedFormats, cursor.positionInBlock());
+		position += adjustForUnfolding(&line.folded, &line.foldedFormats, posInBlock);
 	}
 
 	// Restore cursor.
@@ -88,7 +89,7 @@ void MarkdownWidget::onCursorMoved() {
 	if (newCursor.position() >= 0) {
 		this->setTextCursor(newCursor);
 	}
-	
+
 	// Resume cursor updates.
 	connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
 }
@@ -103,12 +104,11 @@ int MarkdownWidget::adjustForUnfolding(
 
 	int offset = 0;
 	for (auto& range: *ranges) {
-		if (range.to > positionInBlock) {
-			offset += range.endOffset() + range.startOffset();
-		} else if (range.from < positionInBlock) {
+		if (range.to < positionInBlock) {
+			offset += range.endOffset();
+		}
+		if (range.from < positionInBlock) {
 			offset += range.startOffset();
-		} else {
-			break;
 		}
 	}
 
@@ -124,38 +124,18 @@ void MarkdownWidget::formatBlock(
 	assert(formats != nullptr);
 
 	QTextCursor edit(block);
-	int start = 0;
 	int size = text->size();
 
 	edit.beginEditBlock();
 	edit.select(QTextCursor::LineUnderCursor);
-	edit.removeSelectedText();
-	for (auto& format: *formats) {
-		if (format.from > start) {
-			edit.insertText(
-				text->sliced(start, format.from - start),
-				QTextCharFormat()
-			);
-		}
-		edit.insertText(
-			text->sliced(format.from, format.to - format.from),
-			format.qtFormat(m_style)
-		);
-		start = format.to;
-	}	
-	if (start < size) {
-		edit.insertText(
-			text->sliced(start, size - start),
-			QTextCharFormat()
-		);
-	}
+	edit.insertText(*text, QTextCharFormat());
 	edit.endEditBlock();
 }
 
 // Highlighter logic.
 
-MarkdownHighlighter::MarkdownHighlighter(QTextDocument *doc)
-	: QSyntaxHighlighter(doc) {}
+MarkdownHighlighter::MarkdownHighlighter(Style *style, QTextDocument *doc)
+	: QSyntaxHighlighter(doc), m_style(style) {}
 
 void MarkdownHighlighter::setModel(TextModel *model) {
 	m_model = model;
@@ -178,14 +158,12 @@ void MarkdownHighlighter::highlightBlock(const QString &text) {
 
 	std::vector<FormatRange> ranges = (m_activeBlock == number) ? line.formats : line.foldedFormats;
 
-	for (auto format: ranges) {
-		switch (format.format) {
-			case Heading1:
-				QTextCharFormat fmt;
-				fmt.setFontPointSize(25);
-				fmt.setFontWeight(QFont::Bold);
-				setFormat(format.from, format.to - format.from, fmt);
-				break;
-		}
+	for (auto fmt: ranges) {
+		setFormat(
+			fmt.from,
+			fmt.to - fmt.from,
+			fmt.qtFormat(m_style, format(fmt.from))
+		);
 	}
 }
+
