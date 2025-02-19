@@ -27,6 +27,8 @@ inline int blockStartOffset(BlockFormat format) {
 			return 3;
 		case Code:
 			return 1;
+		case CodeBlock:
+			return 0;
 	}
 
 	assert(false); // Should be unreachable.
@@ -50,6 +52,8 @@ inline int blockEndOffset(BlockFormat format) {
 			return 3;
 		case Code:
 			return 1;
+		case CodeBlock:
+			return 0;
 	}
 
 	assert(false); // Should be unreachable.
@@ -98,6 +102,10 @@ QTextCharFormat FormatRange::qtFormat(Style *style, QTextCharFormat fmt) {
 			fmt.setBackground(style->codeBackground());
 			fmt.setFont(style->codeFont());
 			break;
+		case CodeBlock:
+			fmt.setBackground(style->codeBackground());
+			fmt.setFont(style->codeFont());
+			break;
 	}
 
 	return fmt;
@@ -116,31 +124,44 @@ int FormatRange::endOffset() {
 Line::Line(QString& input): text(input), folded(input) {
 	int offset = 0;
 
+	QRegularExpression enumeratedExp("^[0-9]+\\. ");
+	QRegularExpression listExp("^[\\+\\*\\-] ");
+
 	// Headings.
-	if (folded.startsWith("# ")) {
-		folded = folded.right(folded.size() - 2);
+	if (input.startsWith("# ")) {
+		folded = input.right(folded.size() - 2);
 		foldedFormats.push_back(FormatRange(0, folded.size(), BlockFormat::Heading1));
 		formats.push_back(FormatRange(0, input.size(), BlockFormat::Heading1));
-	} else if (folded.startsWith("## ")) {
-		folded = folded.right(folded.size() - 3);
+	} else if (input.startsWith("## ")) {
+		folded = input.right(folded.size() - 3);
 		foldedFormats.push_back(FormatRange(0, folded.size(), BlockFormat::Heading2));
 		formats.push_back(FormatRange(0, input.size(), BlockFormat::Heading2));
-	} else if (folded.startsWith("### ")) {
-		folded = folded.right(folded.size() - 4);
+	} else if (input.startsWith("### ")) {
+		folded = input.right(folded.size() - 4);
 		foldedFormats.push_back(FormatRange(0, folded.size(), BlockFormat::Heading3));
 		formats.push_back(FormatRange(0, input.size(), BlockFormat::Heading3));
-	} else if (folded.startsWith("#### ")) {
-		folded = folded.right(folded.size() - 5);
+	} else if (input.startsWith("#### ")) {
+		folded = input.right(folded.size() - 5);
 		foldedFormats.push_back(FormatRange(0, folded.size(), BlockFormat::Heading4));
 		formats.push_back(FormatRange(0, input.size(), BlockFormat::Heading4));
-	} else if (folded.startsWith("##### ")) {
-		folded = folded.right(folded.size() - 6);
+	} else if (input.startsWith("##### ")) {
+		folded = input.right(folded.size() - 6);
 		foldedFormats.push_back(FormatRange(0, folded.size(), BlockFormat::Heading5));
 		formats.push_back(FormatRange(0, input.size(), BlockFormat::Heading5));
-	} else if (folded.startsWith("###### ")) {
-		folded = folded.right(folded.size() - 7);
+	} else if (input.startsWith("###### ")) {
+		folded = input.right(folded.size() - 7);
 		foldedFormats.push_back(FormatRange(0, folded.size(), BlockFormat::Heading6));
 		formats.push_back(FormatRange(0, input.size(), BlockFormat::Heading6));
+	} else if (QRegularExpressionMatch match = listExp.match(input); match.hasMatch()) {
+		// TODO: Sublist support.
+		list = ListItem(ListBullet, 0);
+		folded = input.right(input.size() - 2);
+		text = input.right(input.size() - 2);
+	} else if (QRegularExpressionMatch match = enumeratedExp.match(input); match.hasMatch()) {
+		// TODO: Numeric list support and levels support.
+		list = ListItem(ListNumeric, 0);
+		folded = input.right(input.size() - match.captured(0).size());
+		text = input.right(input.size() - match.captured(0).size());
 	}
 
 	// Code.
@@ -232,36 +253,63 @@ void Line::apply(
 	}
 }
 
+Line::Line(QString& input, std::vector<FormatRange> format)
+	: isCodeBlock(true), text(input), folded(input), formats(format), foldedFormats(format) {}
+
+Line Line::codeLine(QString& input) {
+	std::vector<FormatRange> formats = {
+		FormatRange(0, input.size(), BlockFormat::CodeBlock)
+	};
+	return Line(input, formats);
+}
+
 // Model
 
 TextModel::TextModel() {}
 
-TextModel::TextModel(std::vector<QString> data) {
-	for (QString& line: data) {
-		m_data.push_back(Line(line));
-	}
-}
-
 TextModel::TextModel(QStringList data) {
+	QStringList content;
+	bool code = false;
+
+	QRegularExpression listExp("^([\\-\\*\\+]|[0-9]+\\.) ");
+
 	for (QString& line: data) {
-		m_data.push_back(Line(line));
+		if (line == "```") {
+			code = !code;
+			continue;
+		}
+
+		if (code) {
+			m_data.push_back(Line::codeLine(line));
+			continue;
+		}
+
+		if (line.isEmpty()) {
+			if (content.size() > 0) {
+				QString paragraph = content.join(" ");
+				m_data.push_back(Line(paragraph));
+				content = QStringList();
+			}
+		} else {
+			if (QRegularExpressionMatch match = listExp.match(line); match.hasMatch()) {
+				// Add previous item.
+				if (content.size() > 0) {
+					QString paragraph = content.join(" ");
+					m_data.push_back(Line(paragraph));
+					content = QStringList();
+				}
+			}
+			content.push_back(line);
+		}
+	}
+
+	if (content.size() > 0) {
+		QString paragraph = content.join(" ");
+		m_data.push_back(Line(paragraph));
 	}
 }
 
-std::vector<Line> TextModel::lines() {
-	return m_data;
-}
-
-QString TextModel::folded() {
-	if (m_data.size() == 0) {
-		return "";
-	}
-
-	QStringList list;
-	for (Line& line: m_data) {
-		list << line.folded;
-	}
-
-	return list.join("\n");
+std::vector<Line> *TextModel::lines() {
+	return &m_data;
 }
 

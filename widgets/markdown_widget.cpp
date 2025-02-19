@@ -1,4 +1,5 @@
 #include <QPlainTextEdit>
+#include <QTextEdit>
 #include <QTextBlock>
 #include <QString>
 #include <QStringList>
@@ -9,17 +10,17 @@
 #include <QDebug>
 
 MarkdownWidget::MarkdownWidget(QWidget *parent, Style *style)
-	: QPlainTextEdit(parent)
+	: QTextEdit(parent)
 {
 	m_style = style;
 	setWordWrapMode(QTextOption::WordWrap);
-	setLineWrapMode(QPlainTextEdit::WidgetWidth);
 	setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
 	// Apply style.
 	setStyleSheet(
-		QString("background-color: %1; font: %2 %3px \"%4\"")
+		QString("padding: 5px; background-color: %1; color: %2; font: %3 %4px \"%5\"")
 		.arg(style->background().name(QColor::HexRgb))
+		.arg(style->textColor().name(QColor::HexRgb))
 		.arg(style->textFont().bold() ? "bold" : "")
 		.arg(style->textFont().pixelSize())
 		.arg(style->textFont().family())
@@ -40,11 +41,83 @@ void MarkdownWidget::load(QString data) {
 	QStringList lines = data.split("\n");
 	m_model = TextModel(lines);
 	m_highlighter->setModel(&m_model);
-	setPlainText(m_model.folded());
+
+	QTextDocument *doc = document();
+	QTextCursor cursor(doc);
+
+	QTextBlockFormat blockFormat;
+	blockFormat.setBottomMargin(10);
+	cursor.mergeBlockFormat(blockFormat);
+
+	QTextBlockFormat listFormat;
+	listFormat.setBottomMargin(0);
+
+	QTextFrameFormat codeFormat;
+	codeFormat.setBottomMargin(10);
+	codeFormat.setTopMargin(10);
+	codeFormat.setPadding(10);
+	codeFormat.setBackground(m_style->codeBackground());
+
+	// Append paragraphs.
+	QTextList *list = nullptr;
+	QTextFrame *code = nullptr;
+	std::vector<Line> *mlines = m_model.lines();
+	std::vector<Line>::iterator it;
+	for (it = mlines->begin(); it != mlines->end(); it++) {
+		if ((*it).isListItem()) {
+			// TODO: Levels support.
+			// Create a new list if needed.
+			if (list == nullptr) {
+				cursor.deletePreviousChar();
+				list = cursor.insertList(
+					(*it).list.listType == ListBullet
+						? QTextListFormat::ListDisc
+						: QTextListFormat::ListDecimal
+				);
+				cursor.mergeBlockFormat(listFormat);
+			}
+		} else if ((*it).isCodeBlock) {
+			// Create code frame.
+			if (code == nullptr) {
+				cursor.deletePreviousChar();
+				code = cursor.insertFrame(codeFormat);
+				cursor.setBlockFormat(listFormat);
+			}	
+		} else {
+			if (list != nullptr) {
+				list = nullptr;
+				cursor.setBlockFormat(blockFormat);
+			} else if (code != nullptr) {
+				code = nullptr;
+			}
+		}
+		// Add paragraph's content.
+		cursor.insertText((*it).folded);
+		if ((it + 1) != mlines->end()) {
+			// Add margin at the end of the list.
+			if ((*it).isListItem() && (*(it + 1)).isListItem() == false) {
+				cursor.mergeBlockFormat(blockFormat);
+				cursor.insertBlock();
+			// Close code frame.
+			} else if (((*it).isCodeBlock == true) && (*(it + 1)).isCodeBlock == false) {
+				cursor.movePosition(QTextCursor::NextBlock);
+				cursor.insertBlock();
+				cursor.mergeBlockFormat(blockFormat);
+				cursor.deletePreviousChar();
+			} else {
+				cursor.insertBlock();
+			}
+		}
+	}
+
+	// Reset cursor.
+	cursor.setPosition(0);
+	m_prevCursor = cursor;
+	setTextCursor(cursor);
 }
 
 void MarkdownWidget::resizeEvent(QResizeEvent* event) {
-	QPlainTextEdit::resizeEvent(event);
+	QTextEdit::resizeEvent(event);
 }
 
 // Cursor.
@@ -66,7 +139,7 @@ void MarkdownWidget::onCursorMoved() {
 	// Change previous block.
 	if (m_prevCursor.has_value()) {
 		QTextBlock prevBlock = m_prevCursor.value().block();
-		Line prev = m_model.lines()[prevBlock.blockNumber()];
+		Line prev = (*m_model.lines())[prevBlock.blockNumber()];
 		formatBlock(prevBlock, &prev.folded, &prev.foldedFormats);
 		// Adjust original cursor position to accout for folding.
 		if (number > prevBlock.blockNumber())
@@ -78,7 +151,7 @@ void MarkdownWidget::onCursorMoved() {
 
 	// Update current block.
 	if (number >= 0) {
-		Line line = m_model.lines()[number];
+		Line line = (*m_model.lines())[number];
 		formatBlock(cursor.block(), &line.text, &line.formats);
 		position += adjustForUnfolding(&line.folded, &line.foldedFormats, posInBlock);
 	}
@@ -154,7 +227,12 @@ void MarkdownHighlighter::highlightBlock(const QString &text) {
 	if (number == -1)
 		return;
 
-	Line line = m_model->lines()[number];
+	std::vector<Line> *lines = m_model->lines();
+	if (lines->size() <= number) {
+		return;
+	}
+
+	Line line = (*lines)[number];
 
 	std::vector<FormatRange> ranges = (m_activeBlock == number) ? line.formats : line.foldedFormats;
 

@@ -17,7 +17,8 @@ enum BlockFormat {
 	Italic,
 	Bold,
 	BoldItalic,
-	Code
+	Code,
+	CodeBlock
 };
 
 struct FormatRange {
@@ -33,13 +34,36 @@ struct FormatRange {
 	int endOffset();
 };
 
+enum ListType {
+	ListNone,
+	ListBullet,
+	ListNumeric
+};
+
+struct ListItem {
+public:
+	ListType listType;
+	int level;
+	QString value;
+	// Constructor.
+	ListItem(ListType lt = ListNone, int l = 0, QString v = "")
+		: listType(lt), level(l), value(v) {};
+};
+
 struct Line {
+public:
 	QString text;
 	QString folded;
 	std::vector<FormatRange> formats;
 	std::vector<FormatRange> foldedFormats;
-	// Constructor
+	ListItem list;
+	bool isCodeBlock = false;
+	// Constructors
 	Line(QString&);
+	Line(QString&, std::vector<FormatRange>);
+	static Line codeLine(QString&);
+	// Properties.
+	const bool isListItem() const { return list.listType != ListNone; };
 
 private:
 	void apply(QString *input, BlockFormat format, QRegularExpression expr, int size);
@@ -48,11 +72,9 @@ private:
 class TextModel {
 public:
 	TextModel();
-	TextModel(std::vector<QString>);
 	TextModel(QStringList);
 	// Data.
-	std::vector<Line> lines();
-	QString folded();
+	std::vector<Line> *lines();
 
 private:
 	std::vector<Line> m_data;

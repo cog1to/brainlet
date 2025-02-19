@@ -6,6 +6,7 @@
 #include <QObject>
 #include <QWidget>
 #include <QPlainTextEdit>
+#include <QTextEdit>
 #include <QResizeEvent>
 #include <QSyntaxHighlighter>
 #include <QTextDocument>
@@ -30,7 +31,7 @@ private:
 	int m_activeBlock = -1;
 };
 
-class MarkdownWidget: public QPlainTextEdit {
+class MarkdownWidget: public QTextEdit {
 	Q_OBJECT
 
 public:

@@ -21,11 +21,16 @@ Sed eget enim scelerisque, placerat ipsum efficitur, hendrerit quam. Proin ut au
 Duis vehicula rutrum consectetur.
 Mauris lobortis nec velit vel bibendum. Nulla nec orci vitae lectus lacinia luctus non at tellus. Donec semper, turpis non porttitor placerat, urna enim venenatis ante, ut fermentum libero mi quis dolor. Quisque et libero nibh. Curabitur eu tellus turpis. Duis pulvinar leo non eleifend pharetra. Vestibulum convallis imperdiet ultricies.
 
+```
+a = b + c *d*e;
+test code block
+```
+
 ### HEADER 3
 
 Donec sit amet neque eu enim ultrices placerat. Sed et mauris id tellus laoreet pretium.
 
-- List 1
+- List 1 asdf **bold** and `text`.
 - List 2
 - List 3
 
