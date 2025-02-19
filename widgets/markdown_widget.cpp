@@ -123,14 +123,27 @@ void MarkdownWidget::resizeEvent(QResizeEvent* event) {
 // Cursor.
 
 void MarkdownWidget::onCursorMoved() {
+	std::vector<Line> *lines = m_model.lines();
 	QTextCursor cursor = textCursor();
 	int position = cursor.position();
 	int posInBlock = cursor.positionInBlock();
+
 	if (m_prevCursor.has_value() && m_prevCursor.value().block() == cursor.block())
 		return;
 
 	QTextBlock block = cursor.block();
 	int number = block.blockNumber();
+	int prevNumber = m_prevCursor.has_value() ? m_prevCursor.value().blockNumber() : -1;
+
+	if (
+		number >= 0 &&
+		prevNumber >= 0 &&
+		cursor.hasSelection() &&
+		(*lines)[prevNumber].isCodeBlock == (*lines)[number].isCodeBlock
+	) {
+		return;
+	}
+
 	m_highlighter->onActiveBlockChanged(number);
 
 	// Suspend cursor changes while we're editing.
