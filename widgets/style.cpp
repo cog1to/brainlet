@@ -17,9 +17,11 @@ Style::Style(
 	QColor hoverBackground,
 	int scrollWidth,
 	QColor anchorHighlight,
-	QFont textFont,
+	QFont textEditFont,
+	QColor textEditColor,
 	QFont codeFont,
-	QColor codeBackground
+	QColor codeBackground,
+	QColor linkColor
 ) {
 	m_background = background;
 	m_nodeBackground = nodeBackground;
@@ -33,9 +35,11 @@ Style::Style(
 	m_hoverBackground = hoverBackground;
 	m_scrollWidth = scrollWidth;
 	m_anchorHighlight = anchorHighlight;
-	m_textFont = textFont;
+	m_textEditFont = textEditFont;
+	m_textEditColor = textEditColor;
 	m_codeFont = codeFont;
 	m_codeBackground = codeBackground;
+	m_linkColor = linkColor;
 }
 
 Style& Style::defaultStyle() {
@@ -43,10 +47,10 @@ Style& Style::defaultStyle() {
 	font.setPixelSize(12);
 
 	static QFont textFont = QFont("Noto Sans");
-	textFont.setPixelSize(13);
+	textFont.setPixelSize(15);
 
 	static QFont codeFont = QFont("Noto Sans Mono");
-	codeFont.setPixelSize(13);
+	codeFont.setPixelSize(15);
 
 	static Style style(
 		QColor(23, 43, 52, 255),
@@ -62,8 +66,10 @@ Style& Style::defaultStyle() {
 		12,
 		QColor(255, 255, 255, 255),
 		textFont,
+		QColor(171, 181, 181, 255),
 		codeFont,
-		QColor(43, 63, 72, 255)
+		QColor(43, 63, 72, 255),
+		QColor(162, 187, 219)
 	);
 
 	return style;
@@ -177,12 +183,21 @@ void Style::setAnchorHighlight(QColor value) {
 	emit styleChanged(this);
 }
 
-const QFont Style::textFont() const {
-	return m_textFont;
+const QFont Style::textEditFont() const {
+	return m_textEditFont;
 }
 
-void Style::setTextFont(QFont font) {
-	m_textFont = font;
+void Style::setTextEditFont(QFont font) {
+	m_textEditFont = font;
+	emit styleChanged(this);
+}
+
+const QColor Style::textEditColor() const {
+	return m_textEditColor;
+}
+
+void Style::setTextEditColor(QColor value) {
+	m_textEditColor = value;
 	emit styleChanged(this);
 }
 
@@ -201,6 +216,15 @@ const QColor Style::codeBackground() const {
 
 void Style::setCodeBackground(QColor color) {
 	m_codeBackground = color;
+	emit styleChanged(this);
+}
+
+const QColor Style::linkColor() const {
+	return m_linkColor;
+}
+
+void Style::setLinkColor(QColor color) {
+	m_linkColor = color;
 	emit styleChanged(this);
 }
 

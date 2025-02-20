@@ -52,6 +52,8 @@ private:
 	// Helpers.
 	void formatBlock(QTextBlock, QString*, std::vector<FormatRange>*);
 	int adjustForUnfolding(QString*, std::vector<FormatRange>*, int);
+	// Metrics.
+	static constexpr int ParagraphMargin = 12;
 };
 
 #endif

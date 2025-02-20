@@ -13,6 +13,7 @@ MarkdownWidget::MarkdownWidget(QWidget *parent, Style *style)
 	: QTextEdit(parent)
 {
 	m_style = style;
+
 	setWordWrapMode(QTextOption::WordWrap);
 	setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
@@ -20,10 +21,10 @@ MarkdownWidget::MarkdownWidget(QWidget *parent, Style *style)
 	setStyleSheet(
 		QString("padding: 5px; background-color: %1; color: %2; font: %3 %4px \"%5\"")
 		.arg(style->background().name(QColor::HexRgb))
-		.arg(style->textColor().name(QColor::HexRgb))
-		.arg(style->textFont().bold() ? "bold" : "")
-		.arg(style->textFont().pixelSize())
-		.arg(style->textFont().family())
+		.arg(style->textEditColor().name(QColor::HexRgb))
+		.arg(style->textEditFont().bold() ? "bold" : "")
+		.arg(style->textEditFont().pixelSize())
+		.arg(style->textEditFont().family())
 	);
 
 	// Install highlighter.
@@ -46,16 +47,16 @@ void MarkdownWidget::load(QString data) {
 	QTextCursor cursor(doc);
 
 	QTextBlockFormat blockFormat;
-	blockFormat.setBottomMargin(10);
+	blockFormat.setBottomMargin(ParagraphMargin);
 	cursor.mergeBlockFormat(blockFormat);
 
 	QTextBlockFormat listFormat;
 	listFormat.setBottomMargin(0);
 
 	QTextFrameFormat codeFormat;
-	codeFormat.setBottomMargin(10);
-	codeFormat.setTopMargin(10);
-	codeFormat.setPadding(10);
+	codeFormat.setBottomMargin(ParagraphMargin);
+	codeFormat.setTopMargin(ParagraphMargin);
+	codeFormat.setPadding(ParagraphMargin);
 	codeFormat.setBackground(m_style->codeBackground());
 
 	// Append paragraphs.

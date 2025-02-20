@@ -9,8 +9,9 @@
 #include "widgets/markdown_widget.h"
 
 int main(int argc, char *argv[]) {
-	Style& style = Style::defaultStyle();
 	QApplication app(argc, argv);
+
+	Style& style = Style::defaultStyle();
 
 	if (argc < 2) {
 		std::cout << "Provide a file to render\n";

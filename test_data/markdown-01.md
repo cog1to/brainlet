@@ -19,7 +19,7 @@ Sed eget enim scelerisque, placerat ipsum efficitur, hendrerit quam. Proin ut au
 ###### Header 2.6
 
 Duis vehicula rutrum consectetur.
-Mauris lobortis nec velit vel bibendum. Nulla nec orci vitae lectus lacinia luctus non at tellus. Donec semper, turpis non porttitor placerat, urna enim venenatis ante, ut fermentum libero mi quis dolor. Quisque et libero nibh. Curabitur eu tellus turpis. Duis pulvinar leo non eleifend pharetra. Vestibulum convallis imperdiet ultricies.
+Mauris lobortis nec velit vel bibendum. Nulla nec orci vitae lectus lacinia luctus non at tellus. Donec semper, turpis non porttitor placerat, urna enim venenatis ante, ut fermentum libero mi quis dolor. Quisque et libero nibh. Curabitur eu tellus turpis. Duis pulvinar leo non eleifend pharetra. Vestibulum convallis imperdiet ultricies. Here's a [Link With Title](https://google.com) here. And some **bold** text after.
 
 ```
 a = b + c *d*e;

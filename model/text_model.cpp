@@ -29,6 +29,8 @@ inline int blockStartOffset(BlockFormat format) {
 			return 1;
 		case CodeBlock:
 			return 0;
+		case Link: // Links are handled separately.
+			return -1;
 	}
 
 	assert(false); // Should be unreachable.
@@ -54,6 +56,8 @@ inline int blockEndOffset(BlockFormat format) {
 			return 1;
 		case CodeBlock:
 			return 0;
+		case Link: // Links are handled separately.
+			return -1;
 	}
 
 	assert(false); // Should be unreachable.
@@ -65,27 +69,27 @@ inline int blockEndOffset(BlockFormat format) {
 QTextCharFormat FormatRange::qtFormat(Style *style, QTextCharFormat fmt) {
 	switch (format) {
 		case Heading1:
-			fmt.setFontPointSize(style->textFont().pixelSize() * 2.0);
+			fmt.setFontPointSize(style->textEditFont().pixelSize() * 2.0);
 			fmt.setFontWeight(QFont::Bold);
 			break;
 		case Heading2:
-			fmt.setFontPointSize(style->textFont().pixelSize() * 1.8);
+			fmt.setFontPointSize(style->textEditFont().pixelSize() * 1.8);
 			fmt.setFontWeight(QFont::Bold);
 			break;
 		case Heading3:
-			fmt.setFontPointSize(style->textFont().pixelSize() * 1.6);
+			fmt.setFontPointSize(style->textEditFont().pixelSize() * 1.6);
 			fmt.setFontWeight(QFont::Bold);
 			break;
 		case Heading4:
-			fmt.setFontPointSize(style->textFont().pixelSize() * 1.4);
+			fmt.setFontPointSize(style->textEditFont().pixelSize() * 1.4);
 			fmt.setFontWeight(QFont::Bold);
 			break;
 		case Heading5:
-			fmt.setFontPointSize(style->textFont().pixelSize() * 1.2);
+			fmt.setFontPointSize(style->textEditFont().pixelSize() * 1.2);
 			fmt.setFontWeight(QFont::Bold);
 			break;
 		case Heading6:
-			fmt.setFontPointSize(style->textFont().pixelSize() * 1.1);
+			fmt.setFontPointSize(style->textEditFont().pixelSize() * 1.1);
 			fmt.setFontWeight(QFont::Bold);
 			break;
 		case Italic:
@@ -106,17 +110,31 @@ QTextCharFormat FormatRange::qtFormat(Style *style, QTextCharFormat fmt) {
 			fmt.setBackground(style->codeBackground());
 			fmt.setFont(style->codeFont());
 			break;
+		case Link:
+			fmt.setFontUnderline(true);
+			fmt.setForeground(style->linkColor());
+			fmt.setAnchorHref(link.target);
+			fmt.setAnchor(true);
+			break;
 	}
 
 	return fmt;
 }
 
 int FormatRange::startOffset() {
-	return blockStartOffset(format);
+	if (format == Link) {
+		return 1;
+	} else {
+		return blockStartOffset(format);
+	}
 }
 
 int FormatRange::endOffset() {
-	return blockEndOffset(format);
+	if (format == Link) {
+		return 3 + link.target.size();
+	} else {
+		return blockEndOffset(format);
+	}
 }
 
 // Lines
@@ -195,6 +213,94 @@ Line::Line(QString& input): text(input), folded(input) {
 		QRegularExpression("(^|[^\\*])\\*\\w[^\n]*?\\*($|[^\\*])"),
 		1
 	);
+
+	// Links.
+	parseLinks(&text);
+}
+
+void Line::parseLinks(QString *input) {
+	QRegularExpression expr("\\[(.+?)\\]\\((.+?://.+?)\\)");
+	QRegularExpressionMatch match = expr.match(*input);
+	int offset;
+	
+	while (match.hasMatch()) {
+		// Get offset from formats before.
+		offset = 0;
+		for (auto& format: formats) {
+			if (format.from < match.capturedStart())
+				offset += format.startOffset();
+			if (format.to < match.capturedStart())
+				offset += format.endOffset();
+		}
+		
+		folded
+			.remove(match.capturedStart() - offset, 1)
+			.remove(
+				match.capturedEnd()
+					- offset
+					- 4
+					- match.captured(2).size(),
+				match.captured(2).size() + 3
+			);
+
+		// Folded text highlights the link title.
+		FormatRange foldedRange = FormatRange(
+			match.capturedStart() - offset,
+			match.capturedStart() - offset + match.captured(1).size(),
+			BlockFormat::Link,
+			LinkFormat(match.captured(2))
+		);
+
+		// Unfolded text highlights the link target and title brackets.
+		formats.push_back(
+			FormatRange(
+				match.capturedStart() + 3 + match.captured(1).size(),
+				match.capturedEnd() - 1,
+				BlockFormat::Link,
+				LinkFormat(match.captured(2))
+			)
+		);
+		// Brackets highlight.
+		formats.push_back(
+			FormatRange(
+				match.capturedStart(),
+				match.capturedStart() + 1,
+				BlockFormat::Bold
+			)
+		);
+		formats.push_back(
+			FormatRange(
+				match.capturedStart() + 1 + match.captured(1).size(),
+				match.capturedStart() + 1 + match.captured(1).size() + 2,
+				BlockFormat::Bold
+			)
+		);
+		formats.push_back(
+			FormatRange(
+				match.capturedEnd() - 1,
+				match.capturedEnd(),
+				BlockFormat::Bold
+			)
+		);
+
+		// Shift other formats.
+		for (auto& format: foldedFormats) {
+			// TODO: Bug with formats after link not adjusting properly.
+			if (format.from > foldedRange.from)
+				format.from -= foldedRange.startOffset();
+			if (format.to > foldedRange.from)
+				format.to -= foldedRange.startOffset();
+			if (format.from > foldedRange.to)
+				format.from -= foldedRange.endOffset();
+			if (format.to > foldedRange.to) {
+				format.to -= foldedRange.endOffset();
+			}
+		}
+
+		foldedFormats.push_back(foldedRange);
+
+		match = expr.match(*input, match.capturedEnd());
+	}
 }
 
 void Line::apply(
