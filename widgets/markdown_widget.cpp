@@ -46,18 +46,25 @@ void MarkdownWidget::load(QString data) {
 	QTextDocument *doc = document();
 	QTextCursor cursor(doc);
 
+	//-- Default formats. --//
+	
+	// Normal paragraph format.
 	QTextBlockFormat blockFormat;
 	blockFormat.setBottomMargin(ParagraphMargin);
 	cursor.mergeBlockFormat(blockFormat);
 
+	// Inter-list format.
 	QTextBlockFormat listFormat;
 	listFormat.setBottomMargin(0);
 
+	// Code frame format.
 	QTextFrameFormat codeFormat;
 	codeFormat.setBottomMargin(ParagraphMargin);
 	codeFormat.setTopMargin(ParagraphMargin);
 	codeFormat.setPadding(ParagraphMargin);
 	codeFormat.setBackground(m_style->codeBackground());
+
+	//-- Content building --//
 
 	// Append paragraphs.
 	QTextList *list = nullptr;

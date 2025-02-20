@@ -422,6 +422,8 @@ TextModel::TextModel() {}
 TextModel::TextModel(QStringList data) {
 	QStringList content;
 	bool code = false;
+	int emptyCount = 0;
+	static QString emptyString = "";
 
 	QRegularExpression listExp("^([\\-\\*\\+]|[0-9]+\\.) ");
 
@@ -441,7 +443,11 @@ TextModel::TextModel(QStringList data) {
 				QString paragraph = content.join(" ");
 				m_data.push_back(Line(paragraph));
 				content = QStringList();
+			} else if (emptyCount == 2) {
+				emptyCount = 0;
+				m_data.push_back(Line(emptyString));
 			}
+			emptyCount += 1;
 		} else {
 			if (QRegularExpressionMatch match = listExp.match(line); match.hasMatch()) {
 				// Add previous item.
@@ -452,6 +458,7 @@ TextModel::TextModel(QStringList data) {
 				}
 			}
 			content.push_back(line);
+			emptyCount = 0;
 		}
 	}
 
