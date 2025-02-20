@@ -19,7 +19,8 @@ enum BlockFormat {
 	BoldItalic,
 	Code,
 	CodeBlock,
-	Link
+	Link,
+	PlainLink
 };
 
 struct LinkFormat {
@@ -75,6 +76,7 @@ public:
 private:
 	void apply(QString *input, BlockFormat format, QRegularExpression expr, int size);
 	void parseLinks(QString *input);
+	void parseSimpleLinks(QString *input);
 };
 
 class TextModel {

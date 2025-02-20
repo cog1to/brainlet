@@ -8,7 +8,7 @@ afsaf
 
 ## HEADER 2
 
-Sed eget enim scelerisque, placerat ipsum efficitur, hendrerit quam. Proin ut augue mattis ligula malesuada ultrices. Duis sit amet varius ligula.
+Sed mailto://aint@github.com eget enim scelerisque, placerat ipsum efficitur, hendrerit quam. Proin ut augue mattis ligula malesuada ultrices. Duis sit amet varius ligula. Simple link: https://duckduckgo.com. Another one ftp://192.168.9.10
 
 ### Header 2.3
 

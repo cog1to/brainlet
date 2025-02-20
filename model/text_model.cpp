@@ -31,6 +31,8 @@ inline int blockStartOffset(BlockFormat format) {
 			return 0;
 		case Link: // Links are handled separately.
 			return -1;
+		case PlainLink:
+			return 0;
 	}
 
 	assert(false); // Should be unreachable.
@@ -58,6 +60,8 @@ inline int blockEndOffset(BlockFormat format) {
 			return 0;
 		case Link: // Links are handled separately.
 			return -1;
+		case PlainLink:
+			return 0;
 	}
 
 	assert(false); // Should be unreachable.
@@ -111,6 +115,7 @@ QTextCharFormat FormatRange::qtFormat(Style *style, QTextCharFormat fmt) {
 			fmt.setFont(style->codeFont());
 			break;
 		case Link:
+		case PlainLink:
 			fmt.setFontUnderline(true);
 			fmt.setForeground(style->linkColor());
 			fmt.setAnchorHref(link.target);
@@ -216,6 +221,9 @@ Line::Line(QString& input): text(input), folded(input) {
 
 	// Links.
 	parseLinks(&text);
+
+	// Remaining Links.
+	parseSimpleLinks(&text);
 }
 
 void Line::parseLinks(QString *input) {
@@ -285,7 +293,6 @@ void Line::parseLinks(QString *input) {
 
 		// Shift other formats.
 		for (auto& format: foldedFormats) {
-			// TODO: Bug with formats after link not adjusting properly.
 			if (format.from > foldedRange.from)
 				format.from -= foldedRange.startOffset();
 			if (format.to > foldedRange.from)
@@ -296,6 +303,45 @@ void Line::parseLinks(QString *input) {
 				format.to -= foldedRange.endOffset();
 			}
 		}
+
+		foldedFormats.push_back(foldedRange);
+
+		match = expr.match(*input, match.capturedEnd());
+	}
+}
+
+void Line::parseSimpleLinks(QString *input) {
+	// TODO: Hacky URL matching. Feels like covering the full URL spec and
+	// detecting link text within normal text properly is almost impossible...
+	QRegularExpression expr("(^| )(\\w+?://.+?)($| |[\\.,;!?\\-] )");
+	QRegularExpressionMatch match = expr.match(*input);
+	int offset;
+	
+	while (match.hasMatch()) {
+		// Get offset from formats before.
+		offset = 0;
+		for (auto& format: formats) {
+			if (format.from < match.capturedStart())
+				offset += format.startOffset();
+			if (format.to < match.capturedStart())
+				offset += format.endOffset();
+		}
+		
+		FormatRange foldedRange = FormatRange(
+			match.capturedStart() - offset + match.captured(1).size(),
+			match.capturedStart() - offset + match.captured(1).size() + match.captured(2).size(),
+			BlockFormat::PlainLink,
+			LinkFormat(match.captured(2))
+		);
+
+		formats.push_back(
+			FormatRange(
+				match.capturedStart() + match.captured(1).size(),
+				match.capturedStart() + match.captured(1).size() + match.captured(2).size(),
+				BlockFormat::PlainLink,
+				LinkFormat(match.captured(2))
+			)
+		);
 
 		foldedFormats.push_back(foldedRange);
 
