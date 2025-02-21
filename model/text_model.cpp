@@ -144,86 +144,8 @@ int FormatRange::endOffset() {
 
 // Lines
 
-Line::Line(QString& input): text(input), folded(input) {
-	int offset = 0;
-
-	QRegularExpression enumeratedExp("^[0-9]+\\. ");
-	QRegularExpression listExp("^[\\+\\*\\-] ");
-
-	// Headings.
-	if (input.startsWith("# ")) {
-		folded = input.right(folded.size() - 2);
-		foldedFormats.push_back(FormatRange(0, folded.size(), BlockFormat::Heading1));
-		formats.push_back(FormatRange(0, input.size(), BlockFormat::Heading1));
-	} else if (input.startsWith("## ")) {
-		folded = input.right(folded.size() - 3);
-		foldedFormats.push_back(FormatRange(0, folded.size(), BlockFormat::Heading2));
-		formats.push_back(FormatRange(0, input.size(), BlockFormat::Heading2));
-	} else if (input.startsWith("### ")) {
-		folded = input.right(folded.size() - 4);
-		foldedFormats.push_back(FormatRange(0, folded.size(), BlockFormat::Heading3));
-		formats.push_back(FormatRange(0, input.size(), BlockFormat::Heading3));
-	} else if (input.startsWith("#### ")) {
-		folded = input.right(folded.size() - 5);
-		foldedFormats.push_back(FormatRange(0, folded.size(), BlockFormat::Heading4));
-		formats.push_back(FormatRange(0, input.size(), BlockFormat::Heading4));
-	} else if (input.startsWith("##### ")) {
-		folded = input.right(folded.size() - 6);
-		foldedFormats.push_back(FormatRange(0, folded.size(), BlockFormat::Heading5));
-		formats.push_back(FormatRange(0, input.size(), BlockFormat::Heading5));
-	} else if (input.startsWith("###### ")) {
-		folded = input.right(folded.size() - 7);
-		foldedFormats.push_back(FormatRange(0, folded.size(), BlockFormat::Heading6));
-		formats.push_back(FormatRange(0, input.size(), BlockFormat::Heading6));
-	} else if (QRegularExpressionMatch match = listExp.match(input); match.hasMatch()) {
-		// TODO: Sublist support.
-		list = ListItem(ListBullet, 0);
-		folded = input.right(input.size() - 2);
-		text = input.right(input.size() - 2);
-	} else if (QRegularExpressionMatch match = enumeratedExp.match(input); match.hasMatch()) {
-		// TODO: Numeric list support and levels support.
-		list = ListItem(ListNumeric, 0);
-		folded = input.right(input.size() - match.captured(0).size());
-		text = input.right(input.size() - match.captured(0).size());
-	}
-
-	// Code.
-	apply(
-		&text,
-		BlockFormat::Code,
-		QRegularExpression("()`[^\n]*?`()"),
-		1		
-	);
-
-	// Bold italic.
-	apply(
-		&text,
-		BlockFormat::BoldItalic,
-		QRegularExpression("(^|[^\\*])\\*\\*\\*\\w[^\n]*?\\*\\*\\*($|[^\\*])"),
-		3
-	);
-
-	// Bold.
-	apply(
-		&text,
-		BlockFormat::Bold,
-		QRegularExpression("(^|[^\\*])\\*\\*\\w[^\n]*?\\*\\*($|[^\\*])"),
-		2
-	);
-
-	// Italic.
-	apply(
-		&text,
-		BlockFormat::Italic,
-		QRegularExpression("(^|[^\\*])\\*\\w[^\n]*?\\*($|[^\\*])"),
-		1
-	);
-
-	// Links.
-	parseLinks(&text);
-
-	// Remaining Links.
-	parseSimpleLinks(&text);
+Line::Line(QString& input) {
+	setText(input);
 }
 
 void Line::parseLinks(QString *input) {
@@ -380,11 +302,13 @@ void Line::apply(
 			fmt
 		);
 
-		formats.push_back(FormatRange(
-			match.capturedStart(),
-			match.capturedEnd(),
-			fmt
-		));
+		formats.push_back(
+			FormatRange(
+				match.capturedStart() + match.captured(1).size(),
+				match.capturedEnd() - match.captured(2).size(),
+				fmt
+			)
+		);
 
 		// Shift other formats.
 		for (auto& format: foldedFormats) {
@@ -408,11 +332,108 @@ void Line::apply(
 Line::Line(QString& input, std::vector<FormatRange> format)
 	: isCodeBlock(true), text(input), folded(input), formats(format), foldedFormats(format) {}
 
+Line::Line(QString& input, ListItem item): Line(input) {
+	list = item;
+}
+
 Line Line::codeLine(QString& input) {
 	std::vector<FormatRange> formats = {
 		FormatRange(0, input.size(), BlockFormat::CodeBlock)
 	};
 	return Line(input, formats);
+}
+
+void Line::setText(QString& input) {
+	text = input;
+	folded = input;
+
+	if (isCodeBlock) {
+		std::vector<FormatRange> fmt = { FormatRange(0, input.size(), BlockFormat::CodeBlock) };
+		formats = fmt;
+		foldedFormats = fmt;
+		return;
+	}
+
+	formats.clear();
+	foldedFormats.clear();
+
+	QRegularExpression enumeratedExp("^[0-9]+\\. ");
+	QRegularExpression listExp("^[\\+\\*\\-] ");
+
+	// Headings.
+	if (input.startsWith("# ")) {
+		folded = input.right(folded.size() - 2);
+		foldedFormats.push_back(FormatRange(0, folded.size(), BlockFormat::Heading1));
+		formats.push_back(FormatRange(0, input.size(), BlockFormat::Heading1));
+	} else if (input.startsWith("## ")) {
+		folded = input.right(folded.size() - 3);
+		foldedFormats.push_back(FormatRange(0, folded.size(), BlockFormat::Heading2));
+		formats.push_back(FormatRange(0, input.size(), BlockFormat::Heading2));
+	} else if (input.startsWith("### ")) {
+		folded = input.right(folded.size() - 4);
+		foldedFormats.push_back(FormatRange(0, folded.size(), BlockFormat::Heading3));
+		formats.push_back(FormatRange(0, input.size(), BlockFormat::Heading3));
+	} else if (input.startsWith("#### ")) {
+		folded = input.right(folded.size() - 5);
+		foldedFormats.push_back(FormatRange(0, folded.size(), BlockFormat::Heading4));
+		formats.push_back(FormatRange(0, input.size(), BlockFormat::Heading4));
+	} else if (input.startsWith("##### ")) {
+		folded = input.right(folded.size() - 6);
+		foldedFormats.push_back(FormatRange(0, folded.size(), BlockFormat::Heading5));
+		formats.push_back(FormatRange(0, input.size(), BlockFormat::Heading5));
+	} else if (input.startsWith("###### ")) {
+		folded = input.right(folded.size() - 7);
+		foldedFormats.push_back(FormatRange(0, folded.size(), BlockFormat::Heading6));
+		formats.push_back(FormatRange(0, input.size(), BlockFormat::Heading6));
+	} else if (QRegularExpressionMatch match = listExp.match(input); match.hasMatch()) {
+		// TODO: Sublist support.
+		list = ListItem(ListBullet, 0);
+		folded = input.right(input.size() - 2);
+		text = input.right(input.size() - 2);
+	} else if (QRegularExpressionMatch match = enumeratedExp.match(input); match.hasMatch()) {
+		// TODO: Numeric list support and levels support.
+		list = ListItem(ListNumeric, 0);
+		folded = input.right(input.size() - match.captured(0).size());
+		text = input.right(input.size() - match.captured(0).size());
+	}
+
+	// Code.
+	apply(
+		&text,
+		BlockFormat::Code,
+		QRegularExpression("()`[^\n]*?`()"),
+		1		
+	);
+
+	// Bold italic.
+	apply(
+		&text,
+		BlockFormat::BoldItalic,
+		QRegularExpression("(^|[^\\*])\\*\\*\\*\\w[^\n]*?\\*\\*\\*($|[^\\*])"),
+		3
+	);
+
+	// Bold.
+	apply(
+		&text,
+		BlockFormat::Bold,
+		QRegularExpression("(^|[^\\*])\\*\\*\\w[^\n]*?\\*\\*($|[^\\*])"),
+		2
+	);
+
+	// Italic.
+	apply(
+		&text,
+		BlockFormat::Italic,
+		QRegularExpression("(^|[^\\*])\\*\\w[^\n]*?\\*($|[^\\*])"),
+		1
+	);
+
+	// Links.
+	parseLinks(&text);
+
+	// Remaining Links.
+	parseSimpleLinks(&text);
 }
 
 // Model

@@ -66,6 +66,9 @@ void MarkdownWidget::load(QString data) {
 
 	//-- Content building --//
 
+	// Suspend cursor changes while we're editing.
+	disconnect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
+
 	// Append paragraphs.
 	QTextList *list = nullptr;
 	QTextFrame *code = nullptr;
@@ -118,14 +121,148 @@ void MarkdownWidget::load(QString data) {
 		}
 	}
 
+	// Reconnect cursor change signal.
+	connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
+
 	// Reset cursor.
+	m_prevBlock = cursor.block().blockNumber();
 	cursor.setPosition(0);
-	m_prevCursor = cursor;
 	setTextCursor(cursor);
 }
 
 void MarkdownWidget::resizeEvent(QResizeEvent* event) {
 	QTextEdit::resizeEvent(event);
+}
+
+void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
+	static QString emptyString = "";
+
+	QTextCursor cursor = textCursor();
+	std::vector<Line> *lines = m_model.lines();
+	int block = cursor.block().blockNumber();
+	auto current = lines->begin() + block;
+	int pos = cursor.positionInBlock();
+
+	// Inter-list format.
+	QTextBlockFormat listFormat;
+	listFormat.setBottomMargin(0);
+
+	// Normal paragraph format.
+	QTextBlockFormat blockFormat;
+	blockFormat.setBottomMargin(ParagraphMargin);
+
+	if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
+		if (cursor.block().blockNumber() != -1) {
+			QString original = (*current).text;
+			QString prefix = original.left(pos);
+			QString suffix = original.right(original.size() - pos);
+
+			bool isLastCode = (*current).isCodeBlock &&
+					(current == (lines->end() - 1) || (*(current + 1)).isCodeBlock == false);
+			bool isLastList = (*current).isListItem() &&
+					(current == (lines->end() - 1) || (*(current + 1)).isListItem() == false);
+			bool isFirstCode = (*current).isCodeBlock &&
+					(current == (lines->begin()) || (*(current - 1)).isCodeBlock == false);
+			bool isFirstList = (*current).isListItem() &&
+					(current == (lines->begin()) || (*(current - 1)).isListItem() == false);
+
+			if (
+				prefix.size() == 0 && suffix.size() == 0 &&
+				(event->modifiers() & Qt::ShiftModifier) == 0
+			) {
+				if (isLastCode || isLastList) {
+					// End code block.
+					(*current).isCodeBlock = false;
+					(*current).list = ListItem();
+					(*current).setText(prefix);
+					// Suspend cursor changes while we're editing.
+					disconnect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
+					// Set block margin for the previous block.
+					if (isLastList) {
+						cursor.movePosition(QTextCursor::PreviousBlock);
+						cursor.mergeBlockFormat(blockFormat);
+						cursor.movePosition(QTextCursor::NextBlock);
+					}
+					// Delete code block from document, create a normal paragraph.
+					cursor.beginEditBlock();
+					cursor.deletePreviousChar();
+					cursor.movePosition(QTextCursor::NextBlock);
+					cursor.insertBlock();
+					cursor.mergeBlockFormat(blockFormat);
+					cursor.movePosition(QTextCursor::PreviousBlock);
+					cursor.endEditBlock();
+					// Resume cursor updates.
+					connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
+					setTextCursor(cursor);
+					// No more actions needed.
+					return;
+				} else if (isFirstCode || isFirstList) {
+					// End code block.
+					(*current).isCodeBlock = false;
+					(*current).list = ListItem();
+					(*current).setText(prefix);
+					// Suspend cursor changes while we're editing.
+					disconnect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
+					// Delete code block from document, create a normal paragraph.
+					cursor.beginEditBlock();
+					cursor.deleteChar();
+					cursor.movePosition(QTextCursor::PreviousBlock);
+					cursor.movePosition(QTextCursor::EndOfBlock);
+					cursor.insertBlock();
+					cursor.mergeBlockFormat(blockFormat);
+					cursor.endEditBlock();
+					// Resume cursor updates.
+					connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
+					setTextCursor(cursor);
+					// No more actions needed.
+					return;
+				}
+			}
+
+			if ((*current).isCodeBlock) {
+				(*current).setText(prefix);
+				lines->insert(current + 1, Line::codeLine(suffix));
+				cursor.insertBlock();
+				return;
+			} else if ((*current).isListItem()) {
+				(*current).setText(prefix);
+				lines->insert(current + 1, Line(suffix, (*current).list));
+				cursor.mergeBlockFormat(listFormat);
+				cursor.insertBlock();
+				if ((current + 2) == lines->end() || !(*(current + 2)).isListItem())
+					cursor.mergeBlockFormat(blockFormat);
+				return;
+			} else {
+				(*current).setText(prefix);
+				lines->insert(current + 1, Line(suffix));
+				cursor.insertBlock();
+				return;
+			}
+		}
+	} 
+
+	if (event->key() == Qt::Key_Delete) {
+		return;
+	}
+
+	if (event->key() == Qt::Key_Backspace) {
+		return;
+	}
+
+	if (event->key() == Qt::Key_Tab) {
+		return;
+	}
+
+	// Normal key press.
+	QTextEdit::keyPressEvent(event);
+
+	if (textCursor().block() == cursor.block()) {
+		// Update text.
+		QString text = cursor.block().text();
+		(*current).setText(text);
+		// Update highlighting after we've saved to the model.
+		m_highlighter->rehighlight();
+	}
 }
 
 // Cursor.
@@ -136,18 +273,21 @@ void MarkdownWidget::onCursorMoved() {
 	int position = cursor.position();
 	int posInBlock = cursor.positionInBlock();
 
-	if (m_prevCursor.has_value() && m_prevCursor.value().block() == cursor.block())
+	if (
+		m_prevBlock != -1 &&
+		m_prevBlock == cursor.block().blockNumber()
+	) {
 		return;
+	}
 
 	QTextBlock block = cursor.block();
 	int number = block.blockNumber();
-	int prevNumber = m_prevCursor.has_value() ? m_prevCursor.value().blockNumber() : -1;
 
 	if (
 		number >= 0 &&
-		prevNumber >= 0 &&
+		m_prevBlock >= 0 &&
 		cursor.hasSelection() &&
-		(*lines)[prevNumber].isCodeBlock == (*lines)[number].isCodeBlock
+		(*lines)[m_prevBlock].isCodeBlock == (*lines)[number].isCodeBlock
 	) {
 		return;
 	}
@@ -158,9 +298,9 @@ void MarkdownWidget::onCursorMoved() {
 	disconnect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
 
 	// Change previous block.
-	if (m_prevCursor.has_value()) {
-		QTextBlock prevBlock = m_prevCursor.value().block();
-		Line prev = (*m_model.lines())[prevBlock.blockNumber()];
+	if (m_prevBlock != -1) {
+		QTextBlock prevBlock = document()->findBlockByNumber(m_prevBlock);
+		Line prev = (*m_model.lines())[m_prevBlock];
 		formatBlock(prevBlock, &prev.folded, &prev.foldedFormats);
 		// Adjust original cursor position to accout for folding.
 		if (number > prevBlock.blockNumber())
@@ -168,7 +308,7 @@ void MarkdownWidget::onCursorMoved() {
 	}
 
 	// Save prev cursor.
-	m_prevCursor = cursor;
+	m_prevBlock = cursor.block().blockNumber();
 
 	// Update current block.
 	if (number >= 0) {

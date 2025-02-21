@@ -69,9 +69,12 @@ public:
 	// Constructors
 	Line(QString&);
 	Line(QString&, std::vector<FormatRange>);
+	Line(QString&, ListItem);
 	static Line codeLine(QString&);
 	// Properties.
 	const bool isListItem() const { return list.listType != ListNone; };
+	// Modificators.
+	void setText(QString&);
 
 private:
 	void apply(QString *input, BlockFormat format, QRegularExpression expr, int size);

@@ -10,6 +10,7 @@
 #include <QResizeEvent>
 #include <QSyntaxHighlighter>
 #include <QTextDocument>
+#include <QKeyEvent>
 
 #include "model/text_model.h"
 #include "widgets/style.h"
@@ -38,7 +39,9 @@ public:
 	MarkdownWidget(QWidget*, Style*);
 	~MarkdownWidget();
 	void load(QString);
+	// Events.
 	void resizeEvent(QResizeEvent*) override;
+	void keyPressEvent(QKeyEvent*) override;
 
 protected slots:
 	void onCursorMoved();
@@ -48,7 +51,7 @@ private:
 	Style *m_style;
 	MarkdownHighlighter *m_highlighter;
 	TextModel m_model;
-	std::optional<QTextCursor> m_prevCursor = std::nullopt;
+	int m_prevBlock = -1;
 	// Helpers.
 	void formatBlock(QTextBlock, QString*, std::vector<FormatRange>*);
 	int adjustForUnfolding(QString*, std::vector<FormatRange>*, int);
