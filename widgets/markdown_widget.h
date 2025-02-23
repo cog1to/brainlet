@@ -59,6 +59,12 @@ private:
 	bool isControlKey(QKeyEvent*);
 	bool isNewlineKey(QKeyEvent*);
 	void deleteSelection(QTextCursor*, std::vector<Line>::iterator*, int*);
+	bool isLastListItem(std::vector<Line>::iterator*);
+	bool isFirstListItem(std::vector<Line>::iterator*);
+	bool isFirstCodeBlock(std::vector<Line>::iterator*);
+	bool isLastCodeBlock(std::vector<Line>::iterator*);
+	void endListOrCode(QTextCursor*, std::vector<Line>::iterator);
+	void deleteListOrCode(QTextCursor*);
 	// Metrics.
 	static constexpr int ParagraphMargin = 12;
 };
