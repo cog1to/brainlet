@@ -151,61 +151,20 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 	QTextBlockFormat blockFormat;
 	blockFormat.setBottomMargin(ParagraphMargin);
 
-	if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
+	if (
+		cursor.block().blockNumber() != -1 &&
+		isControlKey(event) &&
+		cursor.selectionStart() != cursor.selectionEnd()
+	) {
+		deleteSelection(&cursor, &current, &pos);
+		if (!isNewlineKey(event)) {
+			return;
+		}
+	}
+
+	if (isNewlineKey(event)) {
 		if (cursor.block().blockNumber() == -1)
 			return;
-	
-		if (cursor.selectionStart() != cursor.selectionEnd()) {
-			int startBlock = document()->findBlock(cursor.selectionStart()).blockNumber();
-			int endBlock = document()->findBlock(cursor.selectionEnd()).blockNumber();
-			int selStart = cursor.selectionStart();
-
-			// Delete selected text in first and last blocks.
-			if (startBlock != endBlock) {
-				// For last block, delete from start of the block to the end of selection.
-				QString lastText = (*(lines->begin() + endBlock)).text;
-				QString remainingLastText = lastText.right(
-					lastText.size() - 
-						(cursor.selectionEnd() - document()->findBlock(cursor.selectionEnd()).position())
-				);
-				(*(lines->begin() + endBlock)).setText(remainingLastText);
-				
-				// For first block, delete from start of the selection to the end of the block.
-				QString firstText = (*(lines->begin() + startBlock)).text;
-				QString remainingFirstText = firstText.left(
-					cursor.selectionStart() - document()->findBlock(cursor.selectionStart()).position()
-				);
-				(*(lines->begin() + startBlock)).setText(remainingFirstText);
-				
-				// Delete all lines between start and end of selection.
-				if (endBlock > startBlock + 1) {
-					lines->erase(lines->begin() + startBlock + 1, lines->begin() + endBlock);
-				}
-
-				// Merge first and last block, delete the last one.
-				QString mergedText = remainingFirstText + remainingLastText;
-				lines->erase(lines->begin() + startBlock + 1);
-				(*(lines->begin() + startBlock)).setText(mergedText);
-
-				// Delete text from the document.
-				cursor.removeSelectedText();
-				// Set cursor position to beginning of the selection.
-				cursor.setPosition(selStart);
-				pos = cursor.positionInBlock();
-				current = lines->begin() + startBlock;
-			} else {
-				QString text = (*(lines->begin() + startBlock)).text;
-				int length = cursor.selectionEnd() - cursor.selectionStart();
-				int start = cursor.positionInBlock() - length;
-				text.remove(start, length);
-				(*current).setText(text);
-				// Delete text from the document.
-				cursor.removeSelectedText();
-				// Set cursor position to beginning of the selection.
-				cursor.setPosition(selStart);
-				pos = cursor.positionInBlock();
-			}
-		}
 
 		QString original = (*current).text;
 		QString prefix = original.left(pos);
@@ -421,6 +380,82 @@ void MarkdownWidget::formatBlock(
 	edit.select(QTextCursor::LineUnderCursor);
 	edit.insertText(*text, QTextCharFormat());
 	edit.endEditBlock();
+}
+
+bool MarkdownWidget::isControlKey(QKeyEvent* event) {
+  return (
+		event->key() == Qt::Key_Return ||
+		event->key() == Qt::Key_Enter ||
+		event->key() == Qt::Key_Delete ||
+		event->key() == Qt::Key_Backspace
+	);
+}
+
+bool MarkdownWidget::isNewlineKey(QKeyEvent* event) {
+  return (
+		event->key() == Qt::Key_Return ||
+		event->key() == Qt::Key_Enter
+	);
+}
+
+void MarkdownWidget::deleteSelection(
+	QTextCursor *cursor,
+	std::vector<Line>::iterator *current,
+	int *pos
+) {
+	std::vector<Line> *lines = m_model.lines();
+
+	if (cursor->selectionStart() != cursor->selectionEnd()) {
+		int startBlock = document()->findBlock(cursor->selectionStart()).blockNumber();
+		int endBlock = document()->findBlock(cursor->selectionEnd()).blockNumber();
+		int selStart = cursor->selectionStart();
+
+		// Delete selected text in first and last blocks.
+		if (startBlock != endBlock) {
+			// For last block, delete from start of the block to the end of selection.
+			QString lastText = (*(lines->begin() + endBlock)).text;
+			QString remainingLastText = lastText.right(
+				lastText.size() - 
+					(cursor->selectionEnd() - document()->findBlock(cursor->selectionEnd()).position())
+			);
+			(*(lines->begin() + endBlock)).setText(remainingLastText);
+			
+			// For first block, delete from start of the selection to the end of the block.
+			QString firstText = (*(lines->begin() + startBlock)).text;
+			QString remainingFirstText = firstText.left(
+				cursor->selectionStart() - document()->findBlock(cursor->selectionStart()).position()
+			);
+			(*(lines->begin() + startBlock)).setText(remainingFirstText);
+			
+			// Delete all lines between start and end of selection.
+			if (endBlock > startBlock + 1) {
+				lines->erase(lines->begin() + startBlock + 1, lines->begin() + endBlock);
+			}
+
+			// Merge first and last block, delete the last one.
+			QString mergedText = remainingFirstText + remainingLastText;
+			lines->erase(lines->begin() + startBlock + 1);
+			(*(lines->begin() + startBlock)).setText(mergedText);
+
+			// Delete text from the document.
+			cursor->removeSelectedText();
+			// Set cursor position to beginning of the selection.
+			cursor->setPosition(selStart);
+			*pos = cursor->positionInBlock();
+			*current = lines->begin() + startBlock;
+		} else {
+			QString text = (*(lines->begin() + startBlock)).text;
+			int length = cursor->selectionEnd() - cursor->selectionStart();
+			int start = cursor->positionInBlock() - length;
+			text.remove(start, length);
+			(*(*current)).setText(text);
+			// Delete text from the document.
+			cursor->removeSelectedText();
+			// Set cursor position to beginning of the selection.
+			cursor->setPosition(selStart);
+			*pos = cursor->positionInBlock();
+		}
+	}
 }
 
 // Highlighter logic.
