@@ -152,92 +152,148 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 	blockFormat.setBottomMargin(ParagraphMargin);
 
 	if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
-		if (cursor.block().blockNumber() != -1) {
-			QString original = (*current).text;
-			QString prefix = original.left(pos);
-			QString suffix = original.right(original.size() - pos);
+		if (cursor.block().blockNumber() == -1)
+			return;
+	
+		if (cursor.selectionStart() != cursor.selectionEnd()) {
+			int startBlock = document()->findBlock(cursor.selectionStart()).blockNumber();
+			int endBlock = document()->findBlock(cursor.selectionEnd()).blockNumber();
+			int selStart = cursor.selectionStart();
 
-			bool isLastCode = (*current).isCodeBlock &&
-					(current == (lines->end() - 1) || (*(current + 1)).isCodeBlock == false);
-			bool isLastList = (*current).isListItem() &&
-					(current == (lines->end() - 1) || (*(current + 1)).isListItem() == false);
-			bool isFirstCode = (*current).isCodeBlock &&
-					(current == (lines->begin()) || (*(current - 1)).isCodeBlock == false);
-			bool isFirstList = (*current).isListItem() &&
-					(current == (lines->begin()) || (*(current - 1)).isListItem() == false);
-
-			if (
-				prefix.size() == 0 && suffix.size() == 0 &&
-				(event->modifiers() & Qt::ShiftModifier) == 0
-			) {
-				if (isLastCode || isLastList) {
-					// End code block.
-					(*current).isCodeBlock = false;
-					(*current).list = ListItem();
-					(*current).setText(prefix);
-					// Suspend cursor changes while we're editing.
-					disconnect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
-					// Set block margin for the previous block.
-					if (isLastList) {
-						cursor.movePosition(QTextCursor::PreviousBlock);
-						cursor.mergeBlockFormat(blockFormat);
-						cursor.movePosition(QTextCursor::NextBlock);
-					}
-					// Delete code block from document, create a normal paragraph.
-					cursor.beginEditBlock();
-					cursor.deletePreviousChar();
-					cursor.movePosition(QTextCursor::NextBlock);
-					cursor.insertBlock();
-					cursor.mergeBlockFormat(blockFormat);
-					cursor.movePosition(QTextCursor::PreviousBlock);
-					cursor.endEditBlock();
-					// Resume cursor updates.
-					connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
-					setTextCursor(cursor);
-					// No more actions needed.
-					return;
-				} else if (isFirstCode || isFirstList) {
-					// End code block.
-					(*current).isCodeBlock = false;
-					(*current).list = ListItem();
-					(*current).setText(prefix);
-					// Suspend cursor changes while we're editing.
-					disconnect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
-					// Delete code block from document, create a normal paragraph.
-					cursor.beginEditBlock();
-					cursor.deleteChar();
-					cursor.movePosition(QTextCursor::PreviousBlock);
-					cursor.movePosition(QTextCursor::EndOfBlock);
-					cursor.insertBlock();
-					cursor.mergeBlockFormat(blockFormat);
-					cursor.endEditBlock();
-					// Resume cursor updates.
-					connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
-					setTextCursor(cursor);
-					// No more actions needed.
-					return;
+			// Delete selected text in first and last blocks.
+			if (startBlock != endBlock) {
+				// For last block, delete from start of the block to the end of selection.
+				QString lastText = (*(lines->begin() + endBlock)).text;
+				QString remainingLastText = lastText.right(
+					lastText.size() - 
+						(cursor.selectionEnd() - document()->findBlock(cursor.selectionEnd()).position())
+				);
+				(*(lines->begin() + endBlock)).setText(remainingLastText);
+				
+				// For first block, delete from start of the selection to the end of the block.
+				QString firstText = (*(lines->begin() + startBlock)).text;
+				QString remainingFirstText = firstText.left(
+					cursor.selectionStart() - document()->findBlock(cursor.selectionStart()).position()
+				);
+				(*(lines->begin() + startBlock)).setText(remainingFirstText);
+				
+				// Delete all lines between start and end of selection.
+				if (endBlock > startBlock + 1) {
+					lines->erase(lines->begin() + startBlock + 1, lines->begin() + endBlock);
 				}
-			}
 
-			if ((*current).isCodeBlock) {
-				(*current).setText(prefix);
-				lines->insert(current + 1, Line::codeLine(suffix));
-				cursor.insertBlock();
-				return;
-			} else if ((*current).isListItem()) {
-				(*current).setText(prefix);
-				lines->insert(current + 1, Line(suffix, (*current).list));
-				cursor.mergeBlockFormat(listFormat);
-				cursor.insertBlock();
-				if ((current + 2) == lines->end() || !(*(current + 2)).isListItem())
-					cursor.mergeBlockFormat(blockFormat);
-				return;
+				// Merge first and last block, delete the last one.
+				QString mergedText = remainingFirstText + remainingLastText;
+				lines->erase(lines->begin() + startBlock + 1);
+				(*(lines->begin() + startBlock)).setText(mergedText);
+
+				// Delete text from the document.
+				cursor.removeSelectedText();
+				// Set cursor position to beginning of the selection.
+				cursor.setPosition(selStart);
+				pos = cursor.positionInBlock();
+				current = lines->begin() + startBlock;
 			} else {
+				QString text = (*(lines->begin() + startBlock)).text;
+				int length = cursor.selectionEnd() - cursor.selectionStart();
+				int start = cursor.positionInBlock() - length;
+				text.remove(start, length);
+				(*current).setText(text);
+				// Delete text from the document.
+				cursor.removeSelectedText();
+				// Set cursor position to beginning of the selection.
+				cursor.setPosition(selStart);
+				pos = cursor.positionInBlock();
+			}
+		}
+
+		QString original = (*current).text;
+		QString prefix = original.left(pos);
+		QString suffix = original.right(original.size() - pos);
+
+		qDebug() << "prefix:" << prefix;
+		qDebug() << "suffix:" << suffix;
+
+		bool isLastCode = (*current).isCodeBlock &&
+				(current == (lines->end() - 1) || (*(current + 1)).isCodeBlock == false);
+		bool isLastList = (*current).isListItem() &&
+				(current == (lines->end() - 1) || (*(current + 1)).isListItem() == false);
+		bool isFirstCode = (*current).isCodeBlock &&
+				(current == (lines->begin()) || (*(current - 1)).isCodeBlock == false);
+		bool isFirstList = (*current).isListItem() &&
+				(current == (lines->begin()) || (*(current - 1)).isListItem() == false);
+
+		if (
+			prefix.size() == 0 && suffix.size() == 0 &&
+			(event->modifiers() & Qt::ShiftModifier) == 0
+		) {
+			if (isLastCode || isLastList) {
+				// End code block.
+				(*current).isCodeBlock = false;
+				(*current).list = ListItem();
 				(*current).setText(prefix);
-				lines->insert(current + 1, Line(suffix));
+				// Suspend cursor changes while we're editing.
+				disconnect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
+				// Set block margin for the previous block.
+				if (isLastList) {
+					cursor.movePosition(QTextCursor::PreviousBlock);
+					cursor.mergeBlockFormat(blockFormat);
+					cursor.movePosition(QTextCursor::NextBlock);
+				}
+				// Delete code block from document, create a normal paragraph.
+				cursor.beginEditBlock();
+				cursor.deletePreviousChar();
+				cursor.movePosition(QTextCursor::NextBlock);
 				cursor.insertBlock();
+				cursor.mergeBlockFormat(blockFormat);
+				cursor.movePosition(QTextCursor::PreviousBlock);
+				cursor.endEditBlock();
+				// Resume cursor updates.
+				connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
+				setTextCursor(cursor);
+				// No more actions needed.
+				return;
+			} else if (isFirstCode || isFirstList) {
+				// End code block.
+				(*current).isCodeBlock = false;
+				(*current).list = ListItem();
+				(*current).setText(prefix);
+				// Suspend cursor changes while we're editing.
+				disconnect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
+				// Delete code block from document, create a normal paragraph.
+				cursor.beginEditBlock();
+				cursor.deleteChar();
+				cursor.movePosition(QTextCursor::PreviousBlock);
+				cursor.movePosition(QTextCursor::EndOfBlock);
+				cursor.insertBlock();
+				cursor.mergeBlockFormat(blockFormat);
+				cursor.endEditBlock();
+				// Resume cursor updates.
+				connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
+				setTextCursor(cursor);
+				// No more actions needed.
 				return;
 			}
+		}
+
+		if ((*current).isCodeBlock) {
+			(*current).setText(prefix);
+			lines->insert(current + 1, Line::codeLine(suffix));
+			cursor.insertBlock();
+			return;
+		} else if ((*current).isListItem()) {
+			(*current).setText(prefix);
+			lines->insert(current + 1, Line(suffix, (*current).list));
+			cursor.mergeBlockFormat(listFormat);
+			cursor.insertBlock();
+			if ((current + 2) == lines->end() || !(*(current + 2)).isListItem())
+				cursor.mergeBlockFormat(blockFormat);
+			return;
+		} else {
+			(*current).setText(prefix);
+			lines->insert(current + 1, Line(suffix));
+			cursor.insertBlock();
+			return;
 		}
 	} 
 
@@ -246,7 +302,8 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 	}
 
 	if (event->key() == Qt::Key_Backspace) {
-		return;
+		if (cursor.atBlockStart() || cursor.atBlockEnd())
+			return;
 	}
 
 	if (event->key() == Qt::Key_Tab) {

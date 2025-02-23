@@ -3,6 +3,8 @@
 
 #include "model/text_model.h"
 
+#include <QDebug>
+
 // Utils
 
 inline int blockStartOffset(BlockFormat format) {
@@ -293,8 +295,14 @@ void Line::apply(
 		}
 
 		folded
-			.remove(match.capturedStart() - offset + match.captured(1).size(), prefix)
-			.remove(match.capturedEnd() - offset - prefix - suffix - match.captured(2).size(), suffix);
+			.remove(match.capturedStart() - offset + match.captured(1).size(), prefix);
+		folded
+			.remove(
+				match.capturedEnd() 
+					- match.captured(2).size()
+					- offset - prefix - suffix,
+				suffix
+			);
 
 		FormatRange foldedRange = FormatRange(
 			match.capturedStart() - offset + match.captured(1).size(),
@@ -409,7 +417,7 @@ void Line::setText(QString& input) {
 	apply(
 		&text,
 		BlockFormat::BoldItalic,
-		QRegularExpression("(^|[^\\*])\\*\\*\\*\\w[^\n]*?\\*\\*\\*($|[^\\*])"),
+		QRegularExpression("(^|[^\\*])\\*\\*\\*[^\n]*?\\*\\*\\*($|[^\\*])"),
 		3
 	);
 
@@ -417,7 +425,7 @@ void Line::setText(QString& input) {
 	apply(
 		&text,
 		BlockFormat::Bold,
-		QRegularExpression("(^|[^\\*])\\*\\*\\w[^\n]*?\\*\\*($|[^\\*])"),
+		QRegularExpression("(^|[^\\*])\\*\\*[^\\*][^\n]*?\\*\\*($|[^\\*])"),
 		2
 	);
 
@@ -425,7 +433,7 @@ void Line::setText(QString& input) {
 	apply(
 		&text,
 		BlockFormat::Italic,
-		QRegularExpression("(^|[^\\*])\\*\\w[^\n]*?\\*($|[^\\*])"),
+		QRegularExpression("(^|[^\\*])\\*[^\\*\n]+?\\*($|[^\\*])"),
 		1
 	);
 
