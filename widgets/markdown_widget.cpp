@@ -239,7 +239,29 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 				(*current).list = ListItem();
 				return;
 			} else if (isFirstCodeBlock(&current)) {
-				// TODO: Backspace on first code block.
+				// Delete code block if it's empty.
+				// TODO: This is not ideal behavior. We should probably remove current line
+				// from the code block while retaining the block itself. But QTextEdit is
+				// extremely anal with editing frames, so this has to do for now.
+				if (isLastCodeBlock(&current) && (*current).text.isEmpty()) {
+					lines->erase(current);
+
+					// Suspend cursor changes while we're editing.
+					disconnect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
+
+					cursor.movePosition(QTextCursor::PreviousBlock);
+					cursor.movePosition(QTextCursor::EndOfBlock);
+					cursor.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
+					cursor.removeSelectedText();
+					cursor.insertBlock();
+					cursor.movePosition(QTextCursor::PreviousCharacter);
+
+					// Suspend cursor changes while we're editing.
+					connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
+
+					// Restore cursor.
+					setTextCursor(cursor);
+				}
 				return;
 			} else {
 				// Merge with previous item.
