@@ -324,15 +324,21 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 			} else {
 				if (current != lines->begin()) {
 					// Merge with previous item.
+					int prevLength = (*(current - 1)).text.size();
+					bool isCodeBlock = (*current).isCodeBlock;
 					QString text = (*(current - 1)).text + (*current).text;
 					(*(current - 1)).setText(text);
 					lines->erase(current);
 
-					if ((*(current - 1)).isCodeBlock) {
+					if (!isCodeBlock && (*(current - 1)).isCodeBlock) {
 						cursor.beginEditBlock();
-						cursor.movePosition(QTextCursor::NextBlock);
-						cursor.deletePreviousChar();
+						cursor.select(QTextCursor::LineUnderCursor);
+						cursor.removeSelectedText();
+						cursor.deleteChar();
+						cursor.movePosition(QTextCursor::PreviousBlock);
+						cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor, prevLength);
 						cursor.endEditBlock();
+						setTextCursor(cursor);
 					} else {
 						cursor.deletePreviousChar();
 					}
