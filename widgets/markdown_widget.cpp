@@ -289,8 +289,9 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 				}
 				return;
 			} else if (isFirstListItem(&current)) {
-				deleteListOrCode(&cursor);
+				// Remove list formatting from current block.
 				(*current).list = ListItem();
+				cursor.setBlockFormat(blockFormat);
 				return;
 			} else if (isFirstCodeBlock(&current)) {
 				// Delete code block if it's empty.
