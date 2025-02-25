@@ -142,6 +142,10 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 	int block = cursor.block().blockNumber();
 	auto current = lines->begin() + block;
 	int pos = cursor.positionInBlock();
+	// Flag indicating whether backspace handling block should be
+	// entered when we press delete. In some cases the behavior for
+	// delete and backspace is equivalent.
+	bool deleteAsBackspace = false;
 
 	// Inter-list format.
 	QTextBlockFormat listFormat;
@@ -170,14 +174,10 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 		QString prefix = original.left(pos);
 		QString suffix = original.right(original.size() - pos);
 
-		bool isLastCode = (*current).isCodeBlock &&
-				(current == (lines->end() - 1) || (*(current + 1)).isCodeBlock == false);
-		bool isLastList = (*current).isListItem() &&
-				(current == (lines->end() - 1) || (*(current + 1)).isListItem() == false);
-		bool isFirstCode = (*current).isCodeBlock &&
-				(current == (lines->begin()) || (*(current - 1)).isCodeBlock == false);
-		bool isFirstList = (*current).isListItem() &&
-				(current == (lines->begin()) || (*(current - 1)).isListItem() == false);
+		bool isLastCode = isLastCodeBlock(&current);
+		bool isFirstCode = isFirstCodeBlock(&current); 
+		bool isLastList = isLastListItem(&current);
+		bool isFirstList = isFirstListItem(&current);
 
 		if (
 			prefix.size() == 0 && suffix.size() == 0 &&
@@ -212,7 +212,9 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 			lines->insert(current + 1, Line(suffix, (*current).list));
 			cursor.mergeBlockFormat(listFormat);
 			cursor.insertBlock();
-			if ((current + 2) == lines->end() || !(*(current + 2)).isListItem())
+
+			auto next = current + 1;
+			if (isLastListItem(&next))
 				cursor.mergeBlockFormat(blockFormat);
 			return;
 		} else {
@@ -224,15 +226,67 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 	} 
 
 	if (event->key() == Qt::Key_Delete) {
-		return;
+		if (cursor.atBlockEnd()) {
+			if (isLastCodeBlock(&current)) {
+				if (
+					isFirstCodeBlock(&current) &&
+					(*current).text.isEmpty()
+				) {
+					// Delete code block as if we pressed backspace.
+					cursor.movePosition(QTextCursor::NextCharacter);
+					deleteAsBackspace = true;
+				} else {
+					// Don't do anything if we're at the border of the code block.
+					return;
+				}
+			} else if (current != lines->end() && (*(current+1)).isCodeBlock) {
+				// Don't do anything if we're at the border of the code block.
+				return;
+			} else {
+				// Merge with next item.
+				QString text = (*current).text + (*(current + 1)).text;
+				(*(current)).setText(text);
+				lines->erase(current + 1);
+
+				if (current != lines->begin()) {
+					cursor.deleteChar();
+				}
+
+				// Restore margins if needed.
+				if (isLastListItem(&current)) {
+					cursor.mergeBlockFormat(blockFormat);
+				}
+
+				m_highlighter->onActiveBlockChanged(cursor.block().blockNumber());
+				m_highlighter->rehighlight();
+				return;
+			}
+		}
 	}
 
-	if (event->key() == Qt::Key_Backspace) {
+	if (event->key() == Qt::Key_Backspace || deleteAsBackspace) {
 		if (cursor.atBlockStart()) {
 			// If at beginning or end of list item, make it not list.
 			if (isLastListItem(&current)) {
-				endListOrCode(&cursor, current);
-				(*current).list = ListItem();
+				if ((*current).text.isEmpty()) {
+					endListOrCode(&cursor, current);
+					(*current).list = ListItem();
+				} else {
+					// Merge with previous item.
+					QString text = (*(current - 1)).text + (*current).text;
+					(*(current - 1)).setText(text);
+					lines->erase(current);
+
+					if (current != lines->begin()) {
+						cursor.deletePreviousChar();
+					}
+
+					// Set margins for end of the list.
+					cursor.mergeBlockFormat(blockFormat);
+
+					m_highlighter->onActiveBlockChanged(cursor.block().blockNumber());
+					m_highlighter->rehighlight();
+				}
 				return;
 			} else if (isFirstListItem(&current)) {
 				deleteListOrCode(&cursor);
@@ -240,9 +294,13 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 				return;
 			} else if (isFirstCodeBlock(&current)) {
 				// Delete code block if it's empty.
-				// TODO: This is not ideal behavior. We should probably remove current line
-				// from the code block while retaining the block itself. But QTextEdit is
-				// extremely anal with editing frames, so this has to do for now.
+				//
+				// TODO: This is not ideal behavior. We should probably remove current
+				// line from the code block while retaining the block itself. Instead
+				// we just ignore that case, and only delete the whole code block if
+				// it's empty.
+				// But QTextEdit is extremely anal with editing frames, so this has to
+				// do for now.
 				if (isLastCodeBlock(&current) && (*current).text.isEmpty()) {
 					lines->erase(current);
 
@@ -264,13 +322,24 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 				}
 				return;
 			} else {
-				// Merge with previous item.
-				QString text = (*(current - 1)).text + (*current).text;
-				(*(current - 1)).setText(text);
-				lines->erase(current);
-
 				if (current != lines->begin()) {
-					cursor.deletePreviousChar();
+					// Merge with previous item.
+					QString text = (*(current - 1)).text + (*current).text;
+					(*(current - 1)).setText(text);
+					lines->erase(current);
+
+					if ((*(current - 1)).isCodeBlock) {
+						cursor.beginEditBlock();
+						cursor.movePosition(QTextCursor::NextBlock);
+						cursor.deletePreviousChar();
+						cursor.endEditBlock();
+					} else {
+						cursor.deletePreviousChar();
+					}
+					
+					// Rehighlight.
+					m_highlighter->onActiveBlockChanged(cursor.block().blockNumber());
+					m_highlighter->rehighlight();
 				}
 				return;
 			}
@@ -278,7 +347,7 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 	}
 
 	if (event->key() == Qt::Key_Tab) {
-		return;
+		// TODO: Support list levels.
 	}
 
 	// Normal key press.
@@ -486,6 +555,7 @@ void MarkdownWidget::endListOrCode(QTextCursor *cursor, std::vector<Line>::itera
 
 	// Suspend cursor changes while we're editing.
 	disconnect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
+
 	// Set block margin for the previous block.
 	if (isLastListItem(&current)) {
 		cursor->movePosition(QTextCursor::PreviousBlock);
@@ -495,10 +565,19 @@ void MarkdownWidget::endListOrCode(QTextCursor *cursor, std::vector<Line>::itera
 	// Delete code block from document, create a normal paragraph.
 	cursor->beginEditBlock();
 	cursor->deletePreviousChar();
-	cursor->movePosition(QTextCursor::NextBlock);
-	cursor->insertBlock();
-	cursor->mergeBlockFormat(blockFormat);
-	cursor->movePosition(QTextCursor::PreviousBlock);
+	if ((*current).isCodeBlock) {
+		// To end a code block, we have to go outside of code frame and
+		// insert new block at that position.
+		cursor->movePosition(QTextCursor::NextBlock);
+		cursor->insertBlock();
+		cursor->setBlockFormat(blockFormat);
+		cursor->movePosition(QTextCursor::PreviousBlock);
+	} else {
+		// To end a list, we insert non-formatted block right at the end of it
+		cursor->movePosition(QTextCursor::EndOfBlock);
+		cursor->insertBlock();
+		cursor->setBlockFormat(blockFormat);
+	}
 	cursor->endEditBlock();
 	// Resume cursor updates.
 	connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
@@ -528,8 +607,8 @@ void MarkdownWidget::deleteListOrCode(QTextCursor *cursor) {
 bool MarkdownWidget::isLastListItem(std::vector<Line>::iterator *current) {
 	std::vector<Line> *lines = m_model.lines();
 
-	return ((*(*current)).isListItem() && 
-		((*current + 1) == lines->end() || !(*(*current + 1)).isListItem())
+	return ((*(*current)).list.listType != ListNone && 
+		((*current + 1) == lines->end() || !((*(*current + 1)).list.listType == (*(*current)).list.listType))
 	);
 }
 
@@ -537,7 +616,7 @@ bool MarkdownWidget::isFirstListItem(std::vector<Line>::iterator *current) {
 	std::vector<Line> *lines = m_model.lines();
 
 	return ((*(*current)).isListItem() && 
-		((*current) == lines->begin() || !(*(*current - 1)).isListItem())
+		((*current) == lines->begin() || !((*(*current - 1)).list.listType == (*(*current)).list.listType))
 	);
 }
 
