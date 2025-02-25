@@ -356,6 +356,15 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 	if (textCursor().block() == cursor.block()) {
 		// Update text.
 		QString text = cursor.block().text();
+		// TODO: List and code block creation.
+		// Something like:
+		//   if text == "```" {
+		//     createCodeBlock()
+		//   } else if text == "[-+*] " {
+		//     createList()
+		//   } else if text == "[0-9]+. " {
+		//		 createEnumeratedList()
+		//   }
 		(*current).setText(text);
 		// Update highlighting after we've saved to the model.
 		m_highlighter->rehighlight();
