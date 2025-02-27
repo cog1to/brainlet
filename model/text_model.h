@@ -88,6 +88,7 @@ public:
 	TextModel(QStringList);
 	// Data.
 	std::vector<Line> *lines();
+	void setLines(std::vector<Line>);
 
 private:
 	std::vector<Line> m_data;

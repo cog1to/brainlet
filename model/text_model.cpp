@@ -453,7 +453,6 @@ TextModel::TextModel(QStringList data) {
 	bool code = false;
 	int emptyCount = 0;
 	static QString emptyString = "";
-
 	QRegularExpression listExp("^([\\-\\*\\+]|[0-9]+\\.) ");
 
 	for (QString& line: data) {
@@ -499,5 +498,9 @@ TextModel::TextModel(QStringList data) {
 
 std::vector<Line> *TextModel::lines() {
 	return &m_data;
+}
+
+void TextModel::setLines(std::vector<Line> lines) {
+	m_data = lines;
 }
 

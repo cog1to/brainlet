@@ -4,6 +4,9 @@
 #include <QString>
 #include <QStringList>
 #include <QTimer>
+#include <QMimeData>
+#include <QRegularExpression>
+#include <QKeySequence>
 
 #include "widgets/markdown_widget.h"
 
@@ -16,6 +19,7 @@ MarkdownWidget::MarkdownWidget(QWidget *parent, Style *style)
 
 	setWordWrapMode(QTextOption::WordWrap);
 	setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	setAcceptRichText(false);
 
 	// Apply style.
 	setStyleSheet(
@@ -39,15 +43,26 @@ MarkdownWidget::~MarkdownWidget() {
 }
 
 void MarkdownWidget::load(QString data) {
-	QStringList lines = data.split("\n");
+	// Set new model.
+	QRegularExpression splitExp("(\\n|\r\\n)", QRegularExpression::MultilineOption);
+	QStringList lines = data.split(splitExp);
 	m_model = TextModel(lines);
 	m_highlighter->setModel(&m_model);
 
+	// Append model to the document.
+	QTextCursor cursor = append(m_model, QTextCursor(document()));
+
+	// Reset cursor.
+	m_prevBlock = cursor.block().blockNumber();
+	cursor.setPosition(0);
+	setTextCursor(cursor);
+}
+
+QTextCursor MarkdownWidget::append(TextModel model, QTextCursor cursor) {
 	QTextDocument *doc = document();
-	QTextCursor cursor(doc);
 
 	//-- Default formats. --//
-	
+
 	// Normal paragraph format.
 	QTextBlockFormat blockFormat;
 	blockFormat.setBottomMargin(ParagraphMargin);
@@ -72,7 +87,7 @@ void MarkdownWidget::load(QString data) {
 	// Append paragraphs.
 	QTextList *list = nullptr;
 	QTextFrame *code = nullptr;
-	std::vector<Line> *mlines = m_model.lines();
+	std::vector<Line> *mlines = model.lines();
 	std::vector<Line>::iterator it;
 	for (it = mlines->begin(); it != mlines->end(); it++) {
 		if ((*it).isListItem()) {
@@ -93,7 +108,7 @@ void MarkdownWidget::load(QString data) {
 				cursor.deletePreviousChar();
 				code = cursor.insertFrame(codeFormat);
 				cursor.setBlockFormat(listFormat);
-			}	
+			}
 		} else {
 			if (list != nullptr) {
 				list = nullptr;
@@ -124,10 +139,79 @@ void MarkdownWidget::load(QString data) {
 	// Reconnect cursor change signal.
 	connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
 
-	// Reset cursor.
-	m_prevBlock = cursor.block().blockNumber();
-	cursor.setPosition(0);
-	setTextCursor(cursor);
+	// Position at the end of editing.
+	return cursor;
+}
+
+void MarkdownWidget::insertFromMimeData(const QMimeData *source) {
+	if (!source->hasText())
+		return;
+
+	QString text = source->text();
+	if (text.isEmpty())
+		return;
+
+	// Create model from pastebin.
+	QRegularExpression splitExp("(\\n|\\r\\n)", QRegularExpression::MultilineOption);
+	QStringList dataLines = text.split(splitExp);
+	TextModel model = TextModel(dataLines);
+	std::vector<Line> *mlines = model.lines();
+
+	// Current document config.
+	QTextCursor cursor = textCursor();
+	std::vector<Line> *lines = m_model.lines();
+	int block = cursor.block().blockNumber();
+	auto current = lines->begin() + block;
+	int pos = cursor.positionInBlock();
+
+	// Clear current selection first.
+	if (
+		cursor.block().blockNumber() != -1 &&
+		cursor.selectionStart() != cursor.selectionEnd()
+	) {
+		deleteSelection(&cursor, &current, &pos);
+	}
+
+	QString original = (*current).text;
+	QString prefix = original.left(pos);
+	QString suffix = original.right(original.size() - pos);
+
+	// Add lines before cursor.
+	std::vector<Line> newModel;
+	for (auto it = lines->begin(); it != current; it++) {
+		newModel.push_back(*it);
+	}
+
+	// Add pasted lines.
+	std::vector<Line>::iterator it;
+	for (it = mlines->begin(); it != mlines->end(); it++) {
+		if (it == mlines->begin()) {
+			QString newText = prefix + (*it).text;
+			newModel.push_back(Line(newText));
+		} else if ((it + 1) == mlines->end()) {
+			QString lastText = (*it).text + suffix;
+			Line line = Line(lastText);
+			newModel.push_back(line);
+		} else {
+			newModel.push_back(*it);
+		}
+	}
+
+	// Add lines after cursor.
+	current += 1;
+	for (; current != lines->end(); current++) {
+		newModel.push_back(*current);
+	}
+
+	// Save new model.
+	m_model.setLines(newModel);
+
+	// Append to document.
+	QTextCursor updated = append(model, textCursor());
+	setTextCursor(updated);
+	onCursorMoved();
+	// Rehighlight because document configuration has changed.
+	m_highlighter->rehighlight();
 }
 
 void MarkdownWidget::resizeEvent(QResizeEvent* event) {
@@ -175,7 +259,7 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 		QString suffix = original.right(original.size() - pos);
 
 		bool isLastCode = isLastCodeBlock(&current);
-		bool isFirstCode = isFirstCodeBlock(&current); 
+		bool isFirstCode = isFirstCodeBlock(&current);
 		bool isLastList = isLastListItem(&current);
 		bool isFirstList = isFirstListItem(&current);
 
@@ -223,7 +307,7 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 			cursor.insertBlock();
 			return;
 		}
-	} 
+	}
 
 	if (event->key() == Qt::Key_Delete) {
 		if (cursor.atBlockEnd()) {
@@ -343,7 +427,7 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 					} else {
 						cursor.deletePreviousChar();
 					}
-					
+
 					// Rehighlight.
 					m_highlighter->onActiveBlockChanged(cursor.block().blockNumber());
 					m_highlighter->rehighlight();
@@ -359,6 +443,14 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 
 	// Normal key press.
 	QTextEdit::keyPressEvent(event);
+
+	if (
+		event->matches(QKeySequence::Paste) ||
+		event->matches(QKeySequence::Copy) ||
+		event->matches(QKeySequence::Cut)
+	) {
+		return;
+	}
 
 	if (textCursor().block() == cursor.block()) {
 		// Update text.
@@ -480,7 +572,7 @@ void MarkdownWidget::formatBlock(
 }
 
 bool MarkdownWidget::isControlKey(QKeyEvent* event) {
-  return (
+	return (
 		event->key() == Qt::Key_Return ||
 		event->key() == Qt::Key_Enter ||
 		event->key() == Qt::Key_Delete ||
@@ -489,7 +581,7 @@ bool MarkdownWidget::isControlKey(QKeyEvent* event) {
 }
 
 bool MarkdownWidget::isNewlineKey(QKeyEvent* event) {
-  return (
+	return (
 		event->key() == Qt::Key_Return ||
 		event->key() == Qt::Key_Enter
 	);
@@ -515,18 +607,18 @@ void MarkdownWidget::deleteSelection(
 		// For last block, delete from start of the block to the end of selection.
 		QString lastText = (*(lines->begin() + endBlock)).text;
 		QString remainingLastText = lastText.right(
-			lastText.size() - 
+			lastText.size() -
 				(cursor->selectionEnd() - document()->findBlock(cursor->selectionEnd()).position())
 		);
 		(*(lines->begin() + endBlock)).setText(remainingLastText);
-		
+
 		// For first block, delete from start of the selection to the end of the block.
 		QString firstText = (*(lines->begin() + startBlock)).text;
 		QString remainingFirstText = firstText.left(
 			cursor->selectionStart() - document()->findBlock(cursor->selectionStart()).position()
 		);
 		(*(lines->begin() + startBlock)).setText(remainingFirstText);
-		
+
 		// Delete all lines between start and end of selection.
 		if (endBlock > startBlock + 1) {
 			lines->erase(lines->begin() + startBlock + 1, lines->begin() + endBlock);
@@ -546,9 +638,15 @@ void MarkdownWidget::deleteSelection(
 	} else {
 		QString text = (*(lines->begin() + startBlock)).text;
 		int length = cursor->selectionEnd() - cursor->selectionStart();
-		int start = cursor->positionInBlock() - length;
+		// If selection is done forward, i.e. a->bcd|ef, then start position is
+		// end of selection minus length of selection.
+		// If selection is done backwards, i.e. a|bcd<-e, then the start position is
+		// current cursor position.
+		int start = (cursor->position() > cursor->selectionStart())
+			? (cursor->positionInBlock() - length)
+			: (cursor->positionInBlock());
 		text.remove(start, length);
-		(*(*current)).setText(text);
+		*(*current) = Line(text);
 		// Delete text from the document.
 		cursor->removeSelectedText();
 		// Set cursor position to beginning of the selection.
@@ -623,7 +721,7 @@ void MarkdownWidget::deleteListOrCode(QTextCursor *cursor) {
 bool MarkdownWidget::isLastListItem(std::vector<Line>::iterator *current) {
 	std::vector<Line> *lines = m_model.lines();
 
-	return ((*(*current)).list.listType != ListNone && 
+	return ((*(*current)).list.listType != ListNone &&
 		((*current + 1) == lines->end() || !((*(*current + 1)).list.listType == (*(*current)).list.listType))
 	);
 }
@@ -631,7 +729,7 @@ bool MarkdownWidget::isLastListItem(std::vector<Line>::iterator *current) {
 bool MarkdownWidget::isFirstListItem(std::vector<Line>::iterator *current) {
 	std::vector<Line> *lines = m_model.lines();
 
-	return ((*(*current)).isListItem() && 
+	return ((*(*current)).isListItem() &&
 		((*current) == lines->begin() || !((*(*current - 1)).list.listType == (*(*current)).list.listType))
 	);
 }
@@ -639,7 +737,7 @@ bool MarkdownWidget::isFirstListItem(std::vector<Line>::iterator *current) {
 bool MarkdownWidget::isLastCodeBlock(std::vector<Line>::iterator *current) {
 	std::vector<Line> *lines = m_model.lines();
 
-	return ((*(*current)).isCodeBlock && 
+	return ((*(*current)).isCodeBlock &&
 		((*current + 1) == lines->end() || !(*(*current + 1)).isCodeBlock)
 	);
 }
@@ -647,7 +745,7 @@ bool MarkdownWidget::isLastCodeBlock(std::vector<Line>::iterator *current) {
 bool MarkdownWidget::isFirstCodeBlock(std::vector<Line>::iterator *current) {
 	std::vector<Line> *lines = m_model.lines();
 
-	return ((*(*current)).isCodeBlock && 
+	return ((*(*current)).isCodeBlock &&
 		((*current) == lines->begin() || !(*(*current - 1)).isCodeBlock)
 	);
 }
@@ -681,7 +779,9 @@ void MarkdownHighlighter::highlightBlock(const QString &text) {
 
 	Line line = (*lines)[number];
 
-	std::vector<FormatRange> ranges = (m_activeBlock == number) ? line.formats : line.foldedFormats;
+	std::vector<FormatRange> ranges = (m_activeBlock == number)
+		? line.formats
+		: line.foldedFormats;
 
 	for (auto fmt: ranges) {
 		setFormat(

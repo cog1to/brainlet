@@ -11,6 +11,7 @@
 #include <QSyntaxHighlighter>
 #include <QTextDocument>
 #include <QKeyEvent>
+#include <QMimeData>
 
 #include "model/text_model.h"
 #include "widgets/style.h"
@@ -39,6 +40,8 @@ public:
 	MarkdownWidget(QWidget*, Style*);
 	~MarkdownWidget();
 	void load(QString);
+	// Overrides.
+	void insertFromMimeData(const QMimeData*) override;
 	// Events.
 	void resizeEvent(QResizeEvent*) override;
 	void keyPressEvent(QKeyEvent*) override;
@@ -55,6 +58,7 @@ private:
 	// Helpers.
 	void formatBlock(QTextBlock, QString*, std::vector<FormatRange>*);
 	int adjustForUnfolding(QString*, std::vector<FormatRange>*, int);
+	QTextCursor append(TextModel, QTextCursor);
 	// Keyboard helpers.
 	bool isControlKey(QKeyEvent*);
 	bool isNewlineKey(QKeyEvent*);
