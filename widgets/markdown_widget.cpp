@@ -552,7 +552,12 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 		return;
 	}
 
-	if (textCursor().block() == cursor.block()) {
+	if (
+		textCursor().block() == cursor.block() &&
+		// Fix to prevent removing formatting when modifier key is pressed
+		// while selection is active.
+		!cursor.hasSelection() 
+	) {
 		// Update text.
 		QString text = cursor.block().text();
 		// TODO: List and code block creation.
