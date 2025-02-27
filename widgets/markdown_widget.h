@@ -42,6 +42,7 @@ public:
 	void load(QString);
 	// Overrides.
 	void insertFromMimeData(const QMimeData*) override;
+	QMimeData *createMimeDataFromSelection() const override;
 	// Events.
 	void resizeEvent(QResizeEvent*) override;
 	void keyPressEvent(QKeyEvent*) override;

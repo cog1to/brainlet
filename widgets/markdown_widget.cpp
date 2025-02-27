@@ -214,6 +214,106 @@ void MarkdownWidget::insertFromMimeData(const QMimeData *source) {
 	m_highlighter->rehighlight();
 }
 
+QMimeData *MarkdownWidget::createMimeDataFromSelection() const {
+	QTextCursor cursor = textCursor();
+	const std::vector<Line> *lines = m_model.const_lines();
+
+	if (cursor.selectionStart() == cursor.selectionEnd()) {
+		return nullptr;
+	}
+
+	int startBlock = document()->findBlock(cursor.selectionStart()).blockNumber();
+	int endBlock = document()->findBlock(cursor.selectionEnd()).blockNumber();
+	int selStart = cursor.selectionStart();
+
+	if (startBlock == endBlock) {
+		QString text = (*(lines->begin() + startBlock)).text;
+		int length = cursor.selectionEnd() - cursor.selectionStart();
+		// If selection is done forward, i.e. a->bcd|ef, then start position is
+		// end of selection minus length of selection.
+		// If selection is done backwards, i.e. a|bcd<-e, then the start position is
+		// current cursor position.
+		int start = (cursor.position() > cursor.selectionStart())
+			? (cursor.positionInBlock() - length)
+			: (cursor.positionInBlock());
+
+		QString selection = text.mid(start, length);
+
+		QMimeData *data = new QMimeData();
+		data->setText(selection);
+		return data;
+	} else {
+		QStringList list;
+		const Line *prevLine = nullptr;
+		const Line *currentLine = nullptr;
+
+		currentLine = &(*(lines->begin() + startBlock));
+		if (currentLine->isCodeBlock)
+			list.push_back("```");
+		prevLine = currentLine;
+
+		// For first block, push text from selection start.
+		QString firstText = currentLine->text;
+		QString remainingFirstText = firstText.right(
+			firstText.size() -
+				(cursor.selectionStart() - document()->findBlock(cursor.selectionStart()).position())
+		);
+		QString prefix = currentLine->list.value;
+		list.push_back(prefix + remainingFirstText);
+
+		// Push every line before last.
+		for (
+			auto it = lines->begin() + startBlock + 1;
+			it <= (lines->begin() + endBlock);
+			it++
+		) {
+			currentLine = &(*it);
+
+			// Separate blocks.
+			if (prevLine->isCodeBlock && !currentLine->isCodeBlock) {
+				list.push_back("```");
+				list.push_back("");
+			} else if (!prevLine->isCodeBlock && currentLine->isCodeBlock) {
+				list.push_back("");
+				list.push_back("```");
+			} else if (prevLine->list.listType != currentLine->list.listType) {
+				list.push_back("");
+			} else if (
+				prevLine->list.listType == ListNone &&
+				currentLine->list.listType == ListNone
+			) {
+				list.push_back("");
+			}
+
+			if (it == (lines->begin() + endBlock))
+				break;
+
+			QString prefix = currentLine->list.value;
+			list.push_back(prefix + (*it).text);
+			prevLine = currentLine;
+		}
+
+		// For last block, push text up to selection end.
+		currentLine = &(*(lines->begin() + endBlock));
+		QString lastText = currentLine->text;
+		QString startingLastText = lastText.left(
+			cursor.selectionEnd() - document()->findBlock(cursor.selectionEnd()).position()
+		);
+		list.push_back(currentLine->list.value + startingLastText);
+
+		// Close code block.
+		if (currentLine->isCodeBlock)
+			list.push_back("```");
+
+		QString joined = list.join("\n");
+		QMimeData *data = new QMimeData();
+		data->setText(joined);
+		return data;
+	}
+
+	return nullptr;
+}
+
 void MarkdownWidget::resizeEvent(QResizeEvent* event) {
 	QTextEdit::resizeEvent(event);
 }

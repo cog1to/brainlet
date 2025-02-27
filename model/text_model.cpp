@@ -395,12 +395,12 @@ void Line::setText(QString& input) {
 		formats.push_back(FormatRange(0, input.size(), BlockFormat::Heading6));
 	} else if (QRegularExpressionMatch match = listExp.match(input); match.hasMatch()) {
 		// TODO: Sublist support.
-		list = ListItem(ListBullet, 0);
+		list = ListItem(ListBullet, 0, "- ");
 		folded = input.right(input.size() - 2);
 		text = input.right(input.size() - 2);
 	} else if (QRegularExpressionMatch match = enumeratedExp.match(input); match.hasMatch()) {
 		// TODO: Numeric list support and levels support.
-		list = ListItem(ListNumeric, 0);
+		list = ListItem(ListNumeric, 0, "1. ");
 		folded = input.right(input.size() - match.captured(0).size());
 		text = input.right(input.size() - match.captured(0).size());
 	}
@@ -470,7 +470,7 @@ TextModel::TextModel(QStringList data) {
 
 				// If closure is found, apply code formatting. Otherwise ignore it.
 				if (closureFound) {
-					cloud = true;
+					code = true;
 				}
 			} else {
 				code = false;
@@ -514,6 +514,10 @@ TextModel::TextModel(QStringList data) {
 }
 
 std::vector<Line> *TextModel::lines() {
+	return &m_data;
+}
+
+const std::vector<Line> *TextModel::const_lines() const {
 	return &m_data;
 }
 
