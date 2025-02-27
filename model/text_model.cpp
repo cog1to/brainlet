@@ -455,9 +455,26 @@ TextModel::TextModel(QStringList data) {
 	static QString emptyString = "";
 	QRegularExpression listExp("^([\\-\\*\\+]|[0-9]+\\.) ");
 
-	for (QString& line: data) {
+	for (auto it = data.begin(); it != data.end(); it++) {
+		QString& line = *it;
 		if (line == "```") {
-			code = !code;
+			if (!code) {
+				// Look ahead for the closing sequence of the code block.
+				bool closureFound = false;
+				for (auto next = it + 1; next != data.end(); next++) {
+					if (*next == "```") {
+						closureFound = true;
+						break;
+					}
+				}
+
+				// If closure is found, apply code formatting. Otherwise ignore it.
+				if (closureFound) {
+					cloud = true;
+				}
+			} else {
+				code = false;
+			}
 			continue;
 		}
 
