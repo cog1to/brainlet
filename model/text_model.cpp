@@ -128,7 +128,7 @@ QTextCharFormat FormatRange::qtFormat(Style *style, QTextCharFormat fmt) {
 	return fmt;
 }
 
-int FormatRange::startOffset() {
+int FormatRange::startOffset() const {
 	if (format == Link) {
 		return 1;
 	} else {
@@ -136,7 +136,7 @@ int FormatRange::startOffset() {
 	}
 }
 
-int FormatRange::endOffset() {
+int FormatRange::endOffset() const {
 	if (format == Link) {
 		return 3 + link.target.size();
 	} else {

@@ -58,7 +58,7 @@ private:
 	int m_prevBlock = -1;
 	// Helpers.
 	void formatBlock(QTextBlock, QString*, std::vector<FormatRange>*);
-	int adjustForUnfolding(QString*, std::vector<FormatRange>*, int);
+	int adjustForUnfolding(const QString*, const std::vector<FormatRange>*, int) const;
 	QTextCursor append(TextModel, QTextCursor);
 	// Keyboard helpers.
 	bool isControlKey(QKeyEvent*);

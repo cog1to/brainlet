@@ -254,10 +254,23 @@ QMimeData *MarkdownWidget::createMimeDataFromSelection() const {
 
 		// For first block, push text from selection start.
 		QString firstText = currentLine->text;
-		QString remainingFirstText = firstText.right(
-			firstText.size() -
-				(cursor.selectionStart() - document()->findBlock(cursor.selectionStart()).position())
-		);
+
+		// Relative position inside start block.
+		int startPos = cursor.selectionStart()
+			- document()->findBlock(cursor.selectionStart()).position();
+		// If cursor is not on the block, we need to adjust position to
+		// take into account all of the folded formatting.
+		if (cursor.position() == cursor.selectionStart() && startBlock != endBlock) {
+			startPos += adjustForUnfolding(
+				&currentLine->folded,
+				&currentLine->foldedFormats,
+				startPos
+			);
+		}
+
+		// Get the text from position to the end of the block.
+		QString remainingFirstText = firstText.right(firstText.size() - startPos);
+		// Add list prefix, if any.
 		QString prefix = currentLine->list.value;
 		list.push_back(prefix + remainingFirstText);
 
@@ -295,10 +308,21 @@ QMimeData *MarkdownWidget::createMimeDataFromSelection() const {
 
 		// For last block, push text up to selection end.
 		currentLine = &(*(lines->begin() + endBlock));
+		// Position inside block.
+		int endPos = cursor.selectionEnd()
+			- document()->findBlock(cursor.selectionEnd()).position();
+		// If cursor is not on the block, we need to adjust position to
+		// take into account all of the folded formatting.
+		if (cursor.position() == cursor.selectionEnd() && startBlock != endBlock) {
+			endPos += adjustForUnfolding(
+				&currentLine->folded,
+				&currentLine->foldedFormats,
+				endPos
+			);
+		}
+
 		QString lastText = currentLine->text;
-		QString startingLastText = lastText.left(
-			cursor.selectionEnd() - document()->findBlock(cursor.selectionEnd()).position()
-		);
+		QString startingLastText = lastText.left(endPos);
 		list.push_back(currentLine->list.value + startingLastText);
 
 		// Close code block.
@@ -338,6 +362,12 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 	// Normal paragraph format.
 	QTextBlockFormat blockFormat;
 	blockFormat.setBottomMargin(ParagraphMargin);
+
+	if (event->matches(QKeySequence::Cut)) {
+		copy();
+		deleteSelection(&cursor, &current, &pos);
+		return;
+	}
 
 	if (
 		cursor.block().blockNumber() != -1 &&
@@ -639,10 +669,10 @@ void MarkdownWidget::onCursorMoved() {
 }
 
 int MarkdownWidget::adjustForUnfolding(
-	QString *text,
-	std::vector<FormatRange> *ranges,
+	const QString *text,
+	const std::vector<FormatRange> *ranges,
 	int positionInBlock
-) {
+) const {
 	assert(text != nullptr);
 	assert(ranges != nullptr);
 
@@ -709,20 +739,47 @@ void MarkdownWidget::deleteSelection(
 
 	// Delete selected text in first and last blocks.
 	if (startBlock != endBlock) {
-		// For last block, delete from start of the block to the end of selection.
-		QString lastText = (*(lines->begin() + endBlock)).text;
-		QString remainingLastText = lastText.right(
-			lastText.size() -
-				(cursor->selectionEnd() - document()->findBlock(cursor->selectionEnd()).position())
-		);
-		(*(lines->begin() + endBlock)).setText(remainingLastText);
+		// For last block, delete from start of the block to the end of
+		// selection.
 
-		// For first block, delete from start of the selection to the end of the block.
-		QString firstText = (*(lines->begin() + startBlock)).text;
-		QString remainingFirstText = firstText.left(
-			cursor->selectionStart() - document()->findBlock(cursor->selectionStart()).position()
-		);
-		(*(lines->begin() + startBlock)).setText(remainingFirstText);
+		Line *lastLine = &(*(lines->begin() + endBlock));
+		// Position inside last block.
+		int endPos = cursor->selectionEnd()
+			- document()->findBlock(cursor->selectionEnd()).position();
+		// If selection starts not on the last block, we need to
+		// take into account all of the folded formatting.
+		if (cursor->position() == cursor->selectionEnd()) {
+			endPos += adjustForUnfolding(
+				&lastLine->folded,
+				&lastLine->foldedFormats,
+				endPos
+			);
+		}
+
+		QString lastText = lastLine->text;
+		QString remainingLastText = lastText.right(lastText.size() - endPos);
+		lastLine->setText(remainingLastText);
+
+		// For first block, delete from start of the selection to the end of
+		// the block.
+
+		Line *firstLine = &(*(lines->begin() + startBlock));
+		// Relative position inside start block.
+		int startPos = cursor->selectionStart()
+			- document()->findBlock(cursor->selectionStart()).position();
+		// If selection ends not on the first block, we need to
+		// take into account all of the folded formatting.
+		if (cursor->position() == cursor->selectionStart()) {
+			startPos += adjustForUnfolding(
+				&firstLine->folded,
+				&firstLine->foldedFormats,
+				startPos
+			);
+		}
+
+		QString firstText = firstLine->text;
+		QString remainingFirstText = firstText.left(startPos);
+		firstLine->setText(remainingFirstText);
 
 		// Delete all lines between start and end of selection.
 		if (endBlock > startBlock + 1) {

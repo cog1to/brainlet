@@ -38,8 +38,8 @@ struct FormatRange {
 	// Convert to QTextCharFormat
 	QTextCharFormat qtFormat(Style*, QTextCharFormat);
 	// Symbolic offset due to formatting symbols.
-	int startOffset();
-	int endOffset();
+	int startOffset() const;
+	int endOffset() const;
 };
 
 enum ListType {
