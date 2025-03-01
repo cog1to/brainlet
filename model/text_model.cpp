@@ -120,8 +120,8 @@ QTextCharFormat FormatRange::qtFormat(Style *style, QTextCharFormat fmt) {
 		case PlainLink:
 			fmt.setFontUnderline(true);
 			fmt.setForeground(style->linkColor());
-			fmt.setAnchorHref(link.target);
 			fmt.setAnchor(true);
+			fmt.setAnchorHref(link.target);
 			break;
 	}
 

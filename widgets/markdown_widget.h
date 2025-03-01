@@ -46,6 +46,8 @@ public:
 	// Events.
 	void resizeEvent(QResizeEvent*) override;
 	void keyPressEvent(QKeyEvent*) override;
+	void mousePressEvent(QMouseEvent*) override;
+	void mouseReleaseEvent(QMouseEvent*) override;
 
 protected slots:
 	void onCursorMoved();
@@ -56,6 +58,7 @@ private:
 	MarkdownHighlighter *m_highlighter;
 	TextModel m_model;
 	int m_prevBlock = -1;
+	QString m_anchor;
 	// Helpers.
 	void formatBlock(QTextBlock, QString*, std::vector<FormatRange>*);
 	int adjustForUnfolding(const QString*, const std::vector<FormatRange>*, int) const;

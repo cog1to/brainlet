@@ -7,6 +7,8 @@
 #include <QMimeData>
 #include <QRegularExpression>
 #include <QKeySequence>
+#include <QMouseEvent>
+#include <QDesktopServices>
 
 #include "widgets/markdown_widget.h"
 
@@ -603,6 +605,60 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 		// Update highlighting after we've saved to the model.
 		m_highlighter->rehighlight();
 	}
+}
+
+// Link handling.
+
+void MarkdownWidget::mousePressEvent(QMouseEvent *event) {
+	if (event->button() == Qt::LeftButton) {
+		QString anchor;
+		// Check for URL at current position. We have to do this, because
+		// using setAnchor from QSyntaxHighlighter only applies the style,
+		// but doesn't actually make the text a link. So we have to manually
+		// search for a link under the click position and activate it...
+		QTextCursor cursor = cursorForPosition(event->pos());
+		std::vector<Line>* lines = m_model.lines();
+		int blockNumber = cursor.block().blockNumber();
+		Line &line = *(lines->begin() + blockNumber);
+
+		int position = cursor.positionInBlock();
+		QString text = line.text;
+		std::vector<FormatRange> formats = line.formats;
+		// If we're not on active block, use folded text instead of originial.
+		if (textCursor().block().blockNumber() != blockNumber) {
+			text = line.folded;
+			formats = line.foldedFormats;
+		}
+
+		// Go through formats and detect links that envelop the position.
+		for (auto& fmt: formats) {
+			if (fmt.format != Link && fmt.format != PlainLink)
+				continue;
+			if (!(fmt.from < position && fmt.to > position))
+				continue;
+			if (fmt.link.target.isEmpty())
+				continue;
+			anchor = fmt.link.target;
+			break;
+		}
+
+		if (!anchor.isEmpty()) {
+			m_anchor = anchor;
+			return;
+		}
+	}
+
+	QTextEdit::mousePressEvent(event);
+}
+
+void MarkdownWidget::mouseReleaseEvent(QMouseEvent *event) {
+	if (!m_anchor.isEmpty()) {
+		QDesktopServices::openUrl(QUrl(m_anchor));
+		m_anchor = "";
+		return;
+	}
+
+	QTextEdit::mouseReleaseEvent(event);
 }
 
 // Cursor.
