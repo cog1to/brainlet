@@ -443,7 +443,9 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 
 	if (event->key() == Qt::Key_Delete) {
 		if (cursor.atBlockEnd()) {
-			if (isLastCodeBlock(&current)) {
+			if (cursor.atBlockStart()) {
+				deleteAsBackspace = true;
+			} else if (isLastCodeBlock(&current)) {
 				if (
 					isFirstCodeBlock(&current) &&
 					(*current).text.isEmpty()
@@ -567,10 +569,14 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 						cursor.endEditBlock();
 						setTextCursor(cursor);
 					} else {
-						// TODO: Bug. this causes an error:
-						// "QTextCursor::setPosition: Position '1744' out of range"
-						cursor.deletePreviousChar();
-						setTextCursor(cursor);
+						if (cursor.atEnd()) {
+							cursor.deletePreviousChar();
+							m_prevBlock = cursor.block().blockNumber();
+							setTextCursor(cursor);
+						} else {
+							cursor.deletePreviousChar();
+							setTextCursor(cursor);
+						}
 					}
 
 					// Rehighlight.
