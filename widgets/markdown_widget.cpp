@@ -460,17 +460,24 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 				return;
 			} else {
 				// Merge with next item.
-				QString text = (*current).text + (*(current + 1)).text;
-				(*(current)).setText(text);
-				lines->erase(current + 1);
+				if ((current + 1) == lines->end()) {
+					if ((*current).text.isEmpty()) {
+						lines->erase(current);
+						cursor.deletePreviousChar();
+					}
+				} else {
+					QString text = (*current).text + (*(current + 1)).text;
+					(*(current)).setText(text);
+					lines->erase(current + 1);
 
-				if (current != lines->begin()) {
-					cursor.deleteChar();
-				}
+					if (current != lines->begin()) {
+						cursor.deleteChar();
+					}
 
-				// Restore margins if needed.
-				if (isLastListItem(&current)) {
-					cursor.mergeBlockFormat(blockFormat);
+					// Restore margins if needed.
+					if (isLastListItem(&current)) {
+						cursor.mergeBlockFormat(blockFormat);
+					}
 				}
 
 				m_highlighter->onActiveBlockChanged(cursor.block().blockNumber());
@@ -543,6 +550,7 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 					// Merge with previous item.
 					int prevLength = (*(current - 1)).text.size();
 					bool isCodeBlock = (*current).isCodeBlock;
+					bool isEmpty = (*current).text.isEmpty();
 					QString text = (*(current - 1)).text + (*current).text;
 					(*(current - 1)).setText(text);
 					lines->erase(current);
@@ -553,11 +561,16 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 						cursor.removeSelectedText();
 						cursor.deleteChar();
 						cursor.movePosition(QTextCursor::PreviousBlock);
-						cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor, prevLength);
+						cursor.movePosition(
+							QTextCursor::NextCharacter, QTextCursor::MoveAnchor, prevLength
+						);
 						cursor.endEditBlock();
 						setTextCursor(cursor);
 					} else {
+						// TODO: Bug. this causes an error:
+						// "QTextCursor::setPosition: Position '1744' out of range"
 						cursor.deletePreviousChar();
+						setTextCursor(cursor);
 					}
 
 					// Rehighlight.
@@ -592,16 +605,47 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 	) {
 		// Update text.
 		QString text = cursor.block().text();
-		// TODO: List and code block creation.
-		// Something like:
-		//   if text == "```" {
-		//     createCodeBlock()
-		//   } else if text == "[-+*] " {
-		//     createList()
-		//   } else if text == "[0-9]+. " {
-		//		 createEnumeratedList()
-		//   }
+		ListItem prevList = (*current).list;
+		bool prevCode = (*current).isCodeBlock;
 		(*current).setText(text);
+
+		if (prevList.listType == ListNone && (*current).list.listType == ListBullet) {
+			cursor.createList(QTextListFormat::ListDisc);
+			cursor.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor, 2);
+			cursor.removeSelectedText();
+		} else if (prevList.listType == ListNone && (*current).list.listType == ListNumeric) {
+			cursor.createList(QTextListFormat::ListDecimal);
+			cursor.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor, 3);
+			cursor.removeSelectedText();
+		} else if (prevCode == false && text == "```") {
+			// TODO: WTF is going on? Can't seen to just add a code block,
+			// have to create an empty line after it, otherwise the QTextDocument
+			// freaks out.
+			(*current) = Line::codeLine(emptyString);
+			lines->insert(current + 1, Line(emptyString));
+
+			QTextFrameFormat codeFormat;
+			codeFormat.setBottomMargin(ParagraphMargin);
+			codeFormat.setTopMargin(ParagraphMargin);
+			codeFormat.setPadding(ParagraphMargin);
+			codeFormat.setBackground(m_style->codeBackground());
+
+			disconnect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
+			cursor.beginEditBlock();
+			cursor.deletePreviousChar();
+			cursor.deletePreviousChar();
+			cursor.deletePreviousChar();
+			cursor.deletePreviousChar();
+			cursor.insertFrame(codeFormat);
+			cursor.movePosition(QTextCursor::NextBlock);
+			//cursor.mergeBlockFormat(blockFormat);
+			//cursor.deleteChar();
+			cursor.endEditBlock();
+			connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
+
+			setTextCursor(cursor);
+			onCursorMoved();
+		}
 		// Update highlighting after we've saved to the model.
 		m_highlighter->rehighlight();
 	}
@@ -705,6 +749,10 @@ void MarkdownWidget::onCursorMoved() {
 
 	// Save prev cursor.
 	m_prevBlock = cursor.block().blockNumber();
+
+	// Check if we're not outside of the bounds.
+	if (number >= (*m_model.lines()).size())
+		return;
 
 	// Update current block.
 	if (number >= 0) {
