@@ -554,18 +554,22 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 					bool isCodeBlock = (*current).isCodeBlock;
 					bool isEmpty = (*current).text.isEmpty();
 					QString text = (*(current - 1)).text + (*current).text;
+					// Crashes on last line. Try to re-create the list.
 					(*(current - 1)).setText(text);
 					lines->erase(current);
 
 					if (!isCodeBlock && (*(current - 1)).isCodeBlock) {
+						qDebug() << "prev code";
+						// TODO: Bug. Crashes when deleting last line when it's after code.
 						cursor.beginEditBlock();
 						cursor.select(QTextCursor::LineUnderCursor);
 						cursor.removeSelectedText();
-						cursor.deleteChar();
+						cursor.deletePreviousChar();
 						cursor.movePosition(QTextCursor::PreviousBlock);
 						cursor.movePosition(
 							QTextCursor::NextCharacter, QTextCursor::MoveAnchor, prevLength
 						);
+						m_prevBlock = cursor.block().blockNumber();
 						cursor.endEditBlock();
 						setTextCursor(cursor);
 					} else {
@@ -627,28 +631,41 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 			// TODO: WTF is going on? Can't seen to just add a code block,
 			// have to create an empty line after it, otherwise the QTextDocument
 			// freaks out.
-			(*current) = Line::codeLine(emptyString);
-			lines->insert(current + 1, Line(emptyString));
+			QString str1 = QString();
+			(*current) = Line::codeLine(str1);
+			QString str2 = QString();
+			lines->insert(current + 1, Line(str2));
 
+			disconnect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
+			cursor.beginEditBlock();
+
+			// Delete current text.
+			cursor.deletePreviousChar();
+			cursor.deletePreviousChar();
+			cursor.deletePreviousChar();
+			cursor.deletePreviousChar();
+
+			// Insert code frame.
 			QTextFrameFormat codeFormat;
 			codeFormat.setBottomMargin(ParagraphMargin);
 			codeFormat.setTopMargin(ParagraphMargin);
 			codeFormat.setPadding(ParagraphMargin);
 			codeFormat.setBackground(m_style->codeBackground());
-
-			disconnect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
-			cursor.beginEditBlock();
-			cursor.deletePreviousChar();
-			cursor.deletePreviousChar();
-			cursor.deletePreviousChar();
-			cursor.deletePreviousChar();
 			cursor.insertFrame(codeFormat);
+
+			// Set code font.
+			QTextCharFormat fmt;
+			fmt.setFont(m_style->codeFont());
+			cursor.mergeCharFormat(fmt);
+
+			// Add lower margin to next block.
 			cursor.movePosition(QTextCursor::NextBlock);
-			//cursor.mergeBlockFormat(blockFormat);
-			//cursor.deleteChar();
+			cursor.mergeBlockFormat(blockFormat);
+
 			cursor.endEditBlock();
 			connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
 
+			// Update cursor.
 			setTextCursor(cursor);
 			onCursorMoved();
 		}
