@@ -530,7 +530,6 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 				if (isLastCodeBlock(&current) && (*current).text.isEmpty()) {
 					lines->erase(current);
 
-					// Suspend cursor changes while we're editing.
 					disconnect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
 
 					cursor.movePosition(QTextCursor::PreviousBlock);
@@ -540,7 +539,6 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 					cursor.insertBlock();
 					cursor.movePosition(QTextCursor::PreviousCharacter);
 
-					// Suspend cursor changes while we're editing.
 					connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
 
 					// Restore cursor.
@@ -549,22 +547,29 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 				return;
 			} else {
 				if (current != lines->begin()) {
+					if (
+						!(*current).isCodeBlock &&
+						(*(current - 1)).isCodeBlock &&
+						(current + 1) == lines->end() || (*(current + 1)).isCodeBlock
+					) {
+						// TODO: Bug. Don't allow delete lines between code blocks or at the end
+						// of the document after a code block.
+						return;
+					}
+
 					// Merge with previous item.
 					int prevLength = (*(current - 1)).text.size();
 					bool isCodeBlock = (*current).isCodeBlock;
 					bool isEmpty = (*current).text.isEmpty();
 					QString text = (*(current - 1)).text + (*current).text;
-					// Crashes on last line. Try to re-create the list.
 					(*(current - 1)).setText(text);
 					lines->erase(current);
 
 					if (!isCodeBlock && (*(current - 1)).isCodeBlock) {
-						qDebug() << "prev code";
-						// TODO: Bug. Crashes when deleting last line when it's after code.
 						cursor.beginEditBlock();
 						cursor.select(QTextCursor::LineUnderCursor);
 						cursor.removeSelectedText();
-						cursor.deletePreviousChar();
+						cursor.deleteChar();
 						cursor.movePosition(QTextCursor::PreviousBlock);
 						cursor.movePosition(
 							QTextCursor::NextCharacter, QTextCursor::MoveAnchor, prevLength
@@ -573,14 +578,14 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 						cursor.endEditBlock();
 						setTextCursor(cursor);
 					} else {
-						if (cursor.atEnd()) {
-							cursor.deletePreviousChar();
-							m_prevBlock = cursor.block().blockNumber();
-							setTextCursor(cursor);
-						} else {
-							cursor.deletePreviousChar();
-							setTextCursor(cursor);
-						}
+						disconnect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
+
+						cursor.deletePreviousChar();
+						m_prevBlock = 0;
+						setTextCursor(cursor);
+						onCursorMoved();
+
+						connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
 					}
 
 					// Rehighlight.
@@ -611,7 +616,7 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 		textCursor().block() == cursor.block() &&
 		// Fix to prevent removing formatting when modifier key is pressed
 		// while selection is active.
-		!cursor.hasSelection() 
+		!cursor.hasSelection()
 	) {
 		// Update text.
 		QString text = cursor.block().text();
@@ -627,14 +632,66 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 			cursor.createList(QTextListFormat::ListDecimal);
 			cursor.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor, 3);
 			cursor.removeSelectedText();
+		} else if (text == "```" && current != lines->begin() && (*(current - 1)).isCodeBlock) {
+			disconnect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
+
+			// TODO: QTextEdit is buggy. We can't insert two code blocks into the
+			// document one after another, so we solve it either by merging current
+			// line into previous code block, or inserting a new line into previous
+			// block.
+			if ((*(current + 1)).isCodeBlock || (current + 1) == lines->end()) {
+				QString newEmptyString = QString();
+				(*current).setText(newEmptyString);
+				QString emptyString = QString();
+				Line newLine = Line::codeLine(emptyString);
+				lines->insert(current - 1, newLine);
+
+				cursor.beginEditBlock();
+
+				// Delete current text.
+				cursor.deletePreviousChar();
+				cursor.deletePreviousChar();
+				cursor.deletePreviousChar();
+
+				// Append code to the previous code frame.
+				cursor.movePosition(QTextCursor::PreviousBlock);
+				cursor.movePosition(QTextCursor::EndOfBlock);
+				cursor.insertBlock();
+
+				cursor.endEditBlock();
+			} else {
+				// Clear text.
+				QString emptyString = QString();
+				(*current).setText(emptyString);
+				(*current).isCodeBlock = true;
+
+				cursor.beginEditBlock();
+
+				// Delete current text.
+				cursor.deletePreviousChar();
+				cursor.deletePreviousChar();
+				cursor.deletePreviousChar();
+				// Delete current block.
+				cursor.deleteChar();
+
+				// Append code to the previous code frame.
+				cursor.movePosition(QTextCursor::PreviousBlock);
+				cursor.movePosition(QTextCursor::EndOfBlock);
+				cursor.insertBlock();
+
+				cursor.endEditBlock();
+			}
+
+			connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
+
+			// Update cursor position.
+			setTextCursor(cursor);
+			onCursorMoved();
 		} else if (prevCode == false && text == "```") {
-			// TODO: WTF is going on? Can't seen to just add a code block,
-			// have to create an empty line after it, otherwise the QTextDocument
-			// freaks out.
-			QString str1 = QString();
-			(*current) = Line::codeLine(str1);
-			QString str2 = QString();
-			lines->insert(current + 1, Line(str2));
+			QString firstEmptyLine = QString();
+			(*current) = Line::codeLine(firstEmptyLine);
+			QString secondEmptyLine = QString();
+			lines->insert(current + 1, Line(secondEmptyLine));
 
 			disconnect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
 			cursor.beginEditBlock();
@@ -669,6 +726,7 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 			setTextCursor(cursor);
 			onCursorMoved();
 		}
+
 		// Update highlighting after we've saved to the model.
 		m_highlighter->rehighlight();
 	}
@@ -733,7 +791,6 @@ void MarkdownWidget::mouseReleaseEvent(QMouseEvent *event) {
 void MarkdownWidget::onCursorMoved() {
 	std::vector<Line> *lines = m_model.lines();
 	QTextCursor cursor = textCursor();
-	int position = cursor.position();
 	int posInBlock = cursor.positionInBlock();
 
 	if (
@@ -765,9 +822,6 @@ void MarkdownWidget::onCursorMoved() {
 		QTextBlock prevBlock = document()->findBlockByNumber(m_prevBlock);
 		Line prev = (*m_model.lines())[m_prevBlock];
 		formatBlock(prevBlock, &prev.folded, &prev.foldedFormats);
-		// Adjust original cursor position to accout for folding.
-		if (number > prevBlock.blockNumber())
-			position -= prev.text.size() - prev.folded.size();
 	}
 
 	// Save prev cursor.
@@ -781,12 +835,12 @@ void MarkdownWidget::onCursorMoved() {
 	if (number >= 0) {
 		Line line = (*m_model.lines())[number];
 		formatBlock(cursor.block(), &line.text, &line.formats);
-		position += adjustForUnfolding(&line.folded, &line.foldedFormats, posInBlock);
+		posInBlock += adjustForUnfolding(&line.folded, &line.foldedFormats, posInBlock);
 	}
 
 	// Restore cursor.
-	QTextCursor newCursor = QTextCursor(this->document());
-	newCursor.setPosition(position);
+	QTextCursor newCursor = QTextCursor(cursor.block());
+	newCursor.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor, posInBlock);
 	if (newCursor.position() >= 0) {
 		this->setTextCursor(newCursor);
 	}
