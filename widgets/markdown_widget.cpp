@@ -49,6 +49,13 @@ void MarkdownWidget::load(QString data) {
 	QRegularExpression splitExp("(\\n|\r\\n)", QRegularExpression::MultilineOption);
 	QStringList lines = data.split(splitExp);
 	m_model = TextModel(lines);
+	// There has to be at least one line in the document.
+	if (m_model.lines()->size() == 0) {
+		QString emptyString = QString();
+		Line line = Line(emptyString);
+		std::vector<Line> lines = {line};
+		m_model.setLines(lines);
+	}
 	m_highlighter->setModel(&m_model);
 
 	// Append model to the document.
