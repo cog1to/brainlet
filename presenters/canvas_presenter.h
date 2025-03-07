@@ -5,14 +5,14 @@
 #include <QString>
 
 #include "layout/base_layout.h"
-#include "entity/repository.h"
+#include "entity/graph_repository.h"
 #include "widgets/canvas_widget.h"
 
 class CanvasPresenter: public QObject {
-Q_OBJECT
+	Q_OBJECT
 
 public:
-	CanvasPresenter(BaseLayout*, Repository*, CanvasWidget*);
+	CanvasPresenter(BaseLayout*, GraphRepository*, CanvasWidget*);
 	~CanvasPresenter();
 
 private slots:
@@ -37,7 +37,7 @@ private slots:
 private:
 	// State.
 	BaseLayout *m_layout;
-	Repository *m_repo;
+	GraphRepository *m_repo;
 	CanvasWidget *m_view;
 	// Helpers.
 	void reloadState();

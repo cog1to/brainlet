@@ -2,7 +2,7 @@
 
 CanvasPresenter::CanvasPresenter(
 	BaseLayout *layout,
-	Repository *repo,
+	GraphRepository *repo,
 	CanvasWidget *view
 ) : m_layout(layout), m_repo(repo), m_view(view) {
 	QObject::connect(

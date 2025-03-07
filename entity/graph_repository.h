@@ -1,5 +1,5 @@
-#ifndef H_REPOSITORY
-#define H_REPOSITORY
+#ifndef H_GRAPH_REPOSITORY
+#define H_GRAPH_REPOSITORY
 
 #include "model/model.h"
 
@@ -9,7 +9,7 @@ struct CreateResult {
 	CreateResult(bool _success, ThoughtId _id): success(_success), id(_id) {};
 };
 
-class Repository {
+class GraphRepository {
 public:
 	// State.
 	virtual bool select(ThoughtId) = 0;

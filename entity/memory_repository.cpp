@@ -6,6 +6,8 @@
 #include "entity/thought_entity.h"
 #include "entity/connection_entity.h"
 
+#include <QDebug>
+
 MemoryRepository::MemoryRepository(
 	std::vector<ThoughtEntity> thoughts,
 	std::vector<ConnectionEntity> connections,
@@ -302,6 +304,27 @@ ThoughtEntity *MemoryRepository::getThought(ThoughtId id) {
 	}
 	return nullptr;
 }
+
+// TextRepository.
+
+GetResult MemoryRepository::getText(ThoughtId id) {
+	if (auto found = m_texts.find(id); found != m_texts.end()) {
+		GetResult result = GetResult(TextRepositoryNone, found->second);
+		return result;
+	}
+
+	qDebug() << "Text loaded";
+	return GetResult(TextRepositoryNone, "");
+}
+
+SaveResult MemoryRepository::saveText(ThoughtId id, std::string text) {
+	m_texts.insert_or_assign(id, text);
+	qDebug() << "-- Text saved --";
+	qDebug() << text;
+	return SaveResult(TextRepositoryNone);
+}
+
+// Helpers.
 
 std::vector<ConnectionEntity> MemoryRepository::getParents(
 	ThoughtId fromId

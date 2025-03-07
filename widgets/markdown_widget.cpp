@@ -1,3 +1,4 @@
+#include <QObject>
 #include <QPlainTextEdit>
 #include <QTextEdit>
 #include <QTextBlock>
@@ -35,9 +36,6 @@ MarkdownWidget::MarkdownWidget(QWidget *parent, Style *style)
 
 	// Install highlighter.
 	m_highlighter = new MarkdownHighlighter(style, document());
-
-	// Cursor movement.
-	connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
 }
 
 MarkdownWidget::~MarkdownWidget() {
@@ -57,6 +55,12 @@ void MarkdownWidget::load(QString data) {
 		m_model.setLines(lines);
 	}
 	m_highlighter->setModel(&m_model);
+
+	// Clear current text.
+	disconnect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
+	QTextCursor tmp = QTextCursor(document());
+	tmp.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
+	tmp.removeSelectedText();
 
 	// Append model to the document.
 	QTextCursor cursor = append(m_model, QTextCursor(document()));
@@ -225,6 +229,13 @@ void MarkdownWidget::insertFromMimeData(const QMimeData *source) {
 
 QMimeData *MarkdownWidget::createMimeDataFromSelection() const {
 	QTextCursor cursor = textCursor();
+	QString selection = getSelection(cursor);	
+	QMimeData *data = new QMimeData();
+	data->setText(selection);
+	return data;
+}
+
+QString MarkdownWidget::getSelection(QTextCursor cursor) const {
 	const std::vector<Line> *lines = m_model.const_lines();
 
 	if (cursor.selectionStart() == cursor.selectionEnd()) {
@@ -247,10 +258,7 @@ QMimeData *MarkdownWidget::createMimeDataFromSelection() const {
 			: (cursor.positionInBlock());
 
 		QString selection = text.mid(start, length);
-
-		QMimeData *data = new QMimeData();
-		data->setText(selection);
-		return data;
+		return selection;
 	} else {
 		QStringList list;
 		const Line *prevLine = nullptr;
@@ -339,13 +347,23 @@ QMimeData *MarkdownWidget::createMimeDataFromSelection() const {
 			list.push_back("```");
 
 		QString joined = list.join("\n");
-		QMimeData *data = new QMimeData();
-		data->setText(joined);
-		return data;
+		return joined;
 	}
 
 	return nullptr;
 }
+
+bool MarkdownWidget::isDirty() const {
+	return m_isDirty;
+}
+
+// Control events.
+
+void MarkdownWidget::onError(MarkdownError error) {
+	// TODO: Show error popup/toast.
+}
+
+// UI Events.
 
 void MarkdownWidget::resizeEvent(QResizeEvent* event) {
 	QTextEdit::resizeEvent(event);
@@ -371,6 +389,12 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 	// Normal paragraph format.
 	QTextBlockFormat blockFormat;
 	blockFormat.setBottomMargin(ParagraphMargin);
+
+	// Mark dirty. Not ideal, because we trigger save even on cursor move.
+	// TODO: Wrap the event handler into a function returning a bool value
+	// indicating whether there was a change in the text.
+	m_isDirty = true;
+	throttleSave();
 
 	if (event->matches(QKeySequence::Cut)) {
 		copy();
@@ -1072,7 +1096,8 @@ bool MarkdownWidget::isLastListItem(std::vector<Line>::iterator *current) {
 	std::vector<Line> *lines = m_model.lines();
 
 	return ((*(*current)).list.listType != ListNone &&
-		((*current + 1) == lines->end() || !((*(*current + 1)).list.listType == (*(*current)).list.listType))
+		((*current + 1) == lines->end() ||
+		 !((*(*current + 1)).list.listType == (*(*current)).list.listType))
 	);
 }
 
@@ -1080,7 +1105,8 @@ bool MarkdownWidget::isFirstListItem(std::vector<Line>::iterator *current) {
 	std::vector<Line> *lines = m_model.lines();
 
 	return ((*(*current)).isListItem() &&
-		((*current) == lines->begin() || !((*(*current - 1)).list.listType == (*(*current)).list.listType))
+		((*current) == lines->begin() ||
+		 !((*(*current - 1)).list.listType == (*(*current)).list.listType))
 	);
 }
 
@@ -1140,5 +1166,42 @@ void MarkdownHighlighter::highlightBlock(const QString &text) {
 			fmt.qtFormat(m_style, format(fmt.from))
 		);
 	}
+}
+
+// Saving logic.
+
+void MarkdownWidget::throttleSave() {
+	if (!m_isDirty)
+		return;
+
+	if (m_saveTimer != nullptr)
+		return;
+
+	m_saveTimer = new QTimer(this);
+	QObject::connect(
+		m_saveTimer, SIGNAL(timeout()),
+		this, SLOT(saveText())
+	);
+	m_saveTimer->setSingleShot(true);
+	m_saveTimer->start(15000);
+}
+
+void MarkdownWidget::saveText() {
+	if (!m_isDirty)
+		return;
+
+	// Select all text.
+	QTextCursor cursor = QTextCursor(document());
+	cursor.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
+	QString text = getSelection(cursor);
+
+	// Emit text change event.
+	emit textChanged(text);
+
+	// Reset dirty flag.
+	m_isDirty = false;
+	// Delete timer.
+	delete m_saveTimer;
+	m_saveTimer = nullptr;
 }
 

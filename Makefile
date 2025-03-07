@@ -96,6 +96,13 @@ test_markdown: mocs $(HEADERS) $(WIDGETS) tests/test_markdown.cpp
 		$(MODELS) $(LAYOUTS) $(WIDGETS) $(MOCS_O) tests/test_markdown.cpp \
 		-o bin/test_markdown $(LIBDIRS) $(LIBS)
 
+test_text_presenter: mocs $(HEADERS) $(REPO) tests/test_text_presenter.cpp
+	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
+		$(MODELS) $(REPO) $(WIDGETS) $(PRESENTERS) $(LAYOUTS) \
+		$(MOCS_O) $(PRESENTERS_MOCS_O) \
+		tests/test_text_presenter.cpp \
+		-o bin/test_text_presenter $(LIBDIRS) $(LIBS)
+
 # MOCs
 mocs: moc $(MOCS_O) $(PRESENTERS_MOCS_O)
 

@@ -12,10 +12,15 @@
 #include <QTextDocument>
 #include <QKeyEvent>
 #include <QMimeData>
+#include <QTimer>
 
 #include "model/text_model.h"
 #include "widgets/style.h"
 #include "widgets/base_widget.h"
+
+enum MarkdownError {
+	MarkdownIOError
+};
 
 class MarkdownHighlighter: public QSyntaxHighlighter {
 public:
@@ -48,9 +53,18 @@ public:
 	void keyPressEvent(QKeyEvent*) override;
 	void mousePressEvent(QMouseEvent*) override;
 	void mouseReleaseEvent(QMouseEvent*) override;
+	// State.
+	bool isDirty() const;
+
+signals:
+	void textChanged(QString&);
+
+public slots:
+	void onError(MarkdownError);
 
 protected slots:
 	void onCursorMoved();
+	void saveText();
 
 private:
 	// State.
@@ -59,6 +73,8 @@ private:
 	TextModel m_model;
 	int m_prevBlock = -1;
 	QString m_anchor;
+	bool m_isDirty = false;
+	QTimer *m_saveTimer = nullptr;
 	// Helpers.
 	void formatBlock(QTextBlock, QString*, std::vector<FormatRange>*);
 	int adjustForUnfolding(const QString*, const std::vector<FormatRange>*, int) const;
@@ -73,6 +89,9 @@ private:
 	bool isLastCodeBlock(std::vector<Line>::iterator*);
 	void endListOrCode(QTextCursor*, std::vector<Line>::iterator);
 	void deleteListOrCode(QTextCursor*);
+	QString getSelection(QTextCursor) const;
+	// Saving logic.
+	void throttleSave();
 	// Metrics.
 	static constexpr int ParagraphMargin = 12;
 };
