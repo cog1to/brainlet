@@ -41,19 +41,28 @@ CanvasPresenter::CanvasPresenter(
 	);
 }
 
-CanvasPresenter::~CanvasPresenter() {
-	QObject::disconnect(m_view, nullptr, this, nullptr);
-}
-
 // Slots.
 
 void CanvasPresenter::onShown() {
 	reloadState();
+
+	// Notify other widgets.
+	if (auto state = m_repo->getState(); state != nullptr) {
+		if (const Thought* center = state->centralThought(); center != nullptr) {
+			emit thoughtSelected(center->id(), QString::fromStdString(center->name()));
+		}
+	}
 }
 
 void CanvasPresenter::onThoughtSelected(ThoughtId id) {
 	if (m_repo->select(id)) {
 		reloadState();
+
+		if (auto state = m_repo->getState(); state != nullptr) {
+			if (const Thought* center = state->centralThought(); center != nullptr) {
+				emit thoughtSelected(center->id(), QString::fromStdString(center->name()));
+			}
+		}
 	}
 }
 
@@ -68,6 +77,7 @@ void CanvasPresenter::onThoughtChanged(
 
 	if (result) {
 		reloadState();
+		emit thoughtRenamed(id, text);
 	}
 }
 

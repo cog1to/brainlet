@@ -437,11 +437,11 @@ void Line::setText(QString& input) {
 		1
 	);
 
-	// Links.
-	parseLinks(&text);
-
 	// Remaining Links.
 	parseSimpleLinks(&text);
+
+	// Links.
+	parseLinks(&text);
 }
 
 // Model

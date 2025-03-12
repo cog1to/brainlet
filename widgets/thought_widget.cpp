@@ -18,9 +18,9 @@ ThoughtWidget::ThoughtWidget(
 	bool rightSideLink,
 	bool canDelete
 ): BaseWidget(parent, style),
-	m_anchorLink(this, style, AnchorType::Link, hasLink),
-	m_anchorParent(this, style, AnchorType::Parent, hasParent),
-	m_anchorChild(this, style, AnchorType::Child, hasChild),
+	m_anchorLink(this, style, AnchorType::AnchorLink, hasLink),
+	m_anchorParent(this, style, AnchorType::AnchorParent, hasParent),
+	m_anchorChild(this, style, AnchorType::AnchorChild, hasChild),
 	m_textEdit(this, style, readOnly, "")
 {
 	m_id = id;
@@ -211,11 +211,11 @@ AnchorPoint ThoughtWidget::getAnchorFrom(ConnectionType type) {
 
 AnchorPoint ThoughtWidget::getAnchorFrom(AnchorType type) {
 	switch (type) {
-		case AnchorType::Parent:
+		case AnchorType::AnchorParent:
 			return getAnchorTo(ConnectionType::child);
-		case AnchorType::Child:
+		case AnchorType::AnchorChild:
 			return getAnchorFrom(ConnectionType::child);
-		case AnchorType::Link:
+		case AnchorType::AnchorLink:
 			return getAnchorFrom(ConnectionType::link);
 	}
 

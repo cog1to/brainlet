@@ -1,0 +1,49 @@
+#include <QWidget>
+#include <QVBoxLayout>
+#include <QLabel>
+
+#include "widgets/thought_details_widget.h"
+#include "widgets/markdown_widget.h"
+
+ThoughtDetailsWidget::ThoughtDetailsWidget(
+	QWidget *parent,
+	Style *style,
+	MarkdownWidget *markdown
+) : BaseWidget(parent, style),
+	m_layout(this), m_markdown(markdown), m_title(nullptr), m_separator(nullptr)
+{
+	setStyleSheet(
+		QString("background-color: %1").arg(
+			style->background().name(QColor::HexRgb)
+		)
+	);
+
+	m_title.setStyleSheet(
+		QString("color: %1; font: bold %2px \"%3\"")
+			.arg(style->textEditColor().name(QColor::HexRgb))
+			.arg(style->textEditFont().pixelSize() * 2.0)
+			.arg(style->textEditFont().family())
+	);
+	m_title.setWordWrap(true);
+	m_title.setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+
+	m_separator.setMinimumSize(1, 1);
+	m_separator.setStyleSheet(
+		QString("background-color: %1")
+			.arg(style->textEditColor().name(QColor::HexRgb))
+	);
+	m_separator.setSizePolicy(
+		QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum)
+	);
+
+	m_layout.setSpacing(10);
+	m_layout.setContentsMargins(QMargins(5, 5, 5, 5));
+	m_layout.addWidget(&m_title);
+	m_layout.addWidget(&m_separator);
+	m_layout.addWidget(markdown);
+}
+
+void ThoughtDetailsWidget::setTitle(QString title) {
+	m_title.setText(title);
+}
+

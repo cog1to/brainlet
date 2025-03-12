@@ -10,7 +10,7 @@
 #include "widgets/style.h"
 #include "widgets/base_widget.h"
 
-enum AnchorType { Link, Parent, Child };
+enum AnchorType { AnchorLink, AnchorParent, AnchorChild };
 
 class AnchorWidget: public BaseWidget {
 	Q_OBJECT

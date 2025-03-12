@@ -55,6 +55,7 @@ public:
 	void mouseReleaseEvent(QMouseEvent*) override;
 	// State.
 	bool isDirty() const;
+	QString text() const;
 
 signals:
 	void textChanged(QString&);

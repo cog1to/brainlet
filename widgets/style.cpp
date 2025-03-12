@@ -44,7 +44,7 @@ Style::Style(
 
 Style& Style::defaultStyle() {
 	static QFont font = QFont("Noto Sans");
-	font.setPixelSize(12);
+	font.setPixelSize(15);
 
 	static QFont textFont = QFont("Noto Sans");
 	textFont.setPixelSize(15);

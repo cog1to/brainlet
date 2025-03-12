@@ -19,17 +19,20 @@ TextEditorPresenter::TextEditorPresenter(
 	);
 }
 
-TextEditorPresenter::~TextEditorPresenter() {
-	QObject::disconnect(m_view, nullptr, this, nullptr);
-	QObject::disconnect(this, nullptr, m_view, nullptr);
-}
-
 // Loading.
 
 void TextEditorPresenter::setThought(ThoughtId id) {
-	m_id = id;
 	if (m_view == nullptr)
 		return;
+
+	// Force save.
+	if (m_view->isDirty()) {
+		QString text = m_view->text();
+		onTextChanged(text);
+	}
+
+	// Set ID.
+	m_id = id;
 
 	// Empty state.
 	if (m_id == InvalidThoughtId) {

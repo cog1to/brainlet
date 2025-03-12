@@ -37,6 +37,9 @@ CanvasWidget::CanvasWidget(
 		)
 	);
 
+	// Size policy.
+	setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
+
 	// Update callback.
 	layout->onUpdated = [this]{
 		this->updateLayout();
@@ -54,6 +57,10 @@ CanvasWidget::~CanvasWidget() {
 	for (sc = m_scrollAreas.begin(); sc != m_scrollAreas.end(); sc++) {
 		delete sc->second;
 	}
+}
+
+QSize CanvasWidget::sizeHint() const {
+	return QSize(100, 100);
 }
 
 void CanvasWidget::showEvent(QShowEvent *) {
@@ -95,7 +102,13 @@ void CanvasWidget::mouseMoveEvent(QMouseEvent *event) {
 	if (intersects.size() == 0 && m_pathHighlight.has_value()) {
 		m_pathHighlight = std::nullopt;
 		update();
-	} else if (intersects.size() > 0 && (!m_pathHighlight.has_value() || m_pathHighlight.value().path != intersects[0].path)) {
+	} else if (
+		intersects.size() > 0 &&
+		(
+			!m_pathHighlight.has_value() ||
+			m_pathHighlight.value().path != intersects[0].path)
+		)
+	{
 		// TODO: take closest.
 		QPen pen(m_style->anchorHighlight(), 1, Qt::DashLine);
 		m_pathHighlight = Path(intersects[0].from, intersects[0].to, pen, intersects[0].path);
@@ -131,7 +144,7 @@ void CanvasWidget::resizeEvent(QResizeEvent *event) {
 	}
 }
 
-void CanvasWidget::paintEvent(QPaintEvent *) {
+void CanvasWidget::paintEvent(QPaintEvent *event) {
 	if (m_layout == nullptr) {
 		return;
 	}
@@ -429,6 +442,7 @@ void CanvasWidget::updatePaths() {
 	}
 
 	QPen subPen = QPen(color, 0.5);
+	subPen.setStyle(Qt::DashLine);
 
 	for (auto& connection: *subconnections) {
 		auto fromIt = m_widgets.find(connection.from);
@@ -628,6 +642,7 @@ void CanvasWidget::onWidgetActivated(ThoughtWidget* widget) {
 	);
 
 	// Repaint to update connections.
+	updatePaths();
 	update();
 }
 
@@ -645,6 +660,7 @@ void CanvasWidget::onWidgetDeactivated(ThoughtWidget* widget) {
 	}
 
 	// Repaint to update connections.
+	updatePaths();
 	update();
 }
 
@@ -699,11 +715,11 @@ void CanvasWidget::onAnchorEntered(
 
 		// Initial setup.
 		m_newThought->setAttribute(Qt::WA_TransparentForMouseEvents, true);
-		m_newThought->setHasParent(AnchorType::Child == type);
-		m_newThought->setHasLink(AnchorType::Link == type);
-		m_newThought->setHasChild(AnchorType::Parent == type);
+		m_newThought->setHasParent(AnchorType::AnchorChild == type);
+		m_newThought->setHasLink(AnchorType::AnchorLink == type);
+		m_newThought->setHasChild(AnchorType::AnchorParent == type);
 		m_newThought->setRightSideLink(
-			type == AnchorType::Link && widget->id() == *m_layout->rootId()
+			type == AnchorType::AnchorLink && widget->id() == *m_layout->rootId()
 		);
 
 		// Connect signals.
@@ -876,8 +892,12 @@ void CanvasWidget::onCreateConfirmed(
 
 	emit thoughtCreated(
 		m_anchorSource->widget->id(),
-		m_anchorSource->type == AnchorType::Link ? ConnectionType::link : ConnectionType::child,
-		m_anchorSource->type == AnchorType::Parent ? true : false,
+		m_anchorSource->type == AnchorType::AnchorLink
+			? ConnectionType::link
+			: ConnectionType::child,
+		m_anchorSource->type == AnchorType::AnchorParent
+			? true
+			: false,
 		text,
 		onCreateCallback
 	);
@@ -961,17 +981,17 @@ void CanvasWidget::clearAnchor() {
 
 inline AnchorType CanvasWidget::reverseAnchorType(AnchorType type) {
 	switch (type) {
-		case AnchorType::Parent:
-			return AnchorType::Child;
-		case AnchorType::Child:
-			return AnchorType::Parent;
-		case AnchorType::Link:
-			return AnchorType::Link;
+		case AnchorType::AnchorParent:
+			return AnchorType::AnchorChild;
+		case AnchorType::AnchorChild:
+			return AnchorType::AnchorParent;
+		case AnchorType::AnchorLink:
+			return AnchorType::AnchorLink;
 	}
 
 	// Should not reach here.
 	assert(false);
-	return AnchorType::Link;
+	return AnchorType::AnchorLink;
 }
 
 ThoughtWidget *CanvasWidget::widgetUnder(QPoint point) {
@@ -1018,15 +1038,15 @@ void CanvasWidget::updateConnection() {
 	ConnectionType type;
 
 	switch (m_anchorSource->type) {
-		case AnchorType::Link:
+		case AnchorType::AnchorLink:
 			type = ConnectionType::link;
 			break;
-		case AnchorType::Parent:
+		case AnchorType::AnchorParent:
 			type = ConnectionType::child;
 			to = from;
 			from = m_overThought->id();
 			break;
-		case AnchorType::Child:
+		case AnchorType::AnchorChild:
 			type = ConnectionType::child;
 			break;
 	}

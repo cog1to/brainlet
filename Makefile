@@ -103,6 +103,13 @@ test_text_presenter: mocs $(HEADERS) $(REPO) tests/test_text_presenter.cpp
 		tests/test_text_presenter.cpp \
 		-o bin/test_text_presenter $(LIBDIRS) $(LIBS)
 
+test_brain_presenter: mocs $(HEADERS) $(REPO) tests/test_brain_presenter.cpp
+	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
+		$(MODELS) $(REPO) $(WIDGETS) $(PRESENTERS) $(LAYOUTS) \
+		$(MOCS_O) $(PRESENTERS_MOCS_O) \
+		tests/test_brain_presenter.cpp \
+		-o bin/test_brain_presenter $(LIBDIRS) $(LIBS)
+
 # MOCs
 mocs: moc $(MOCS_O) $(PRESENTERS_MOCS_O)
 

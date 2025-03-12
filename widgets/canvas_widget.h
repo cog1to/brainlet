@@ -37,6 +37,7 @@ class CanvasWidget: public BaseWidget {
 public:
 	CanvasWidget(QWidget*, Style*, BaseLayout*);
 	~CanvasWidget();
+	QSize sizeHint() const override;
 
 signals:
 	void textChanged(ThoughtId, QString, std::function<void(bool)>);

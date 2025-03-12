@@ -5,7 +5,8 @@
 #include "widgets/anchor_highlight_widget.h"
 
 AnchorHighlightWidget::AnchorHighlightWidget(QWidget *parent, Style *style)
-	: BaseWidget(parent, style), m_anchor(this, style, AnchorType::Parent, true)
+	: BaseWidget(parent, style),
+	  m_anchor(this, style, AnchorType::AnchorParent, true)
 {
 	setAttribute(Qt::WA_TransparentForMouseEvents, true);
 }

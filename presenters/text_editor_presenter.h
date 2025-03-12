@@ -13,7 +13,6 @@ class TextEditorPresenter: public QObject {
 
 public:
 	TextEditorPresenter(TextRepository*, MarkdownWidget*);
-	~TextEditorPresenter();
 	void setThought(ThoughtId);
 
 signals:

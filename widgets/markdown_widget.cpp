@@ -23,10 +23,11 @@ MarkdownWidget::MarkdownWidget(QWidget *parent, Style *style)
 	setWordWrapMode(QTextOption::WordWrap);
 	setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	setAcceptRichText(false);
+	setPlaceholderText(tr("Start typing here..."));
 
 	// Apply style.
 	setStyleSheet(
-		QString("padding: 5px; background-color: %1; color: %2; font: %3 %4px \"%5\"")
+		QString("border: 0px; background-color: %1; color: %2; font: %3 %4px \"%5\"")
 		.arg(style->background().name(QColor::HexRgb))
 		.arg(style->textEditColor().name(QColor::HexRgb))
 		.arg(style->textEditFont().bold() ? "bold" : "")
@@ -43,6 +44,12 @@ MarkdownWidget::~MarkdownWidget() {
 }
 
 void MarkdownWidget::load(QString data) {
+	// Delete timer.
+	if (m_saveTimer != nullptr) {
+		delete m_saveTimer;
+		m_saveTimer = nullptr;
+	}
+
 	// Set new model.
 	QRegularExpression splitExp("(\\n|\r\\n)", QRegularExpression::MultilineOption);
 	QStringList lines = data.split(splitExp);
@@ -68,10 +75,14 @@ void MarkdownWidget::load(QString data) {
 	// Reset cursor.
 	m_prevBlock = cursor.block().blockNumber();
 	cursor.setPosition(0);
+	m_highlighter->onActiveBlockChanged(cursor.block().blockNumber());
 	setTextCursor(cursor);
 }
 
-QTextCursor MarkdownWidget::append(TextModel model, QTextCursor cursor) {
+QTextCursor MarkdownWidget::append(
+	TextModel model,
+	QTextCursor cursor
+) {
 	QTextDocument *doc = document();
 
 	//-- Default formats. --//
@@ -97,11 +108,25 @@ QTextCursor MarkdownWidget::append(TextModel model, QTextCursor cursor) {
 	// Suspend cursor changes while we're editing.
 	disconnect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
 
-	// Append paragraphs.
-	QTextList *list = nullptr;
-	QTextFrame *code = nullptr;
 	std::vector<Line> *mlines = model.lines();
 	std::vector<Line>::iterator it;
+
+	QTextList *list = nullptr;
+	QTextFrame *code = nullptr;
+
+	bool inCode = false;
+	if (auto block = cursor.block().blockNumber(); block != -1) {
+		auto lines = m_model.lines();
+		if (lines->size() > block && (*lines)[block].isCodeBlock) {
+			code = cursor.currentFrame();
+			cursor.setBlockFormat(listFormat);
+			inCode = true;
+		} else if (lines->size() > block && (*lines)[block].isListItem()) {
+			list = cursor.currentList();
+		}
+	}
+
+	// Append paragraphs.
 	for (it = mlines->begin(); it != mlines->end(); it++) {
 		if ((*it).isListItem()) {
 			// TODO: Levels support.
@@ -126,10 +151,11 @@ QTextCursor MarkdownWidget::append(TextModel model, QTextCursor cursor) {
 			if (list != nullptr) {
 				list = nullptr;
 				cursor.setBlockFormat(blockFormat);
-			} else if (code != nullptr) {
+			} else if (!inCode && code != nullptr) {
 				code = nullptr;
 			}
 		}
+
 		// Add paragraph's content.
 		cursor.insertText((*it).folded);
 		if ((it + 1) != mlines->end()) {
@@ -138,7 +164,10 @@ QTextCursor MarkdownWidget::append(TextModel model, QTextCursor cursor) {
 				cursor.mergeBlockFormat(blockFormat);
 				cursor.insertBlock();
 			// Close code frame.
-			} else if (((*it).isCodeBlock == true) && (*(it + 1)).isCodeBlock == false) {
+			} else if (
+				!inCode &&
+				((*it).isCodeBlock == true && (*(it + 1)).isCodeBlock == false)
+			) {
 				cursor.movePosition(QTextCursor::NextBlock);
 				cursor.insertBlock();
 				cursor.mergeBlockFormat(blockFormat);
@@ -195,18 +224,35 @@ void MarkdownWidget::insertFromMimeData(const QMimeData *source) {
 		newModel.push_back(*it);
 	}
 
+	// TODO: paste into a code block
+	bool isCode = (*current).isCodeBlock;
+
 	// Add pasted lines.
 	std::vector<Line>::iterator it;
 	for (it = mlines->begin(); it != mlines->end(); it++) {
 		if (it == mlines->begin()) {
 			QString newText = prefix + (*it).text;
-			newModel.push_back(Line(newText));
+			if (isCode) {
+				newModel.push_back(Line::codeLine(newText));
+			} else {
+				newModel.push_back(Line(newText));
+			}
 		} else if ((it + 1) == mlines->end()) {
 			QString lastText = (*it).text + suffix;
-			Line line = Line(lastText);
-			newModel.push_back(line);
+			if (isCode) {
+				Line line = Line::codeLine(lastText);
+				newModel.push_back(line);
+			} else {
+				Line line = Line(lastText);
+				newModel.push_back(line);
+			}
 		} else {
-			newModel.push_back(*it);
+			if (isCode) {
+				Line line = Line::codeLine((*it).text);
+				newModel.push_back(line);
+			} else {
+				newModel.push_back(*it);
+			}
 		}
 	}
 
@@ -229,7 +275,7 @@ void MarkdownWidget::insertFromMimeData(const QMimeData *source) {
 
 QMimeData *MarkdownWidget::createMimeDataFromSelection() const {
 	QTextCursor cursor = textCursor();
-	QString selection = getSelection(cursor);	
+	QString selection = getSelection(cursor);
 	QMimeData *data = new QMimeData();
 	data->setText(selection);
 	return data;
@@ -355,6 +401,15 @@ QString MarkdownWidget::getSelection(QTextCursor cursor) const {
 
 bool MarkdownWidget::isDirty() const {
 	return m_isDirty;
+}
+
+QString MarkdownWidget::text() const {
+	// Select all text.
+	QTextCursor cursor = QTextCursor(document());
+	cursor.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
+	QString txt = getSelection(cursor);
+	// Return all text.
+	return txt;
 }
 
 // Control events.
@@ -663,7 +718,12 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 			cursor.createList(QTextListFormat::ListDecimal);
 			cursor.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor, 3);
 			cursor.removeSelectedText();
-		} else if (text == "```" && current != lines->begin() && (*(current - 1)).isCodeBlock) {
+		} else if (
+			text == "```" &&
+			current != lines->begin() &&
+			(*(current - 1)).isCodeBlock &&
+			(!(*current).isCodeBlock)
+		) {
 			disconnect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
 
 			// TODO: QTextEdit is buggy. We can't insert two code blocks into the
@@ -671,11 +731,12 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 			// line into previous code block, or inserting a new line into previous
 			// block.
 			if ((*(current + 1)).isCodeBlock || (current + 1) == lines->end()) {
+				qDebug() << "we're here";
 				QString newEmptyString = QString();
 				(*current).setText(newEmptyString);
 				QString emptyString = QString();
 				Line newLine = Line::codeLine(emptyString);
-				lines->insert(current - 1, newLine);
+				lines->insert(current, newLine);
 
 				cursor.beginEditBlock();
 
@@ -1095,25 +1156,32 @@ void MarkdownWidget::deleteListOrCode(QTextCursor *cursor) {
 bool MarkdownWidget::isLastListItem(std::vector<Line>::iterator *current) {
 	std::vector<Line> *lines = m_model.lines();
 
-	return ((*(*current)).list.listType != ListNone &&
-		((*current + 1) == lines->end() ||
-		 !((*(*current + 1)).list.listType == (*(*current)).list.listType))
+	return (
+		(*(*current)).list.listType != ListNone &&
+		(
+			(*current + 1) == lines->end() ||
+			!((*(*current + 1)).list.listType == (*(*current)).list.listType)
+		)
 	);
 }
 
 bool MarkdownWidget::isFirstListItem(std::vector<Line>::iterator *current) {
 	std::vector<Line> *lines = m_model.lines();
 
-	return ((*(*current)).isListItem() &&
-		((*current) == lines->begin() ||
-		 !((*(*current - 1)).list.listType == (*(*current)).list.listType))
+	return (
+		(*(*current)).isListItem() &&
+		(
+			(*current) == lines->begin() ||
+			!((*(*current - 1)).list.listType == (*(*current)).list.listType)
+		)
 	);
 }
 
 bool MarkdownWidget::isLastCodeBlock(std::vector<Line>::iterator *current) {
 	std::vector<Line> *lines = m_model.lines();
 
-	return ((*(*current)).isCodeBlock &&
+	return (
+		(*(*current)).isCodeBlock &&
 		((*current + 1) == lines->end() || !(*(*current + 1)).isCodeBlock)
 	);
 }
@@ -1121,7 +1189,8 @@ bool MarkdownWidget::isLastCodeBlock(std::vector<Line>::iterator *current) {
 bool MarkdownWidget::isFirstCodeBlock(std::vector<Line>::iterator *current) {
 	std::vector<Line> *lines = m_model.lines();
 
-	return ((*(*current)).isCodeBlock &&
+	return (
+		(*(*current)).isCodeBlock &&
 		((*current) == lines->begin() || !(*(*current - 1)).isCodeBlock)
 	);
 }

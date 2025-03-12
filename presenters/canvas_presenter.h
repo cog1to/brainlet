@@ -13,7 +13,10 @@ class CanvasPresenter: public QObject {
 
 public:
 	CanvasPresenter(BaseLayout*, GraphRepository*, CanvasWidget*);
-	~CanvasPresenter();
+
+signals:
+	void thoughtSelected(ThoughtId, QString);
+	void thoughtRenamed(ThoughtId, QString);
 
 private slots:
 	void onThoughtSelected(ThoughtId);
