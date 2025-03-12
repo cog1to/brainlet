@@ -731,7 +731,6 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 			// line into previous code block, or inserting a new line into previous
 			// block.
 			if ((*(current + 1)).isCodeBlock || (current + 1) == lines->end()) {
-				qDebug() << "we're here";
 				QString newEmptyString = QString();
 				(*current).setText(newEmptyString);
 				QString emptyString = QString();
