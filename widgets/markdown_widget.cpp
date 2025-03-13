@@ -11,6 +11,7 @@
 #include <QMouseEvent>
 #include <QDesktopServices>
 
+#include "model/text_model.h"
 #include "widgets/markdown_widget.h"
 
 #include <QDebug>

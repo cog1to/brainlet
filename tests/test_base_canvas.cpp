@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
 	parentThree->children().push_back(leftFour->id());
 
 	// Composed state.
-	State state(central, map);
+	State state(0, central, map);
 
 	// Assign state.
 	layout.setState(&state);
