@@ -24,8 +24,8 @@ LAYOUTS := $(shell ls layout/*.cpp)
 MODELS := $(shell ls model/*.cpp)
 REPO := $(shell ls entity/*.cpp)
 # Widgets
-WIDGETS := $(shell ls widgets/*.cpp)
-MOCS_H = $(wildcard widgets/*.h)
+WIDGETS := $(shell ls widgets/*widget.cpp) widgets/style.cpp
+MOCS_H = $(wildcard widgets/*widget.h) widgets/style.h
 MOCS_O = $(patsubst widgets/%.cpp,mocs/%.cpp,$(MOCS_H:.h=.moc.cpp))
 # Presenters
 PRESENTERS := $(shell ls presenters/*.cpp)
