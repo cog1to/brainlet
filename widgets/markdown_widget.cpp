@@ -70,6 +70,11 @@ void MarkdownWidget::load(QString data) {
 	tmp.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
 	tmp.removeSelectedText();
 
+	// Normal paragraph format.
+	QTextBlockFormat blockFormat;
+	blockFormat.setBottomMargin(ParagraphMargin);
+	textCursor().setBlockFormat(blockFormat);
+
 	// Append model to the document.
 	QTextCursor cursor = append(m_model, QTextCursor(document()));
 
