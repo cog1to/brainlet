@@ -132,6 +132,27 @@ bool MemoryRepository::disconnect(ThoughtId from, ThoughtId to) {
 	return found;
 }
 
+// Search.
+
+SearchResult MemoryRepository::search(std::string term) {
+	std::vector<SearchItem> result;
+
+	for (auto it = m_thoughts.begin(); it != m_thoughts.end(); it++) {
+		std::string *name = &(*it).name;
+		if (name->find(term) != name->npos) {
+			result.push_back(SearchItem{
+				.id = (*it).id,
+				.name	= name
+			});
+		}
+	}
+
+	return SearchResult{
+		.error = SearchErrorNone,
+		.items = result,
+	};
+}
+
 // Helpers.
 
 void MemoryRepository::loadState(ThoughtId rootId) {
