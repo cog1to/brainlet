@@ -128,6 +128,13 @@ test_brain_presenter: mocs $(HEADERS) $(REPO) tests/test_brain_presenter.cpp
 		tests/test_brain_presenter.cpp \
 		-o bin/test_brain_presenter $(LIBDIRS) $(LIBS)
 
+test_conn: mocs $(HEADERS) $(REPO) tests/test_conn_list.cpp
+	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
+		$(MODELS) $(REPO) $(WIDGETS_C) $(PRESENTERS_C) $(LAYOUTS) \
+		$(WIDGETS_MOCS_C) $(PRESENTERS_MOCS_C) \
+		tests/test_conn_list.cpp \
+		-o bin/test_conn_list $(LIBDIRS) $(LIBS)
+
 # MOCs
 mocs: moc $(WIDGETS_MOCS_C) $(PRESENTERS_MOCS_C)
 
