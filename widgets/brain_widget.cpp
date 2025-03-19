@@ -6,11 +6,11 @@
 BrainWidget::BrainWidget(
 	QWidget *parent,
 	Style *style,
-	CanvasWidget *canvas,
+	ContainerWidget *container,
 	ThoughtDetailsWidget *details
 )
 	: BaseWidget(parent, style),
-	m_layout(this), m_canvas(canvas), m_details(details)
+	m_layout(this), m_canvasContainer(container), m_details(details)
 {
 	setStyleSheet(
 		QString("background-color: %1").arg(
@@ -28,7 +28,7 @@ BrainWidget::BrainWidget(
 		QSizePolicy(QSizePolicy::Maximum, QSizePolicy::Expanding)
 	);
 
-	m_layout.addWidget(canvas, 1);
+	m_layout.addWidget(container, 1);
 	m_layout.addWidget(separator, 0);
 	m_layout.addWidget(details, 1);
 }
@@ -37,3 +37,6 @@ ThoughtDetailsWidget *BrainWidget::details() {
 	return m_details;
 }
 
+ContainerWidget *BrainWidget::canvas() {
+	return m_canvasContainer;
+}

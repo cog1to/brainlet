@@ -10,6 +10,7 @@
 #include "widgets/canvas_widget.h"
 #include "widgets/brain_widget.h"
 #include "widgets/thought_details_widget.h"
+#include "widgets/container_widget.h"
 #include "presenters/text_editor_presenter.h"
 #include "presenters/canvas_presenter.h"
 #include "presenters/brain_presenter.h"
@@ -48,15 +49,21 @@ int main(int argc, char *argv[]) {
 	TextEditorPresenter markdownPresenter(&repo, markdownWidget);
 
 	// Make thought details widget.
-	ThoughtDetailsWidget *detailsWidget = new ThoughtDetailsWidget(nullptr, &style, markdownWidget);
+	ThoughtDetailsWidget *detailsWidget = new ThoughtDetailsWidget(
+		nullptr,
+		&style,
+		markdownWidget
+	);
 
 	// Make canvas widget.
 	DefaultLayout layout(&style);
 	CanvasWidget *canvasWidget = new CanvasWidget(nullptr, &style, &layout);
 	CanvasPresenter canvasPresenter(&layout, &repo, canvasWidget);
+	// Makr canvas container.
+	ContainerWidget *containerWidget = new ContainerWidget(nullptr, &style, canvasWidget);
 
 	// Make brain widget.
-	BrainWidget brainWidget = BrainWidget(nullptr, &style, canvasWidget, detailsWidget);
+	BrainWidget brainWidget = BrainWidget(nullptr, &style, containerWidget, detailsWidget);
 	BrainPresenter brainPresenter(&brainWidget, &canvasPresenter, &markdownPresenter);
 
 	// Show window.

@@ -5,18 +5,19 @@
 #include <QHBoxLayout>
 
 #include "widgets/thought_details_widget.h"
-#include "widgets/canvas_widget.h"
+#include "widgets/container_widget.h"
 
 class BrainWidget: public BaseWidget {
 	Q_OBJECT
 
 public:
-	BrainWidget(QWidget*, Style*, CanvasWidget*, ThoughtDetailsWidget*);
+	BrainWidget(QWidget*, Style*, ContainerWidget*, ThoughtDetailsWidget*);
 	ThoughtDetailsWidget *details();
+	ContainerWidget *canvas();
 
 private:
 	QHBoxLayout m_layout;
-	CanvasWidget *m_canvas;
+	ContainerWidget *m_canvasContainer;
 	ThoughtDetailsWidget *m_details;
 };
 
