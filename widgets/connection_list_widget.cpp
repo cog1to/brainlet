@@ -71,8 +71,13 @@ QPushButton *ConnectionItemWidget::makeButton(Style *style, QString title) {
 // Events.
 
 void ConnectionItemWidget::paintEvent(QPaintEvent* event) {
-	if (m_hover) {
-		QPainter painter(this);
+	QPainter painter(this);
+
+	if (m_pressed) {
+		painter.setPen(Qt::NoPen);
+		painter.setBrush(QColor(255, 255, 255, 32));
+		painter.drawRect(rect());
+	} else if (m_hover) {
 		painter.setPen(Qt::NoPen);
 		painter.setBrush(QColor(255, 255, 255, 16));
 		painter.drawRect(rect());
@@ -86,11 +91,15 @@ void ConnectionItemWidget::mousePressEvent(QMouseEvent *) {
 		return;
 
 	m_pressed = true;
+	update();
 }
 
 void ConnectionItemWidget::mouseReleaseEvent(QMouseEvent *event) {
 	if (!m_pressed)
 		return;
+
+	m_pressed = false;
+	update();
 
 	QPoint pos = event->pos();
 	QSize current = size();
@@ -100,8 +109,6 @@ void ConnectionItemWidget::mouseReleaseEvent(QMouseEvent *event) {
 	) {
 		emit clicked(this, m_id);
 	}
-
-	m_pressed = false;
 }
 
 void ConnectionItemWidget::enterEvent(QEnterEvent *) {
