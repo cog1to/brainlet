@@ -21,7 +21,8 @@ Style::Style(
 	QColor textEditColor,
 	QFont codeFont,
 	QColor codeBackground,
-	QColor linkColor
+	QColor linkColor,
+	QFont iconFont
 ) {
 	m_background = background;
 	m_nodeBackground = nodeBackground;
@@ -40,9 +41,12 @@ Style::Style(
 	m_codeFont = codeFont;
 	m_codeBackground = codeBackground;
 	m_linkColor = linkColor;
+	m_iconFont = iconFont;
 }
 
 Style& Style::defaultStyle() {
+	// TODO: Load fonts statically from resources. MacOS seem to have
+	// a bug with not loading font variants properly.
 	static QFont font = QFont("Noto Sans");
 	font.setPixelSize(15);
 
@@ -51,6 +55,9 @@ Style& Style::defaultStyle() {
 
 	static QFont codeFont = QFont("Noto Sans Mono");
 	codeFont.setPixelSize(15);
+
+	static QFont iconFont = QFont("Font Awesome 6 Free");
+	iconFont.setPixelSize(12);
 
 	static Style style(
 		QColor(23, 43, 52, 255),
@@ -69,7 +76,8 @@ Style& Style::defaultStyle() {
 		QColor(171, 181, 181, 255),
 		codeFont,
 		QColor(43, 63, 72, 255),
-		QColor(162, 187, 219)
+		QColor(162, 187, 219),
+		iconFont
 	);
 
 	return style;
@@ -250,3 +258,13 @@ QString Style::menuStyle() {
 
 	return stylesheet;
 }
+
+const QFont Style::iconFont() const {
+	return m_iconFont;
+}
+
+void Style::setIconFont(QFont font) {
+	m_iconFont = font;
+	emit styleChanged(this);
+}
+

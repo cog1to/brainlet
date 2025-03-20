@@ -74,6 +74,7 @@ public:
 	// Updates.
 	const std::vector<ConnectionItem> &items();
 	void setItems(std::vector<ConnectionItem>);
+	// Size.
 
 signals:
 	void thoughtSelected(ThoughtId);

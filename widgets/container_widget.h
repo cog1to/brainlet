@@ -7,6 +7,7 @@
 #include "widgets/base_widget.h"
 #include "widgets/style.h"
 #include "widgets/canvas_widget.h"
+#include "widgets/search_widget.h"
 
 class ContainerWidget: public BaseWidget {
 	Q_OBJECT
@@ -16,8 +17,15 @@ public:
 	CanvasWidget *canvas();
 	void resizeEvent(QResizeEvent *) override;
 
+private slots:
+	void onSearchCanceled(SearchWidget*);
+	void onSearchActivated(SearchWidget*);
+
 private:
 	CanvasWidget *m_canvas = nullptr;
+	SearchWidget m_search;
+	// Helpers
+	void layoutSearch();
 };
 
 #endif

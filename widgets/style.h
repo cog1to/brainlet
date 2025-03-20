@@ -27,7 +27,8 @@ public:
 		QColor textEditColor,
 		QFont codeFont,
 		QColor codeBackground,
-		QColor linkColor
+		QColor linkColor,
+		QFont iconFont
 	);
 	// Default style.
 	static Style& defaultStyle();
@@ -81,6 +82,9 @@ public:
 	void setLinkColor(QColor);
 	// Menu style.
 	QString menuStyle();
+	// Icons.
+	const QFont iconFont() const;
+	void setIconFont(QFont);
 
 signals:
 	void styleChanged(Style*);
@@ -103,6 +107,7 @@ private:
 	int m_scrollWidth;
 	QColor m_codeBackground;
 	QColor m_linkColor;
+	QFont m_iconFont;
 };
 
 #endif

@@ -20,6 +20,7 @@ public:
 		bool ro,
 		std::string text
 	);
+	void clearFocus();
 
 signals:
 	void mouseEnter();
@@ -37,9 +38,6 @@ protected:
 	void mousePressEvent(QMouseEvent *) override;
 	void keyPressEvent(QKeyEvent *) override;
 	bool eventFilter(QObject *obj, QEvent *event) override;
-
-private:
-	void clearFocus();
 };
 
 #endif
