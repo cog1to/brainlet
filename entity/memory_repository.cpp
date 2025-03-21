@@ -2,6 +2,8 @@
 #include <unordered_map>
 #include <ctime>
 
+#include <QString>
+
 #include "entity/memory_repository.h"
 #include "entity/thought_entity.h"
 #include "entity/connection_entity.h"
@@ -136,10 +138,13 @@ bool MemoryRepository::disconnect(ThoughtId from, ThoughtId to) {
 
 SearchResult MemoryRepository::search(std::string term) {
 	std::vector<SearchItem> result;
+	QString qterm = QString::fromStdString(term);
 
 	for (auto it = m_thoughts.begin(); it != m_thoughts.end(); it++) {
 		std::string *name = &(*it).name;
-		if (name->find(term) != name->npos) {
+		QString qstr = QString::fromStdString(*name);
+
+		if (qstr.contains(qterm, Qt::CaseInsensitive)) {
 			result.push_back(SearchItem{
 				.id = (*it).id,
 				.name	= name
