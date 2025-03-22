@@ -33,10 +33,14 @@ class ConnectionItemWidget: public BaseWidget {
 
 public:
 	ConnectionItemWidget(QWidget*, Style*, bool, ThoughtId, QString);
+	// Highlighting.
+	void activate();
+	void deactivate();
 
 signals:
 	void buttonClicked(ConnectionItemWidget*, ThoughtId, ConnectionItemButton);
 	void clicked(ConnectionItemWidget*, ThoughtId, QString);
+	void hover(ConnectionItemWidget*);
 
 protected:
 	void enterEvent(QEnterEvent *) override;
@@ -74,6 +78,7 @@ public:
 	// Updates.
 	const std::vector<ConnectionItem> &items();
 	void setItems(std::vector<ConnectionItem>);
+	int selectedIndex();
 	// Size.
 	QSize sizeHint() const override;
 
@@ -81,13 +86,20 @@ signals:
 	void thoughtSelected(ThoughtId, QString);
 	void connectionSelected(ThoughtId, ConnectionType, bool);
 
+public slots:
+	void onNextItem();
+	void onPrevItem();
+
 private slots:
 	void onConnectionSelected(ConnectionItemWidget*, ThoughtId, ConnectionItemButton);
 	void onThoughtSelected(ConnectionItemWidget*, ThoughtId, QString);
+	void onItemHover(ConnectionItemWidget*);
 
 private:
 	QVBoxLayout m_layout;
 	bool m_showButtons;
+	int m_selectedIdx = -1;
+	std::vector<ConnectionItemWidget*> m_widgets;
 	std::vector<ConnectionItem> m_items;
 	// Helpers.
 	QWidget *makeSeparator();

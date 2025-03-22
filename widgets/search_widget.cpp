@@ -75,7 +75,8 @@ SearchWidget::SearchWidget(
 		QString("background: #64000000; border-radius: 10px;")
 	);
 
-	// Events.
+	// Edit signals.
+
 	connect(
 		m_edit, SIGNAL(editStarted()),
 		this, SLOT(onTextEdit())
@@ -95,6 +96,18 @@ SearchWidget::SearchWidget(
 		m_edit, SIGNAL(textChanged()),
 		this, SLOT(onTextChanged())
 	);
+
+	connect(
+		m_edit, SIGNAL(nextSuggestion()),
+		this, SLOT(onNextSuggestion())
+	);
+
+	connect(
+		m_edit, SIGNAL(prevSuggestion()),
+		this, SLOT(onPrevSuggestion())
+	);
+
+	// List signals.
 
 	connect(
 		m_list, SIGNAL(thoughtSelected(ThoughtId, QString)),
@@ -169,7 +182,22 @@ void SearchWidget::onTextConfirmed(std::function<void(bool)> callback) {
 	if (auto items = m_list->items(); items.size() == 1) {
 		callback(false);
 		emit thoughtSelected(this, items[0].id, items[0].name);
+	} else if (int idx = m_list->selectedIndex(); idx != -1) {
+		callback(false);
+		emit thoughtSelected(this, items[idx].id, items[idx].name);
 	}
+}
+
+void SearchWidget::onNextSuggestion() {
+	if (m_list->isVisible() == false)
+		return;
+	m_list->onNextItem();
+}
+
+void SearchWidget::onPrevSuggestion() {
+	if (m_list->isVisible() == false)
+		return;
+	m_list->onPrevItem();
 }
 
 // List selection.

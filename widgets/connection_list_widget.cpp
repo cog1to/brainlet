@@ -69,6 +69,19 @@ QPushButton *ConnectionItemWidget::makeButton(Style *style, QString title) {
 	return button;
 }
 
+// Highlighting.
+
+void ConnectionItemWidget::activate() {
+	m_hover = true;
+	update();
+	emit hover(this);
+}
+
+void ConnectionItemWidget::deactivate() {
+	m_hover = false;
+	update();
+}
+
 // Events.
 
 void ConnectionItemWidget::paintEvent(QPaintEvent* event) {
@@ -165,14 +178,20 @@ ConnectionListWidget::ConnectionListWidget(
 	setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
 }
 
+int ConnectionListWidget::selectedIndex() {
+	return m_selectedIdx;
+}
+
 const std::vector<ConnectionItem> &ConnectionListWidget::items() {
 	return m_items;
 }
 
 void ConnectionListWidget::setItems(std::vector<ConnectionItem> items) {
 	m_items = items;
+	m_selectedIdx = -1;
 
 	// Delete old items.
+	m_widgets.clear();
 	QLayoutItem *item = nullptr;
 	while ((item = m_layout.takeAt(0)) != nullptr) {
 		delete item->widget();
@@ -200,6 +219,12 @@ void ConnectionListWidget::setItems(std::vector<ConnectionItem> items) {
 			this, SLOT(onThoughtSelected(ConnectionItemWidget*, ThoughtId, QString))
 		);
 
+		connect(
+			widget, SIGNAL(hover(ConnectionItemWidget*)),
+			this, SLOT(onItemHover(ConnectionItemWidget*))
+		);
+
+		m_widgets.push_back(widget);
 		m_layout.addWidget(widget);
 
 		if (idx != items.size() - 1) {
@@ -253,6 +278,40 @@ QSize ConnectionListWidget::sizeHint() const {
 	return QSize(maxWidth, maxHeight);
 }
 
+// Public slots.
+
+void ConnectionListWidget::onNextItem() {
+	if (isVisible() == false)
+		return;
+	if (m_widgets.size() == 0)
+		return;
+	
+	int next = std::min((int)m_items.size() - 1, m_selectedIdx + 1);
+	if (next != m_selectedIdx) {
+		if (m_selectedIdx != -1)
+			m_widgets[m_selectedIdx]->deactivate();
+
+		m_selectedIdx = next;
+		m_widgets[m_selectedIdx]->activate();
+	}
+}
+
+void ConnectionListWidget::onPrevItem() {
+	if (isVisible() == false)
+		return;
+	if (m_widgets.size() == 0)
+		return;
+
+	int prev = std::max(0, m_selectedIdx - 1);
+	if (prev != m_selectedIdx) {
+		if (m_selectedIdx != -1)
+			m_widgets[m_selectedIdx]->deactivate();
+
+		m_selectedIdx = prev;
+		m_widgets[m_selectedIdx]->activate();
+	}
+}
+
 // Slots.
 
 void ConnectionListWidget::onConnectionSelected(
@@ -279,5 +338,17 @@ void ConnectionListWidget::onThoughtSelected(
 	QString name
 ) {
 	emit thoughtSelected(id, name);
+}
+
+void ConnectionListWidget::onItemHover(ConnectionItemWidget *item) {
+	for (int idx = 0; idx < m_widgets.size(); idx++) {
+		if (m_widgets[idx] == item) {
+			m_selectedIdx = idx;
+			return;
+		}
+	}
+
+	// Failsafe. Reset selected index if we got an event from a deleted widget.
+	m_selectedIdx = -1;
 }
 

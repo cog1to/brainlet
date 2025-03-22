@@ -48,6 +48,9 @@ private slots:
 	// List selection.
 	void onThoughtSelected(ThoughtId, QString);
 	void onConnectionSelected(ThoughtId, ConnectionType, bool);
+	// List navigation.
+	void onNextSuggestion();
+	void onPrevSuggestion();
 
 private:
 	// Subviews.

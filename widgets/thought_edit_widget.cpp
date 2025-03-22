@@ -94,6 +94,10 @@ void ThoughtEditWidget::keyPressEvent(QKeyEvent *event) {
 		});
 	} else if (event->key() == Qt::Key_Escape) {
 		emit editCanceled();
+	} else if (event->key() == Qt::Key_Up) {
+		emit prevSuggestion();
+	} else if (event->key() == Qt::Key_Down) {
+		emit nextSuggestion();
 	} else {
 		QTextEdit::keyPressEvent(event);
 	}
