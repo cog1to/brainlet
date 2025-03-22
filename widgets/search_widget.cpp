@@ -163,6 +163,9 @@ void SearchWidget::onTextCancel() {
 }
 
 void SearchWidget::onTextConfirmed(std::function<void(bool)> callback) {
+	if (m_list->isVisible() == false)
+		return;
+
 	if (auto items = m_list->items(); items.size() == 1) {
 		callback(false);
 		emit thoughtSelected(this, items[0].id, items[0].name);
