@@ -49,6 +49,7 @@ SearchWidget::SearchWidget(
 			.arg(style->iconFont().family())
 			.arg(iconColor.name(QColor::HexArgb))
 	);
+	m_icon->setIndent(2);
 	m_icon->setText(QChar(0xf002));
 
 	// Setup input layout.

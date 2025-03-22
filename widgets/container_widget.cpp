@@ -79,7 +79,7 @@ void ContainerWidget::onSearchUpdated(SearchWidget *widget) {
 // Helpers
 
 void ContainerWidget::updateSearchWidth() {
-	int width = m_search.isActive() ? (size().width() / 2) : 92;
+	int width = m_search.isActive() ? (size().width() / 2) : 94;
 	m_search.setMaximumWidth(width);
 	m_search.setMinimumWidth(width);
 }
@@ -89,7 +89,7 @@ void ContainerWidget::layoutSearch() {
 	QSize hint = m_search.sizeHint();
 	m_search.setGeometry(
 		0, 0,
-		m_search.isActive() ? (current.width() / 2) : 92,
+		m_search.isActive() ? (current.width() / 2) : 94,
 		hint.height()
 	);
 }
