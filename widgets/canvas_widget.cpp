@@ -443,6 +443,7 @@ void CanvasWidget::updatePaths() {
 
 	QPen subPen = QPen(color, 0.5);
 	subPen.setStyle(Qt::DashLine);
+	subPen.setDashPattern({4, 2});
 
 	for (auto& connection: *subconnections) {
 		auto fromIt = m_widgets.find(connection.from);
