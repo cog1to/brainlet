@@ -261,8 +261,9 @@ QSize ConnectionListWidget::sizeHint() const {
 		QRect bounds = metrics.boundingRect(m_items[idx].name);
 		QSize textSize = bounds.size();
 
+		// 8px for QLabel spacing
 		maxHeight = maxHeight + metrics.height() + 8;
-		maxWidth = std::max(maxWidth, textSize.width());
+		maxWidth = std::max(maxWidth, textSize.width()) + 8;
 
 		if (idx < m_items.size() - 1) {
 			// Spacing for separator.

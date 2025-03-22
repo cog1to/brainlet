@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
 	widget.resize(800, 800);
 
 	// Make presenter.
-	CanvasPresenter presenter(&layout, &repo, &widget);
+	CanvasPresenter presenter(&layout, &repo, &repo, &widget);
 
 	// Show window.
 	widget.show();

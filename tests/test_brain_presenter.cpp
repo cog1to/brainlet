@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
 	// Make canvas widget.
 	DefaultLayout layout(&style);
 	CanvasWidget *canvasWidget = new CanvasWidget(nullptr, &style, &layout);
-	CanvasPresenter canvasPresenter(&layout, &repo, canvasWidget);
+	CanvasPresenter canvasPresenter(&layout, &repo, &repo, canvasWidget);
 	// Make canvas container.
 	ContainerWidget *containerWidget = new ContainerWidget(nullptr, &style, canvasWidget);
 

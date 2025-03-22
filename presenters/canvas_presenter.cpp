@@ -1,43 +1,51 @@
+#include <QObject>
+
 #include "presenters/canvas_presenter.h"
 
 CanvasPresenter::CanvasPresenter(
 	BaseLayout *layout,
 	GraphRepository *repo,
+	SearchRepository *search,
 	CanvasWidget *view
-) : m_layout(layout), m_repo(repo), m_view(view) {
-	QObject::connect(
+) : m_layout(layout), m_repo(repo), m_search(search), m_view(view) {
+	connect(
 		view, SIGNAL(textChanged(ThoughtId, QString, std::function<void(bool)>)),
 		this, SLOT(onThoughtChanged(ThoughtId, QString, std::function<void(bool)>))
 	);
 
-	QObject::connect(
+	connect(
 		view, SIGNAL(thoughtSelected(ThoughtId)),
 		this, SLOT(onThoughtSelected(ThoughtId))
 	);
 
-	QObject::connect(
-		view, SIGNAL(thoughtCreated(ThoughtId, ConnectionType, bool, QString, std::function<void(bool, ThoughtId)>)),
+	connect(
+		view,SIGNAL(thoughtCreated(ThoughtId, ConnectionType, bool, QString, std::function<void(bool, ThoughtId)>)),
 		this, SLOT(onThoughtCreated(ThoughtId, ConnectionType, bool, QString, std::function<void(bool, ThoughtId)>))
 	);
 
-	QObject::connect(
-		view, SIGNAL(thoughtConnected(ThoughtId, ThoughtId, ConnectionType)),
-		this, SLOT(onThoughtConnected(ThoughtId, ThoughtId, ConnectionType))
+	connect(
+		view, SIGNAL(thoughtConnected(ThoughtId, ThoughtId, ConnectionType, std::function<void(bool)>)),
+		this, SLOT(onThoughtConnected(ThoughtId, ThoughtId, ConnectionType, std::function<void(bool)>))
 	);
 
-	QObject::connect(
+	connect(
 		view, SIGNAL(thoughtDeleted(ThoughtId)),
 		this, SLOT(onThoughtDeleted(ThoughtId))
 	);
 
-	QObject::connect(
+	connect(
 		view, SIGNAL(thoughtsDisconnected(ThoughtId, ThoughtId)),
 		this, SLOT(onThoughtsDisconnected(ThoughtId, ThoughtId))
 	);
 
-	QObject::connect(
-		view, SIGNAL(onShown()),
+	connect(
+		view, SIGNAL(shown()),
 		this, SLOT(onShown())
+	);
+
+	connect(
+		view, SIGNAL(newThoughtTextChanged(QString)),
+		this, SLOT(onNewThoughtTextChanged(QString))	
 	);
 }
 
@@ -106,10 +114,15 @@ void CanvasPresenter::onThoughtCreated(
 void CanvasPresenter::onThoughtConnected(
 	ThoughtId fromId,
 	ThoughtId toId,
-	ConnectionType type
+	ConnectionType type,
+	std::function<void(bool)> callback
 ) {
 	bool result = m_repo->connect(fromId, toId, type);
+	callback(result);
+
 	if (result) {
+		if (m_view != nullptr)
+			m_view->hideSuggestions();
 		reloadState();
 	}
 }
@@ -125,6 +138,48 @@ void CanvasPresenter::onThoughtsDisconnected(ThoughtId from, ThoughtId to) {
 	bool result = m_repo->disconnect(from, to);
 	if (result) {
 		reloadState();
+	}
+}
+
+void CanvasPresenter::onNewThoughtTextChanged(QString text) {
+	if (m_view == nullptr)
+		return;
+	if (m_search == nullptr)
+		return;
+
+	if (text.length() < 3) {
+		m_view->hideSuggestions();
+		return;
+	}
+
+	const State *state = m_repo->getState();
+	if (state == nullptr)
+		return;
+	const std::unordered_map<ThoughtId, Thought*>* thoughts = state->thoughts();
+
+	std::string term = text.toStdString();
+	SearchResult result = m_search->search(term);
+
+	if (result.error != SearchErrorNone) {
+		// TODO: show error
+	} else {
+		std::vector<ConnectionItem> items;
+
+		for (auto it = result.items.begin(); it != result.items.end(); it++) {
+			// Don't show currently visible items in suggestions.
+			// Can potentially change later if we'll make "full graph" layout.
+			if (auto found = thoughts->find((*it).id); found != thoughts->end()) {
+				continue;
+			}
+
+			ConnectionItem item = {
+				.id = (*it).id,
+				.name = QString::fromStdString(*((*it).name))
+			};
+			items.push_back(item);
+		}
+
+		m_view->showSuggestions(items);
 	}
 }
 

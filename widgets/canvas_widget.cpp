@@ -63,8 +63,86 @@ QSize CanvasWidget::sizeHint() const {
 	return QSize(100, 100);
 }
 
+void CanvasWidget::showSuggestions(std::vector<ConnectionItem> items) {
+	if (m_newThought == nullptr)
+		return;
+
+	if (items.size() == 0) {
+		hideSuggestions();
+		return;
+	}
+
+	if (m_suggestions == nullptr) {
+		m_suggestionsContainer = new QFrame(this);
+		m_suggestionsContainer->setStyleSheet(
+			QString("background: #64000000; border-radius: 10px;")
+		);
+
+		m_suggestions = new ConnectionListWidget(
+			m_suggestionsContainer,
+			m_style,
+			false
+		);
+
+	connect(
+		m_suggestions, SIGNAL(thoughtSelected(ThoughtId, QString)),
+		this, SLOT(onSuggestionSelected(ThoughtId, QString))
+	);
+	}
+
+	m_suggestions->setItems(items);
+	layoutSuggestions();
+}
+
+void CanvasWidget::hideSuggestions() {
+	if (m_suggestions != nullptr) {
+		delete m_suggestions;
+		m_suggestions = nullptr;
+	}
+
+	if (m_suggestionsContainer != nullptr) {
+		delete m_suggestionsContainer;
+		m_suggestionsContainer = nullptr;
+	}
+
+	update();
+}
+
+void CanvasWidget::layoutSuggestions() {
+	const int padding = 8;
+	const int width = 200;
+
+	if (m_newThought == nullptr || m_suggestions == nullptr)
+		return;
+
+	QSize hint = m_suggestions->sizeHint();
+	QRect newRect = m_newThought->geometry();
+	int height = hint.height() + padding * 2;
+
+	int x = std::min(newRect.x() + (newRect.width() - width) / 2, rect().width() - width);
+	int y = newRect.y() + newRect.height();
+	if ((y + height) > rect().height()) {
+		y = newRect.y() - height;
+	}
+
+	m_suggestions->setGeometry(
+		padding, padding,
+		width - padding * 2, hint.height()
+	);
+
+	m_suggestionsContainer->setGeometry(
+		x, y,
+		width, hint.height() + padding * 2
+	);
+	m_suggestionsContainer->show();
+
+	update();
+}
+
+// Events
+
 void CanvasWidget::showEvent(QShowEvent *) {
-	emit onShown();
+	emit shown();
 }
 
 void CanvasWidget::mouseMoveEvent(QMouseEvent *event) {
@@ -736,7 +814,7 @@ void CanvasWidget::onAnchorEntered(
 		);
 		QObject::connect(
 			m_newThought, SIGNAL(textChanged(ThoughtWidget*)),
-			this, SLOT(onWidgetActivated(ThoughtWidget*))
+			this, SLOT(onNewThoughtTextChanged(ThoughtWidget*))
 		);
 
 		// Draw over everything else.
@@ -863,6 +941,38 @@ void CanvasWidget::onTextConfirmed(
 }
 
 // Creation slots.
+
+void CanvasWidget::onSuggestionSelected(ThoughtId to, QString name) {
+	ThoughtId from = m_anchorSource->widget->id();
+	ConnectionType type;
+
+	switch (m_anchorSource->type) {
+		case AnchorType::AnchorLink:
+			type = ConnectionType::link;
+			break;
+		case AnchorType::AnchorParent:
+			type = ConnectionType::child;
+			to = from;
+			from = m_overThought->id();
+			break;
+		case AnchorType::AnchorChild:
+			type = ConnectionType::child;
+			break;
+	}
+
+	emit thoughtConnected(from, to, type, [this](bool success){
+		if (success) {
+			this->clearAnchor();
+		}
+	});
+}
+
+void CanvasWidget::onNewThoughtTextChanged(ThoughtWidget *widget) {
+	// Relayout.
+	onWidgetActivated(widget);
+	// Emit text update.
+	emit newThoughtTextChanged(QString::fromStdString(widget->text()));
+}
 
 void CanvasWidget::onCreateCanceled(ThoughtWidget *widget) {
 	clearAnchor();
@@ -1052,5 +1162,5 @@ void CanvasWidget::updateConnection() {
 			break;
 	}
 
-	emit thoughtConnected(from, to, type);
+	emit thoughtConnected(from, to, type, [](bool){});
 }

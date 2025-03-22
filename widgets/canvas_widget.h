@@ -16,6 +16,7 @@
 #include "widgets/anchor_highlight_widget.h"
 #include "widgets/thought_widget.h"
 #include "widgets/scroll_area_widget.h"
+#include "widgets/connection_list_widget.h"
 
 struct AnchorSource {
 	ThoughtWidget *widget;
@@ -38,15 +39,19 @@ public:
 	CanvasWidget(QWidget*, Style*, BaseLayout*);
 	~CanvasWidget();
 	QSize sizeHint() const override;
+	// Suggestions.
+	void showSuggestions(std::vector<ConnectionItem>);
+	void hideSuggestions();
 
 signals:
 	void textChanged(ThoughtId, QString, std::function<void(bool)>);
 	void thoughtSelected(ThoughtId);
 	void thoughtCreated(ThoughtId, ConnectionType, bool, QString, std::function<void(bool, ThoughtId)>);
-	void thoughtConnected(ThoughtId, ThoughtId, ConnectionType);
+	void thoughtConnected(ThoughtId, ThoughtId, ConnectionType, std::function<void(bool)>);
 	void thoughtDeleted(ThoughtId);
 	void thoughtsDisconnected(ThoughtId, ThoughtId);
-	void onShown();
+	void shown();
+	void newThoughtTextChanged(QString);
 
 protected:
 	// Event overrides.
@@ -72,6 +77,10 @@ private:
 	ThoughtWidget *m_menuThought = nullptr;
 	QWidget m_overlay;
 	std::optional<Path> m_pathHighlight;
+	// Suggestions.
+	ConnectionListWidget *m_suggestions = nullptr;	
+	QFrame *m_suggestionsContainer = nullptr;
+	void layoutSuggestions();
 	// Layout.
 	void updateLayout();
 	void updatePaths();
@@ -113,6 +122,8 @@ private slots:
 	void onMenuRequested(ThoughtWidget*, const QPoint&);
 	void onDeleteThought();
 	void onDisconnect();
+	void onNewThoughtTextChanged(ThoughtWidget*);
+	void onSuggestionSelected(ThoughtId, QString);
 };
 
 #endif
