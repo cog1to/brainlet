@@ -41,6 +41,12 @@ CanvasPresenter::CanvasPresenter(
 	);
 }
 
+void CanvasPresenter::setThought(ThoughtId id) {
+	if (m_repo->select(id)) {
+		reloadState();
+	}
+}
+
 // Slots.
 
 void CanvasPresenter::onShown() {

@@ -4,14 +4,16 @@
 #include "presenters/canvas_presenter.h"
 #include "presenters/text_editor_presenter.h"
 #include "presenters/brain_presenter.h"
+#include "presenters/search_presenter.h"
 #include "widgets/brain_widget.h"
 
 BrainPresenter::BrainPresenter(
 	BrainWidget *view,
 	CanvasPresenter *canvas,
-	TextEditorPresenter *editor
+	TextEditorPresenter *editor,
+	SearchPresenter *search
 )
-	: m_view(view), m_canvas(canvas), m_editor(editor)
+	: m_view(view), m_canvas(canvas), m_editor(editor), m_search(search)
 {
 	connect(
 		canvas, SIGNAL(thoughtSelected(ThoughtId, QString)),
@@ -20,6 +22,10 @@ BrainPresenter::BrainPresenter(
 	connect(
 		canvas, SIGNAL(thoughtRenamed(ThoughtId, QString)),
 		this, SLOT(onThoughtRenamed(ThoughtId, QString))
+	);
+	connect(
+		search, SIGNAL(searchItemSelected(ThoughtId, QString)),
+		this, SLOT(onSearchItemSelected(ThoughtId, QString))
 	);
 }
 
@@ -31,6 +37,10 @@ void BrainPresenter::onThoughtSelected(ThoughtId id, QString title) {
 	if (m_view != nullptr) {
 		m_view->details()->setTitle(title);
 	};
+
+	if (m_search != nullptr) {
+		m_search->clear();
+	}
 }
 
 void BrainPresenter::onThoughtRenamed(ThoughtId id, QString title) {
@@ -38,5 +48,15 @@ void BrainPresenter::onThoughtRenamed(ThoughtId id, QString title) {
 		return;
 
 	m_view->details()->setTitle(title);
+}
+
+void BrainPresenter::onSearchItemSelected(ThoughtId id, QString title) {
+	if (m_canvas != nullptr) {
+		m_canvas->setThought(id);
+	};
+
+	if (m_search != nullptr) {
+		m_search->reset();
+	}
 }
 

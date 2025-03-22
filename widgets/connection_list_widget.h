@@ -36,7 +36,7 @@ public:
 
 signals:
 	void buttonClicked(ConnectionItemWidget*, ThoughtId, ConnectionItemButton);
-	void clicked(ConnectionItemWidget*, ThoughtId);
+	void clicked(ConnectionItemWidget*, ThoughtId, QString);
 
 protected:
 	void enterEvent(QEnterEvent *) override;
@@ -75,14 +75,15 @@ public:
 	const std::vector<ConnectionItem> &items();
 	void setItems(std::vector<ConnectionItem>);
 	// Size.
+	QSize sizeHint() const override;
 
 signals:
-	void thoughtSelected(ThoughtId);
+	void thoughtSelected(ThoughtId, QString);
 	void connectionSelected(ThoughtId, ConnectionType, bool);
 
 private slots:
 	void onConnectionSelected(ConnectionItemWidget*, ThoughtId, ConnectionItemButton);
-	void onThoughtSelected(ConnectionItemWidget*, ThoughtId);
+	void onThoughtSelected(ConnectionItemWidget*, ThoughtId, QString);
 
 private:
 	QVBoxLayout m_layout;

@@ -15,7 +15,6 @@ SearchWidget::SearchWidget(
 	m_style(style),
 	m_showButtons(showButtons),
 	m_layout(this),
-	m_list(nullptr, style, showButtons),
 	m_separator(nullptr)
 {
 	// Setup separator.
@@ -28,12 +27,12 @@ SearchWidget::SearchWidget(
 		QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum)
 	);
 	m_separator.setVisible(false);
-	m_list.setVisible(false);
 
 	// Edit styling.
 	m_edit = new ThoughtEditWidget(nullptr, style, false, "");
 	QFontMetrics metrics(m_style->font());
-	m_edit->setMaximumHeight(metrics.height() + 2);
+	m_edit->setMinimumHeight(metrics.height() + 4);
+	m_edit->setMaximumHeight(metrics.height() + 4);
 	m_edit->setAlignment(Qt::AlignLeft);
 	m_edit->setWordWrapMode(QTextOption::NoWrap);
 	m_edit->setPlaceholderText("Go to...");
@@ -64,11 +63,15 @@ SearchWidget::SearchWidget(
 	m_layout.setSpacing(0);
 	m_layout.addLayout(m_input_layout);
 	m_layout.addWidget(&m_separator);
-	m_layout.addWidget(&m_list);
+
+	// List widget.
+	m_list = new ConnectionListWidget(nullptr, style, showButtons);
+	m_list->setVisible(false);
+	m_layout.addWidget(m_list);
 
 	// Style.
 	setStyleSheet(
-		QString("background: #55000000; border-radius: 10px;")
+		QString("background: #64000000; border-radius: 10px;")
 	);
 
 	// Events.
@@ -83,17 +86,22 @@ SearchWidget::SearchWidget(
 	);
 
 	connect(
+		m_edit, SIGNAL(editConfirmed(std::function<void(bool)>)),
+		this, SLOT(onTextConfirmed(std::function<void(bool)>))
+	);
+
+	connect(
 		m_edit, SIGNAL(textChanged()),
 		this, SLOT(onTextChanged())
 	);
 
 	connect(
-		&m_list, SIGNAL(thoughtSelected(ThoughtId)),
-		this, SLOT(onThoughtSelected(ThoughtId))
+		m_list, SIGNAL(thoughtSelected(ThoughtId, QString)),
+		this, SLOT(onThoughtSelected(ThoughtId, QString))
 	);
 
 	connect(
-		&m_list, SIGNAL(connectionSelected(ThoughtId, ConnectionType, bool)),
+		m_list, SIGNAL(connectionSelected(ThoughtId, ConnectionType, bool)),
 		this, SLOT(onConnectionSelected(ThoughtId, ConnectionType, bool))
 	);
 }
@@ -101,34 +109,35 @@ SearchWidget::SearchWidget(
 void SearchWidget::setItems(std::vector<ConnectionItem> items) {
 	if (items.size() == 0) {
 		m_separator.setVisible(false);
-		m_list.setVisible(false);
+		m_list->setVisible(false);
 	} else {
-		m_list.setItems(items);
-
 		m_separator.setVisible(true);
-		m_list.setVisible(true);
+		m_list->setVisible(true);
+		m_list->setItems(items);
 	}
+
+	adjustSize();
 }
 
-void SearchWidget::clear() {
+void SearchWidget::reset() {
 	std::vector<ConnectionItem> emptyList;
 	setItems(emptyList);
 
 	QString emptyString = "";
 	m_edit->setPlainText(emptyString);
+}
+
+void SearchWidget::clear() {
+	reset();
+	m_active = false;
 	m_edit->clearFocus();
+	emit updated(this);
 }
 
 // State.
 
 bool SearchWidget::isActive() const {
-	return m_edit->hasFocus();
-}
-
-// Sizing.
-
-QSize SearchWidget::sizeHint() const {
-	return m_layout.sizeHint();
+	return m_active || m_edit->hasFocus() || m_edit->toPlainText().length() > 0;
 }
 
 // Slots.
@@ -143,17 +152,26 @@ void SearchWidget::onTextChanged() {
 }
 
 void SearchWidget::onTextEdit() {
+	m_active = true;
 	emit searchActivated(this);
 }
 
 void SearchWidget::onTextCancel() {
+	m_active = false;
 	emit searchCanceled(this);
+}
+
+void SearchWidget::onTextConfirmed(std::function<void(bool)> callback) {
+	if (auto items = m_list->items(); items.size() == 1) {
+		callback(false);
+		emit thoughtSelected(this, items[0].id, items[0].name);
+	}
 }
 
 // List selection.
 
-void SearchWidget::onThoughtSelected(ThoughtId id) {
-	emit thoughtSelected(this, id);
+void SearchWidget::onThoughtSelected(ThoughtId id, QString name) {
+	emit thoughtSelected(this, id, name);
 }
 
 void SearchWidget::onConnectionSelected(

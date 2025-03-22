@@ -24,9 +24,10 @@ public:
 	SearchWidget(QWidget*, Style*, bool);
 	// Updates.
 	void setItems(std::vector<ConnectionItem>);
+	// Removes text and frees focus.
 	void clear();
-	// Size.
-	QSize sizeHint() const override;
+	// Removes text but keeps focus.
+	void reset();
 	// State.
 	bool isActive() const;
 
@@ -34,16 +35,18 @@ signals:
 	void searchActivated(SearchWidget*);
 	void searchCanceled(SearchWidget*);
 	void textChanged(SearchWidget*, QString);
-	void thoughtSelected(SearchWidget*, ThoughtId);
+	void thoughtSelected(SearchWidget*, ThoughtId, QString);
 	void connectionSelected(SearchWidget*, ThoughtId, ConnectionType, bool);
+	void updated(SearchWidget*);
 
 private slots:
 	// Text editing.
 	void onTextChanged();
 	void onTextEdit();
 	void onTextCancel();
+	void onTextConfirmed(std::function<void(bool)>);
 	// List selection.
-	void onThoughtSelected(ThoughtId);
+	void onThoughtSelected(ThoughtId, QString);
 	void onConnectionSelected(ThoughtId, ConnectionType, bool);
 
 private:
@@ -51,11 +54,12 @@ private:
 	QHBoxLayout *m_input_layout = nullptr;
 	QLabel *m_icon = nullptr;
 	ThoughtEditWidget *m_edit = nullptr;
+	ConnectionListWidget *m_list = nullptr;
 	QVBoxLayout m_layout;
-	ConnectionListWidget m_list;
 	QWidget m_separator;
 	// State.
 	bool m_showButtons = false;
+	bool m_active = false;
 	Style *m_style = nullptr;
 	// Helpers.
 	void restyleIcon(bool);

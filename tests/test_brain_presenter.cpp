@@ -14,6 +14,7 @@
 #include "presenters/text_editor_presenter.h"
 #include "presenters/canvas_presenter.h"
 #include "presenters/brain_presenter.h"
+#include "presenters/search_presenter.h"
 #include "entity/thought_entity.h"
 #include "entity/connection_entity.h"
 #include "entity/memory_repository.h"
@@ -59,12 +60,20 @@ int main(int argc, char *argv[]) {
 	DefaultLayout layout(&style);
 	CanvasWidget *canvasWidget = new CanvasWidget(nullptr, &style, &layout);
 	CanvasPresenter canvasPresenter(&layout, &repo, canvasWidget);
-	// Makr canvas container.
+	// Make canvas container.
 	ContainerWidget *containerWidget = new ContainerWidget(nullptr, &style, canvasWidget);
+
+	// Make search presenter.
+	SearchPresenter searchPresenter(&repo, containerWidget->search());
 
 	// Make brain widget.
 	BrainWidget brainWidget = BrainWidget(nullptr, &style, containerWidget, detailsWidget);
-	BrainPresenter brainPresenter(&brainWidget, &canvasPresenter, &markdownPresenter);
+	BrainPresenter brainPresenter(
+		&brainWidget,
+		&canvasPresenter,
+		&markdownPresenter,
+		&searchPresenter
+	);
 
 	// Show window.
 	brainWidget.resize(1400, 800);

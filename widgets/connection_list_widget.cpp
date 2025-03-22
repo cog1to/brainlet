@@ -26,8 +26,9 @@ ConnectionItemWidget::ConnectionItemWidget(
 	m_showButtons(showButtons)
 {
 	setMinimumWidth(300);
-	m_layout.setContentsMargins(QMargins(5, 5, 5, 5));
+	m_layout.setContentsMargins(QMargins(5, 4, 5, 4));
 	setStyleSheet(QString("background: #00000000"));
+	setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
 
 	// Setup title.
 	QLabel *titleLabel = new QLabel(nullptr);
@@ -107,7 +108,7 @@ void ConnectionItemWidget::mouseReleaseEvent(QMouseEvent *event) {
 		pos.x() >= 0 && pos.x() <= current.width() &&
 		pos.y() >= 0 && pos.y() <= current.height()
 	) {
-		emit clicked(this, m_id);
+		emit clicked(this, m_id, m_name);
 	}
 }
 
@@ -195,24 +196,26 @@ void ConnectionListWidget::setItems(std::vector<ConnectionItem> items) {
 		);
 
 		connect(
-			widget, SIGNAL(clicked(ConnectionItemWidget*, ThoughtId)),
-			this, SLOT(onThoughtSelected(ConnectionItemWidget*, ThoughtId))
+			widget, SIGNAL(clicked(ConnectionItemWidget*, ThoughtId, QString)),
+			this, SLOT(onThoughtSelected(ConnectionItemWidget*, ThoughtId, QString))
 		);
 
 		m_layout.addWidget(widget);
 
-		if (idx != MaxItems - 1) {
+		if (idx != items.size() - 1) {
 			m_layout.addWidget(makeSeparator());
 		}
 	}
 
-	update();
+	m_layout.invalidate();
+	adjustSize();
 }
 
 QWidget *ConnectionListWidget::makeSeparator() {
 	QWidget *separator = new QWidget(nullptr);
-	
+
 	separator->setMinimumSize(1, 1);
+	separator->setMaximumHeight(1);
 	separator->setStyleSheet(
 		QString("background-color: %1")
 			.arg(m_style->textEditColor().name(QColor::HexRgb))
@@ -222,6 +225,32 @@ QWidget *ConnectionListWidget::makeSeparator() {
 	);
 
 	return separator;
+}
+
+QSize ConnectionListWidget::sizeHint() const {
+	int maxWidth = 0;
+	int maxHeight = 0;
+
+	QFontMetrics metrics(m_style->font());
+	for (auto idx = 0; idx < m_items.size(); idx++) {
+		QRect bounds = metrics.boundingRect(m_items[idx].name);
+		QSize textSize = bounds.size();
+
+		maxHeight = maxHeight + metrics.height() + 8;
+		maxWidth = std::max(maxWidth, textSize.width());
+
+		if (idx < m_items.size() - 1) {
+			// Spacing for separator.
+			maxHeight += (1 + m_layout.spacing() * 2);
+		}
+	}
+
+	// Add margins.
+	QMargins margins = m_layout.contentsMargins();
+	maxWidth += margins.left() + margins.right();
+	maxHeight += margins.top() + margins.bottom();
+
+	return QSize(maxWidth, maxHeight);
 }
 
 // Slots.
@@ -244,6 +273,11 @@ void ConnectionListWidget::onConnectionSelected(
 	}
 }
 
-void ConnectionListWidget::onThoughtSelected(ConnectionItemWidget*, ThoughtId id) {
-	emit thoughtSelected(id);
+void ConnectionListWidget::onThoughtSelected(
+	ConnectionItemWidget*,
+	ThoughtId id,
+	QString name
+) {
+	emit thoughtSelected(id, name);
 }
+

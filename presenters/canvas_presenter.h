@@ -13,13 +13,16 @@ class CanvasPresenter: public QObject {
 
 public:
 	CanvasPresenter(BaseLayout*, GraphRepository*, CanvasWidget*);
+	void setThought(ThoughtId);
 
 signals:
 	void thoughtSelected(ThoughtId, QString);
 	void thoughtRenamed(ThoughtId, QString);
 
-private slots:
+public slots:
 	void onThoughtSelected(ThoughtId);
+
+private slots:
 	void onThoughtChanged(ThoughtId, QString, std::function<void(bool)>);
 	void onThoughtCreated(
 		ThoughtId fromId,
