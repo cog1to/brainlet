@@ -35,7 +35,7 @@ SearchWidget::SearchWidget(
 	m_edit->setMaximumHeight(metrics.height() + 4);
 	m_edit->setAlignment(Qt::AlignLeft);
 	m_edit->setWordWrapMode(QTextOption::NoWrap);
-	m_edit->setPlaceholderText("Go to...");
+	m_edit->setPlaceholderText(tr("Go to..."));
 
 	// Setup icon.
 	m_icon = new QLabel(nullptr);
