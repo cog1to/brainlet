@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
 	);
 
 	// Show window.
-	brainWidget.resize(1400, 800);
+	brainWidget.resize(1200, 600);
 	brainWidget.show();
 
 	// Run app.
