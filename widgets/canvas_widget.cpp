@@ -951,10 +951,13 @@ void CanvasWidget::onSuggestionSelected(ThoughtId to, QString name) {
 			type = ConnectionType::link;
 			break;
 		case AnchorType::AnchorParent:
-			type = ConnectionType::child;
-			to = from;
-			from = m_overThought->id();
-			break;
+			{
+				ThoughtId tmp = to;
+				to = from;
+				from = tmp;
+				type = ConnectionType::child;
+				break;
+			}
 		case AnchorType::AnchorChild:
 			type = ConnectionType::child;
 			break;

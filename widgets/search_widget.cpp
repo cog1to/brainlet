@@ -72,7 +72,7 @@ SearchWidget::SearchWidget(
 
 	// Style.
 	setStyleSheet(
-		QString("background: #64000000; border-radius: 10px;")
+		QString("background: #74000000; border-radius: 10px;")
 	);
 
 	// Edit signals.
