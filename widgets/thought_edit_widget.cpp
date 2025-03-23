@@ -1,5 +1,6 @@
 #include <QColor>
 #include <QWindow>
+#include <QFocusEvent>
 
 #include "widgets/thought_edit_widget.h"
 #include "widgets/style.h"
@@ -103,7 +104,11 @@ void ThoughtEditWidget::keyPressEvent(QKeyEvent *event) {
 	}
 }
 
-void ThoughtEditWidget::clearFocus() {
-	QWidget::clearFocus();
+void ThoughtEditWidget::focusOutEvent(QFocusEvent *event) {
+	QTextEdit::focusOutEvent(event);
 	emit focusLost();
+}
+
+void ThoughtEditWidget::clearFocus() {
+	QTextEdit::clearFocus();
 }

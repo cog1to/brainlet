@@ -83,13 +83,13 @@ SearchWidget::SearchWidget(
 	);
 
 	connect(
-		m_edit, SIGNAL(editCanceled()),
-		this, SLOT(onTextCancel())
+		m_edit, SIGNAL(editConfirmed(std::function<void(bool)>)),
+		this, SLOT(onTextConfirmed(std::function<void(bool)>))
 	);
 
 	connect(
-		m_edit, SIGNAL(editConfirmed(std::function<void(bool)>)),
-		this, SLOT(onTextConfirmed(std::function<void(bool)>))
+		m_edit, SIGNAL(editCanceled()),
+		this, SLOT(onTextCanceled())
 	);
 
 	connect(
@@ -105,6 +105,11 @@ SearchWidget::SearchWidget(
 	connect(
 		m_edit, SIGNAL(prevSuggestion()),
 		this, SLOT(onPrevSuggestion())
+	);
+
+	connect(
+		m_edit, SIGNAL(focusLost()),
+		this, SLOT(onFocusLost())
 	);
 
 	// List signals.
@@ -170,9 +175,8 @@ void SearchWidget::onTextEdit() {
 	emit searchActivated(this);
 }
 
-void SearchWidget::onTextCancel() {
-	m_active = false;
-	emit searchCanceled(this);
+void SearchWidget::onTextCanceled() {
+	m_edit->clearFocus();
 }
 
 void SearchWidget::onTextConfirmed(std::function<void(bool)> callback) {
@@ -198,6 +202,11 @@ void SearchWidget::onPrevSuggestion() {
 	if (m_list->isVisible() == false)
 		return;
 	m_list->onPrevItem();
+}
+
+void SearchWidget::onFocusLost() {
+	m_active = false;
+	emit searchCanceled(this);
 }
 
 // List selection.

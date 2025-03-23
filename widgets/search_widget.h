@@ -43,8 +43,9 @@ private slots:
 	// Text editing.
 	void onTextChanged();
 	void onTextEdit();
-	void onTextCancel();
+	void onTextCanceled();
 	void onTextConfirmed(std::function<void(bool)>);
+	void onFocusLost();
 	// List selection.
 	void onThoughtSelected(ThoughtId, QString);
 	void onConnectionSelected(ThoughtId, ConnectionType, bool);

@@ -6,6 +6,7 @@
 #include <QString>
 #include <QEnterEvent>
 #include <QMouseEvent>
+#include <QFocusEvent>
 #include <string>
 
 #include "widgets/style.h"
@@ -35,6 +36,7 @@ signals:
 	void prevSuggestion();
 
 protected:
+	void focusOutEvent(QFocusEvent *) override;
 	void enterEvent(QEnterEvent *) override;
 	void leaveEvent(QEvent *) override;
 	void mousePressEvent(QMouseEvent *) override;

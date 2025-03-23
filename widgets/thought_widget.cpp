@@ -366,6 +366,7 @@ void ThoughtWidget::onTextEdit() {
 void ThoughtWidget::onTextCancel() {
 	m_text = m_originalText;
 	m_textEdit.setPlainText(m_text);
+	m_textEdit.clearFocus();
 	emit textChanged(this);
 	emit textCanceled(this);
 }
