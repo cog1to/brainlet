@@ -53,7 +53,7 @@ debug: tests
 # Tests
 tests: bin test_anchor test_thought test_resize test_edit test_base \
 	test_memory test_presenter test_markdown test_text_presenter \
-	test_brain_presenter
+	test_brain_presenter test_conn
 
 test_anchor: mocs $(HEADERS) $(WIDGETS_C) tests/test_anchor.cpp
 	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \

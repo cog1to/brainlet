@@ -109,7 +109,7 @@ void CanvasWidget::hideSuggestions() {
 }
 
 void CanvasWidget::layoutSuggestions() {
-	const int padding = 8;
+	const int padding = 5;
 	const int width = 200;
 
 	if (m_newThought == nullptr || m_suggestions == nullptr)

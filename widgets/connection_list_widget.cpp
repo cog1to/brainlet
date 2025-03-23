@@ -10,6 +10,7 @@
 #include "widgets/base_widget.h"
 #include "widgets/connection_list_widget.h"
 #include "widgets/link_button_widget.h"
+#include "widgets/elided_label_widget.h"
 
 // Item.
 
@@ -25,20 +26,18 @@ ConnectionItemWidget::ConnectionItemWidget(
 	m_layout(this),
 	m_showButtons(showButtons)
 {
-	setMinimumWidth(300);
 	m_layout.setContentsMargins(QMargins(5, 4, 5, 4));
 	setStyleSheet(QString("background: #00000000"));
-	setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
+	setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Maximum);
 
 	// Setup title.
-	QLabel *titleLabel = new QLabel(nullptr);
+	ElidedLabelWidget *titleLabel = new ElidedLabelWidget(nullptr, name);
 	titleLabel->setStyleSheet(
 		QString("color: %1; font: %2px \"%3\"")
 			.arg(style->textColor().name(QColor::HexRgb))
 			.arg(style->font().pixelSize())
 			.arg(style->font().family())
 	);
-	titleLabel->setText(name);
 	titleLabel->setMinimumWidth(40);
 	titleLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 	m_layout.addWidget(titleLabel);
@@ -63,6 +62,9 @@ ConnectionItemWidget::ConnectionItemWidget(
 QPushButton *ConnectionItemWidget::makeButton(Style *style, QString title) {
 	LinkButtonWidget *button = new LinkButtonWidget(nullptr, style);
 
+	QFontMetrics metrics(style->font());
+	button->setMaximumHeight(metrics.height());
+	button->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
 	button->setText(title);
 	button->setVisible(false);
 
@@ -261,7 +263,7 @@ QSize ConnectionListWidget::sizeHint() const {
 		QRect bounds = metrics.boundingRect(m_items[idx].name);
 		QSize textSize = bounds.size();
 
-		// 8px for QLabel spacing
+		// 8px for layout margins
 		maxHeight = maxHeight + metrics.height() + 8;
 		maxWidth = std::max(maxWidth, textSize.width()) + 8;
 
