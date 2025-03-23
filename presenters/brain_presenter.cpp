@@ -55,6 +55,14 @@ void BrainPresenter::onSearchItemSelected(ThoughtId id, QString title) {
 		m_canvas->setThought(id);
 	};
 
+	if (m_editor != nullptr) {
+		m_editor->setThought(id);
+	}
+
+	if (m_view != nullptr) {
+		m_view->details()->setTitle(title);
+	};
+
 	if (m_search != nullptr) {
 		m_search->reset();
 	}
