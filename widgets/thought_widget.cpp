@@ -63,6 +63,14 @@ ThoughtWidget::ThoughtWidget(
 		&m_textEdit, SIGNAL(menuRequested(const QPoint&)),
 		this, SLOT(onMenuRequested(const QPoint&))
 	);
+	connect(
+		&m_textEdit, SIGNAL(nextSuggestion()),
+		this, SIGNAL(nextSuggestion())
+	);
+	connect(
+		&m_textEdit, SIGNAL(prevSuggestion()),
+		this, SIGNAL(prevSuggestion())
+	);
 
 	AnchorWidget *anchors[] = {&m_anchorLink, &m_anchorParent, &m_anchorChild};
 	for (AnchorWidget *widget: anchors) {

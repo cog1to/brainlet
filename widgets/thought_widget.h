@@ -81,6 +81,8 @@ signals:
 	void clicked(ThoughtWidget*);
 	void textCanceled(ThoughtWidget*);
 	void menuRequested(ThoughtWidget*, const QPoint&);
+	void nextSuggestion();
+	void prevSuggestion();
 
 protected slots:
 	void onClick();

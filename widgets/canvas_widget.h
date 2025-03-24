@@ -124,6 +124,9 @@ private slots:
 	void onDisconnect();
 	void onNewThoughtTextChanged(ThoughtWidget*);
 	void onSuggestionSelected(ThoughtId, QString);
+	void onNextSuggestion();
+	void onPrevSuggestion();
+	void onMenuHide();
 };
 
 #endif

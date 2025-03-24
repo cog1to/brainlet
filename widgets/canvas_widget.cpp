@@ -108,37 +108,6 @@ void CanvasWidget::hideSuggestions() {
 	update();
 }
 
-void CanvasWidget::layoutSuggestions() {
-	const int padding = 5;
-	const int width = 200;
-
-	if (m_newThought == nullptr || m_suggestions == nullptr)
-		return;
-
-	QSize hint = m_suggestions->sizeHint();
-	QRect newRect = m_newThought->geometry();
-	int height = hint.height() + padding * 2;
-
-	int x = std::min(newRect.x() + (newRect.width() - width) / 2, rect().width() - width);
-	int y = newRect.y() + newRect.height();
-	if ((y + height) > rect().height()) {
-		y = newRect.y() - height;
-	}
-
-	m_suggestions->setGeometry(
-		padding, padding,
-		width - padding * 2, hint.height()
-	);
-
-	m_suggestionsContainer->setGeometry(
-		x, y,
-		width, hint.height() + padding * 2
-	);
-	m_suggestionsContainer->show();
-
-	update();
-}
-
 // Events
 
 void CanvasWidget::showEvent(QShowEvent *) {
@@ -252,6 +221,8 @@ void CanvasWidget::paintEvent(QPaintEvent *event) {
 		drawConnection(painter, m_pathHighlight.value());
 	}
 }
+
+// Connections helpers.
 
 void CanvasWidget::drawAnchorConnection(QPainter& painter) {
 	assert(m_anchorHighlight.isVisible());
@@ -593,7 +564,7 @@ ScrollAreaWidget *CanvasWidget::createScrollArea(
 ) {
 	ScrollAreaWidget *widget = new ScrollAreaWidget(this,	m_style, id, pos);
 
-	QObject::connect(
+	connect(
 		widget, SIGNAL(scrolled(unsigned int, int)),
 		this, SLOT(onScrollAreaScroll(unsigned int, int))
 	);
@@ -627,53 +598,53 @@ ThoughtWidget *CanvasWidget::createWidget(
 }
 
 void CanvasWidget::connectWidget(ThoughtWidget *widget) {
-	QObject::connect(
+	connect(
 		widget, SIGNAL(clicked(ThoughtWidget*)),
 		this, SLOT(onWidgetClicked(ThoughtWidget*))
 	);
-	QObject::connect(
+	connect(
 		widget, SIGNAL(activated(ThoughtWidget*)),
 		this, SLOT(onWidgetActivated(ThoughtWidget*))
 	);
-	QObject::connect(
+	connect(
 		widget, SIGNAL(deactivated(ThoughtWidget*)),
 		this, SLOT(onWidgetDeactivated(ThoughtWidget*))
 	);
-	QObject::connect(
+	connect(
 		widget, SIGNAL(textChanged(ThoughtWidget*)),
 		this, SLOT(onWidgetActivated(ThoughtWidget*))
 	);
-	QObject::connect(
+	connect(
 		widget, SIGNAL(mouseScroll(ThoughtWidget*, QWheelEvent*)),
 		this, SLOT(onWidgetScroll(ThoughtWidget*, QWheelEvent*))
 	);
-	QObject::connect(
+	connect(
 		widget, SIGNAL(anchorEntered(ThoughtWidget*, AnchorType, QPoint)),
 		this, SLOT(onAnchorEntered(ThoughtWidget*, AnchorType, QPoint))
 	);
-	QObject::connect(
+	connect(
 		widget, SIGNAL(anchorLeft()),
 		this, SLOT(onAnchorLeft())
 	);
-	QObject::connect(
+	connect(
 		widget, SIGNAL(anchorMoved(QPoint)),
 		this, SLOT(onAnchorMoved(QPoint))
 	);
-	QObject::connect(
+	connect(
 		widget, SIGNAL(anchorReleased(QPoint)),
 		this, SLOT(onAnchorReleased(QPoint))
 	);
-	QObject::connect(
+	connect(
 		widget, SIGNAL(anchorCanceled()),
 		this, SLOT(onAnchorCanceled())
 	);
-	QObject::connect(
+	connect(
 		widget,
 		SIGNAL(textConfirmed(ThoughtWidget*, QString, std::function<void(bool)>)),
 		this,
 		SLOT(onTextConfirmed(ThoughtWidget*, QString, std::function<void(bool)>))
 	);
-	QObject::connect(
+	connect(
 		widget, SIGNAL(menuRequested(ThoughtWidget*, const QPoint&)),
 		this, SLOT(onMenuRequested(ThoughtWidget*, const QPoint&))
 	);
@@ -802,19 +773,27 @@ void CanvasWidget::onAnchorEntered(
 		);
 
 		// Connect signals.
-		QObject::connect(
+		connect(
 			m_newThought, SIGNAL(textCanceled(ThoughtWidget*)),
 			this, SLOT(onCreateCanceled(ThoughtWidget*))
 		);
-		QObject::connect(
+		connect(
 			m_newThought,
 			SIGNAL(textConfirmed(ThoughtWidget*, QString, std::function<void(bool)>)),
 			this,
 			SLOT(onCreateConfirmed(ThoughtWidget*, QString, std::function<void(bool)>))
 		);
-		QObject::connect(
+		connect(
 			m_newThought, SIGNAL(textChanged(ThoughtWidget*)),
 			this, SLOT(onNewThoughtTextChanged(ThoughtWidget*))
+		);
+		connect(
+			m_newThought, SIGNAL(nextSuggestion()),
+			this, SLOT(onNextSuggestion())
+		);
+		connect(
+			m_newThought, SIGNAL(prevSuggestion()),
+			this, SLOT(onPrevSuggestion())
 		);
 
 		// Draw over everything else.
@@ -979,6 +958,7 @@ void CanvasWidget::onNewThoughtTextChanged(ThoughtWidget *widget) {
 
 void CanvasWidget::onCreateCanceled(ThoughtWidget *widget) {
 	clearAnchor();
+	hideSuggestions();
 }
 
 void CanvasWidget::onCreateConfirmed(
@@ -989,18 +969,30 @@ void CanvasWidget::onCreateConfirmed(
 	if (m_anchorSource == nullptr)
 		return;
 
+	if (
+		m_suggestions != nullptr &&
+		m_suggestions->items().size() > 0 &&
+		m_suggestions->selectedIndex() != -1 &&
+		m_suggestions->selectedIndex() < m_suggestions->items().size()
+	) {
+		ConnectionItem item = m_suggestions->items()[m_suggestions->selectedIndex()];
+		onSuggestionSelected(item.id, item.name);
+		return;
+	}
+
 	auto onCreateCallback = [this, widget, checkCallback](bool result, ThoughtId id){
 		checkCallback(result);
 		if (result) {
 			// Connect signals.
-			QObject::disconnect(widget, nullptr, this, nullptr);
+			disconnect(widget, nullptr, this, nullptr);
 			this->connectWidget(widget);
 			// Set widget's ID and add it to the list of widgets.
 			widget->setId(id);
 			this->m_widgets.insert_or_assign(id, widget);
 			this->m_newThought = nullptr;
 			// Clear editing widgets and connections.
-			clearAnchor();
+			this->clearAnchor();
+			this->hideSuggestions();
 		}
 	};
 
@@ -1015,6 +1007,16 @@ void CanvasWidget::onCreateConfirmed(
 		text,
 		onCreateCallback
 	);
+}
+
+void CanvasWidget::onNextSuggestion() {
+	if (m_suggestions != nullptr && m_suggestions->isVisible())
+		m_suggestions->onNextItem();
+}
+
+void CanvasWidget::onPrevSuggestion() {
+	if (m_suggestions != nullptr && m_suggestions->isVisible())
+		m_suggestions->onPrevItem();
 }
 
 void CanvasWidget::onMenuRequested(
@@ -1041,9 +1043,14 @@ void CanvasWidget::onMenuRequested(
 	QString forgetMenu = tr("Forget") + " \"" + thoughtName + "\"";
 	QAction action(forgetMenu, this);
 	connect(&action, SIGNAL(triggered()), this, SLOT(onDeleteThought()));
+	connect(&contextMenu, SIGNAL(aboutToHide()), SLOT(onMenuHide()));
 
 	contextMenu.addAction(&action);
 	contextMenu.exec(mapToGlobal(point));
+}
+
+void CanvasWidget::onMenuHide() {
+	m_menuThought = nullptr;
 }
 
 void CanvasWidget::onDeleteThought() {
@@ -1167,3 +1174,35 @@ void CanvasWidget::updateConnection() {
 
 	emit thoughtConnected(from, to, type, [](bool){});
 }
+
+void CanvasWidget::layoutSuggestions() {
+	const int padding = 5;
+	const int width = 200;
+
+	if (m_newThought == nullptr || m_suggestions == nullptr)
+		return;
+
+	QSize hint = m_suggestions->sizeHint();
+	QRect newRect = m_newThought->geometry();
+	int height = hint.height() + padding * 2;
+
+	int x = std::min(newRect.x() + (newRect.width() - width) / 2, rect().width() - width);
+	int y = newRect.y() + newRect.height();
+	if ((y + height) > rect().height()) {
+		y = newRect.y() - height;
+	}
+
+	m_suggestions->setGeometry(
+		padding, padding,
+		width - padding * 2, hint.height()
+	);
+
+	m_suggestionsContainer->setGeometry(
+		x, y,
+		width, hint.height() + padding * 2
+	);
+	m_suggestionsContainer->show();
+
+	update();
+}
+
