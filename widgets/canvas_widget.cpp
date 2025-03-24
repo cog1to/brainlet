@@ -1186,7 +1186,12 @@ void CanvasWidget::layoutSuggestions() {
 	QRect newRect = m_newThought->geometry();
 	int height = hint.height() + padding * 2;
 
-	int x = std::min(newRect.x() + (newRect.width() - width) / 2, rect().width() - width);
+	int x = std::min(
+		newRect.x() + (newRect.width() - width) / 2,
+		rect().width() - width
+	);
+	x = std::max(x, 0);
+
 	int y = newRect.y() + newRect.height();
 	if ((y + height) > rect().height()) {
 		y = newRect.y() - height;
