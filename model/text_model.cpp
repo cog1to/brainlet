@@ -122,7 +122,7 @@ QTextCharFormat FormatRange::qtFormat(Style *style, QTextCharFormat fmt) {
 			break;
 		case NodeLink:
 			fmt.setFontUnderline(true);
-			fmt.setForeground(style->activeAnchorColor());
+			fmt.setForeground(style->borderColor());
 			fmt.setAnchor(true);
 			fmt.setAnchorHref(link.target);
 			break;
