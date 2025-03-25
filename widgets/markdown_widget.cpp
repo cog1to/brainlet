@@ -860,7 +860,7 @@ void MarkdownWidget::mousePressEvent(QMouseEvent *event) {
 
 		// Go through formats and detect links that envelop the position.
 		for (auto& fmt: formats) {
-			if (fmt.format != Link && fmt.format != PlainLink)
+			if (fmt.format != Link && fmt.format != PlainLink && fmt.format != NodeLink)
 				continue;
 			if (!(fmt.from < position && fmt.to > position))
 				continue;

@@ -20,7 +20,8 @@ enum BlockFormat {
 	Code,
 	CodeBlock,
 	Link,
-	PlainLink
+	PlainLink,
+	NodeLink
 };
 
 struct LinkFormat {

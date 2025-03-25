@@ -33,6 +33,8 @@ inline int blockStartOffset(BlockFormat format) {
 			return 0;
 		case Link: // Links are handled separately.
 			return -1;
+		case NodeLink: // Links are handled separately.
+			return -1;
 		case PlainLink:
 			return 0;
 	}
@@ -61,6 +63,8 @@ inline int blockEndOffset(BlockFormat format) {
 		case CodeBlock:
 			return 0;
 		case Link: // Links are handled separately.
+			return -1;
+		case NodeLink: // Links are handled separately.
 			return -1;
 		case PlainLink:
 			return 0;
@@ -116,6 +120,12 @@ QTextCharFormat FormatRange::qtFormat(Style *style, QTextCharFormat fmt) {
 			fmt.setBackground(style->codeBackground());
 			fmt.setFont(style->codeFont());
 			break;
+		case NodeLink:
+			fmt.setFontUnderline(true);
+			fmt.setForeground(style->activeAnchorColor());
+			fmt.setAnchor(true);
+			fmt.setAnchorHref(link.target);
+			break;
 		case Link:
 		case PlainLink:
 			fmt.setFontUnderline(true);
@@ -129,7 +139,7 @@ QTextCharFormat FormatRange::qtFormat(Style *style, QTextCharFormat fmt) {
 }
 
 int FormatRange::startOffset() const {
-	if (format == Link) {
+	if (format == Link || format == NodeLink) {
 		return 1;
 	} else {
 		return blockStartOffset(format);
@@ -137,7 +147,7 @@ int FormatRange::startOffset() const {
 }
 
 int FormatRange::endOffset() const {
-	if (format == Link) {
+	if (format == Link || format == NodeLink) {
 		return 3 + link.target.size();
 	} else {
 		return blockEndOffset(format);
@@ -151,20 +161,21 @@ Line::Line(QString& input) {
 }
 
 void Line::parseLinks(QString *input) {
-	QRegularExpression expr("\\[(.+?)\\]\\((.+?://(.+?))\\)");
+	QRegularExpression expr("\\[(.+?)\\]\\(((.+?)://(.+?))\\)");
 	QRegularExpressionMatch match = expr.match(*input);
 	int offset;
 	
 	while (match.hasMatch()) {
-		// Get offset from formats before.
+		// Calcualate offset in the folded string by counting offsets applied
+		// from previous folding operations.
 		offset = 0;
-		for (auto& format: formats) {
+		for (auto& format: foldedFormats) {
 			if (format.from < match.capturedStart())
 				offset += format.startOffset();
 			if (format.to < match.capturedStart())
 				offset += format.endOffset();
 		}
-		
+
 		folded
 			.remove(match.capturedStart() - offset, 1)
 			.remove(
@@ -175,11 +186,15 @@ void Line::parseLinks(QString *input) {
 				match.captured(2).size() + 3
 			);
 
+		BlockFormat linkType = BlockFormat::Link;
+		if (match.captured(3) == "node")
+			linkType = BlockFormat::NodeLink;
+
 		// Folded text highlights the link title.
 		FormatRange foldedRange = FormatRange(
 			match.capturedStart() - offset,
 			match.capturedStart() - offset + match.captured(1).size(),
-			BlockFormat::Link,
+			linkType,
 			LinkFormat(match.captured(2))
 		);
 
@@ -188,7 +203,7 @@ void Line::parseLinks(QString *input) {
 			FormatRange(
 				match.capturedStart() + 3 + match.captured(1).size(),
 				match.capturedEnd() - 1,
-				BlockFormat::Link,
+				linkType,
 				LinkFormat(match.captured(2))
 			)
 		);
