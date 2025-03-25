@@ -151,7 +151,7 @@ Line::Line(QString& input) {
 }
 
 void Line::parseLinks(QString *input) {
-	QRegularExpression expr("\\[(.+?)\\]\\((.+?://.+?)\\)");
+	QRegularExpression expr("\\[(.+?)\\]\\((.+?://(.+?))\\)");
 	QRegularExpressionMatch match = expr.match(*input);
 	int offset;
 	

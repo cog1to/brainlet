@@ -45,6 +45,9 @@ MarkdownWidget::~MarkdownWidget() {
 }
 
 void MarkdownWidget::load(QString data) {
+	qDebug() << "++ loading ++";
+	qDebug() << data;
+
 	// Delete timer.
 	if (m_saveTimer != nullptr) {
 		delete m_saveTimer;
@@ -80,6 +83,9 @@ void MarkdownWidget::load(QString data) {
 
 	// Reset cursor.
 	m_prevBlock = cursor.block().blockNumber();
+	if (m_prevBlock == 0) {
+		m_prevBlock = -1;
+	}
 	cursor.setPosition(0);
 	m_highlighter->onActiveBlockChanged(cursor.block().blockNumber());
 	setTextCursor(cursor);
@@ -874,8 +880,24 @@ void MarkdownWidget::mousePressEvent(QMouseEvent *event) {
 }
 
 void MarkdownWidget::mouseReleaseEvent(QMouseEvent *event) {
+	static QRegularExpression expr("(.+?)://(.+?)");
+
 	if (!m_anchor.isEmpty()) {
-		QDesktopServices::openUrl(QUrl(m_anchor));
+		QRegularExpressionMatch match = expr.match(m_anchor);
+		if (match.hasMatch()) {
+			QString scheme = match.captured(1);
+			if (scheme == "node") {
+				QString value = match.captured(2);
+				bool success = false;
+				ThoughtId thoughtId = value.toInt(&success);
+				if (success) {
+					emit nodeLinkSelected(thoughtId);
+				}
+			} else {
+				QDesktopServices::openUrl(QUrl(m_anchor));
+			}
+		}
+
 		m_anchor = "";
 		return;
 	}

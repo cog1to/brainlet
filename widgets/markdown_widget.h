@@ -14,6 +14,7 @@
 #include <QMimeData>
 #include <QTimer>
 
+#include "model/thought.h"
 #include "model/text_model.h"
 #include "widgets/style.h"
 #include "widgets/base_widget.h"
@@ -59,6 +60,7 @@ public:
 
 signals:
 	void textChanged(QString&);
+	void nodeLinkSelected(ThoughtId);
 
 public slots:
 	void onError(MarkdownError);

@@ -7,15 +7,22 @@
 TextEditorPresenter::TextEditorPresenter(
 	TextRepository *repo,
 	MarkdownWidget *view
-): m_repository(repo), m_view(view) {
-	QObject::connect(
+)
+	: m_repository(repo), m_view(view)
+{
+	connect(
 		view, SIGNAL(textChanged(QString&)),
 		this, SLOT(onTextChanged(QString&))
 	);
 
-	QObject::connect(
+	connect(
 		this, SIGNAL(textError(MarkdownError)),
 		view, SLOT(onError(MarkdownError))
+	);
+
+	connect(
+		view, SIGNAL(nodeLinkSelected(ThoughtId)),
+		this, SIGNAL(nodeLinkSelected(ThoughtId))
 	);
 }
 

@@ -17,6 +17,7 @@ public:
 
 signals:
 	void textError(MarkdownError);
+	void nodeLinkSelected(ThoughtId);
 
 private slots:
 	void onTextChanged(QString&);

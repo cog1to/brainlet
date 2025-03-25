@@ -27,6 +27,10 @@ BrainPresenter::BrainPresenter(
 		search, SIGNAL(searchItemSelected(ThoughtId, QString)),
 		this, SLOT(onSearchItemSelected(ThoughtId, QString))
 	);
+	connect(
+		editor, SIGNAL(nodeLinkSelected(ThoughtId)),
+		this,	SLOT(onThoughtLinkSelected(ThoughtId))
+	);
 }
 
 void BrainPresenter::onThoughtSelected(ThoughtId id, QString title) {
@@ -66,5 +70,9 @@ void BrainPresenter::onSearchItemSelected(ThoughtId id, QString title) {
 	if (m_search != nullptr) {
 		m_search->reset();
 	}
+}
+
+void BrainPresenter::onThoughtLinkSelected(ThoughtId id) {
+	m_canvas->onThoughtSelected(id);
 }
 

@@ -14,7 +14,7 @@ class CanvasPresenter: public QObject {
 
 public:
 	CanvasPresenter(BaseLayout*, GraphRepository*, SearchRepository*, CanvasWidget*);
-	void setThought(ThoughtId);
+	void setThought(ThoughtId id);
 
 signals:
 	void thoughtSelected(ThoughtId, QString);
