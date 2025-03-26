@@ -26,6 +26,7 @@ LinkButtonWidget::LinkButtonWidget(QWidget *parent, Style *style)
 	);
 
 	setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+	setFocusPolicy(Qt::NoFocus);
 }
 
 void LinkButtonWidget::enterEvent(QEnterEvent *) {

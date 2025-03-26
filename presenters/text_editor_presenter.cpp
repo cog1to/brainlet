@@ -153,6 +153,7 @@ void TextEditorPresenter::onConnectionSelected(
 	if (result) {
 		m_view->hideSearchWidget();
 		m_view->insertNodeLink(id, name);
+		m_view->setFocus();
 		emit connectionCreated();
 	} else {
 		m_view->onError(MarkdownIOError);
@@ -162,5 +163,6 @@ void TextEditorPresenter::onConnectionSelected(
 void TextEditorPresenter::onThoughtSelected(ThoughtId id, QString name) {
 	m_view->hideSearchWidget();
 	m_view->insertNodeLink(id, name);
+	m_view->setFocus();
 }
 

@@ -27,6 +27,10 @@ SearchPresenter::SearchPresenter(
 		widget, SIGNAL(searchCanceled(SearchWidget*)),
 		this, SLOT(onSearchCanceled(SearchWidget*))
 	);
+	connect(
+		widget, SIGNAL(searchFocusLost(SearchWidget*)),
+		this, SLOT(onSearchCanceled(SearchWidget*))
+	);
 }
 
 void SearchPresenter::onTextChanged(SearchWidget *widget, QString text) {

@@ -476,9 +476,6 @@ void MarkdownWidget::hideSearchWidget() {
 
 	m_search->deleteLater();
 	m_search = nullptr;
-
-	// Restore focus and cursor.
-	setFocus();
 }
 
 void MarkdownWidget::insertNodeLink(ThoughtId id, QString title) {
