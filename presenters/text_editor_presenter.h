@@ -6,26 +6,43 @@
 
 #include "model/thought.h"
 #include "entity/text_repository.h"
+#include "entity/search_repository.h"
+#include "entity/graph_repository.h"
 #include "widgets/markdown_widget.h"
+#include "presenters/search_presenter.h"
 
 class TextEditorPresenter: public QObject {
 	Q_OBJECT
 
 public:
-	TextEditorPresenter(TextRepository*, MarkdownWidget*);
+	TextEditorPresenter(
+		TextRepository*,
+		SearchRepository*,
+		GraphRepository*, 
+		MarkdownWidget*
+	);
 	void setThought(ThoughtId);
 
 signals:
 	void textError(MarkdownError);
 	void nodeLinkSelected(ThoughtId);
+	void connectionCreated();
 
 private slots:
 	void onTextChanged(QString&);
+	void onNodeInsertion(QPoint);
+	void onSearchCanceled();
+	void onConnectionSelected(ThoughtId, QString, ConnectionType, bool);
 
 private:
 	ThoughtId m_id = InvalidThoughtId;
 	TextRepository *m_repository = nullptr;
 	MarkdownWidget *m_view = nullptr;
+	// Search.
+	SearchRepository *m_searchRepository = nullptr;
+	SearchPresenter *m_search = nullptr;
+	// Graph.
+	GraphRepository *m_graph;
 };
 
 #endif

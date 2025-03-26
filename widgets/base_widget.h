@@ -11,6 +11,7 @@ class BaseWidget: public QWidget {
 
 public:
 	BaseWidget(QWidget*, Style*);
+	Style *style();
 
 protected:
 	Style *m_style;

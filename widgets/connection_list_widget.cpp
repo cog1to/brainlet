@@ -154,15 +154,15 @@ void ConnectionItemWidget::leaveEvent(QEvent *) {
 // Slots
 
 void ConnectionItemWidget::onLinkClicked() {
-	emit buttonClicked(this, m_id, ConnButtonLink);
+	emit buttonClicked(this, m_id, m_name, ConnButtonLink);
 }
 
 void ConnectionItemWidget::onChildClicked() {
-	emit buttonClicked(this, m_id, ConnButtonChild);
+	emit buttonClicked(this, m_id, m_name, ConnButtonChild);
 }
 
 void ConnectionItemWidget::onParentClicked() {
-	emit buttonClicked(this, m_id, ConnButtonParent);
+	emit buttonClicked(this, m_id, m_name, ConnButtonParent);
 }
 
 // List.
@@ -211,9 +211,9 @@ void ConnectionListWidget::setItems(std::vector<ConnectionItem> items) {
 
 		connect(
 			widget,
-			SIGNAL(buttonClicked(ConnectionItemWidget*, ThoughtId, ConnectionItemButton)),
+			SIGNAL(buttonClicked(ConnectionItemWidget*, ThoughtId, QString, ConnectionItemButton)),
 			this,
-			SLOT(onConnectionSelected(ConnectionItemWidget*, ThoughtId, ConnectionItemButton))
+			SLOT(onConnectionSelected(ConnectionItemWidget*, ThoughtId, QString, ConnectionItemButton))
 		);
 
 		connect(
@@ -320,17 +320,18 @@ void ConnectionListWidget::onPrevItem() {
 void ConnectionListWidget::onConnectionSelected(
 	ConnectionItemWidget*,
 	ThoughtId id,
+	QString name,
 	ConnectionItemButton button
 ) {
 	switch (button) {
 		case ConnButtonLink:
-			emit connectionSelected(id, ConnectionType::link, false);
+			emit connectionSelected(id, name, ConnectionType::link, false);
 			break;
 		case ConnButtonParent:
-			emit connectionSelected(id, ConnectionType::child, true);
+			emit connectionSelected(id, name, ConnectionType::child, true);
 			break;
 		case ConnButtonChild:
-			emit connectionSelected(id, ConnectionType::child, false);
+			emit connectionSelected(id, name, ConnectionType::child, false);
 			break;
 	}
 }

@@ -21,7 +21,7 @@ class SearchWidget: public QFrame {
 	Q_OBJECT
 
 public:
-	SearchWidget(QWidget*, Style*, bool);
+	SearchWidget(QWidget*, Style*, bool, QString);
 	// Updates.
 	void setItems(std::vector<ConnectionItem>);
 	// Removes text and frees focus.
@@ -36,7 +36,7 @@ signals:
 	void searchCanceled(SearchWidget*);
 	void textChanged(SearchWidget*, QString);
 	void thoughtSelected(SearchWidget*, ThoughtId, QString);
-	void connectionSelected(SearchWidget*, ThoughtId, ConnectionType, bool);
+	void connectionSelected(SearchWidget*, ThoughtId, QString, ConnectionType, bool);
 	void updated(SearchWidget*);
 
 private slots:
@@ -48,7 +48,7 @@ private slots:
 	void onFocusLost();
 	// List selection.
 	void onThoughtSelected(ThoughtId, QString);
-	void onConnectionSelected(ThoughtId, ConnectionType, bool);
+	void onConnectionSelected(ThoughtId, QString, ConnectionType, bool);
 	// List navigation.
 	void onNextSuggestion();
 	void onPrevSuggestion();

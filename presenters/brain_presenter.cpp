@@ -31,6 +31,10 @@ BrainPresenter::BrainPresenter(
 		editor, SIGNAL(nodeLinkSelected(ThoughtId)),
 		this,	SLOT(onThoughtLinkSelected(ThoughtId))
 	);
+	connect(
+		editor, SIGNAL(connectionCreated()),
+		canvas,	SLOT(reload())
+	);
 }
 
 void BrainPresenter::onThoughtSelected(ThoughtId id, QString title) {
@@ -76,3 +80,8 @@ void BrainPresenter::onThoughtLinkSelected(ThoughtId id) {
 	m_canvas->onThoughtSelected(id);
 }
 
+void BrainPresenter::onConnectionCreated() {
+	if (m_canvas != nullptr) {
+		m_canvas->reload();
+	}
+}

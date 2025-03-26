@@ -38,7 +38,7 @@ public:
 	void deactivate();
 
 signals:
-	void buttonClicked(ConnectionItemWidget*, ThoughtId, ConnectionItemButton);
+	void buttonClicked(ConnectionItemWidget*, ThoughtId, QString, ConnectionItemButton);
 	void clicked(ConnectionItemWidget*, ThoughtId, QString);
 	void hover(ConnectionItemWidget*);
 
@@ -84,14 +84,14 @@ public:
 
 signals:
 	void thoughtSelected(ThoughtId, QString);
-	void connectionSelected(ThoughtId, ConnectionType, bool);
+	void connectionSelected(ThoughtId, QString, ConnectionType, bool);
 
 public slots:
 	void onNextItem();
 	void onPrevItem();
 
 private slots:
-	void onConnectionSelected(ConnectionItemWidget*, ThoughtId, ConnectionItemButton);
+	void onConnectionSelected(ConnectionItemWidget*, ThoughtId, QString, ConnectionItemButton);
 	void onThoughtSelected(ConnectionItemWidget*, ThoughtId, QString);
 	void onItemHover(ConnectionItemWidget*);
 

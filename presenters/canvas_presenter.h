@@ -22,6 +22,7 @@ signals:
 
 public slots:
 	void onThoughtSelected(ThoughtId);
+	void reload();
 
 private slots:
 	void onThoughtChanged(ThoughtId, QString, std::function<void(bool)>);

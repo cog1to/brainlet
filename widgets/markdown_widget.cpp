@@ -10,6 +10,7 @@
 #include <QKeySequence>
 #include <QMouseEvent>
 #include <QDesktopServices>
+#include <QMenu>
 
 #include "model/text_model.h"
 #include "widgets/markdown_widget.h"
@@ -161,8 +162,10 @@ QTextCursor MarkdownWidget::append(
 			}
 		} else {
 			if (list != nullptr) {
-				list = nullptr;
-				cursor.setBlockFormat(blockFormat);
+				if (it != mlines->begin() && mlines->size() > 1) {
+					list = nullptr;
+					cursor.setBlockFormat(blockFormat);
+				}
 			} else if (!inCode && code != nullptr) {
 				code = nullptr;
 			}
@@ -236,7 +239,6 @@ void MarkdownWidget::insertFromMimeData(const QMimeData *source) {
 		newModel.push_back(*it);
 	}
 
-	// TODO: paste into a code block
 	bool isCode = (*current).isCodeBlock;
 
 	// Add pasted lines.
@@ -244,10 +246,18 @@ void MarkdownWidget::insertFromMimeData(const QMimeData *source) {
 	for (it = mlines->begin(); it != mlines->end(); it++) {
 		if (it == mlines->begin()) {
 			QString newText = prefix + (*it).text;
+			// Add suffix if we're inserting a single line without paragraph brakes.
+			// This case is a simple in-paragraph paste.
+			if ((it + 1) == mlines->end()) {
+				newText = newText + suffix;
+			}
+
 			if (isCode) {
 				newModel.push_back(Line::codeLine(newText));
 			} else {
-				newModel.push_back(Line(newText));
+				// Copy list settings from current line.
+				Line newLine = Line(newText, (*current).list);
+				newModel.push_back(newLine);
 			}
 		} else if ((it + 1) == mlines->end()) {
 			QString lastText = (*it).text + suffix;
@@ -279,6 +289,11 @@ void MarkdownWidget::insertFromMimeData(const QMimeData *source) {
 
 	// Append to document.
 	QTextCursor updated = append(model, textCursor());
+	// Reset prev block for cases when paste was within a single line.
+	// That way we unfold the current line.
+	if (mlines->size() == 1) {
+		m_prevBlock = -1;
+	}
 	setTextCursor(updated);
 	onCursorMoved();
 	// Rehighlight because document configuration has changed.
@@ -422,6 +437,65 @@ QString MarkdownWidget::text() const {
 	QString txt = getSelection(cursor);
 	// Return all text.
 	return txt;
+}
+
+Style *MarkdownWidget::style() {
+	return m_style;
+}
+
+// Search.
+
+void MarkdownWidget::showSearchWidget(QWidget *widget, QPoint belowPoint) {
+	assert(widget != nullptr);
+	m_search = widget;
+
+	// Save current cursor position.
+	m_menuCursor = textCursor();
+
+	// Calculate position.
+	QSize hint = widget->sizeHint();
+	QSize cur = size();
+	int width = std::min(cur.width(), 300);
+	int x = std::max(belowPoint.x() - width / 2, 0);
+
+	widget->setGeometry(
+		x, belowPoint.y() + 5,
+		width, hint.height()
+	);
+
+	widget->setParent(this);
+	widget->show();
+	widget->setFocus();
+}
+
+void MarkdownWidget::hideSearchWidget() {
+	if (m_search == nullptr)
+		return;
+
+	m_search->deleteLater();
+	m_search = nullptr;
+
+	// Restore focus and cursor.
+	setFocus();
+}
+
+void MarkdownWidget::insertNodeLink(ThoughtId id, QString title) {
+	QMimeData *data = new QMimeData();
+	data->setText(
+		QString("[%1](node://%2)")
+		.arg(title)
+		.arg(id)
+	);
+	insertFromMimeData(data);
+	delete data;
+
+	// Schedule save.
+	m_isDirty = true;
+	throttleSave();
+
+	// Rehighlight.
+	m_highlighter->onActiveBlockChanged(textCursor().block().blockNumber());
+	m_highlighter->rehighlight();
 }
 
 // Control events.
@@ -903,6 +977,29 @@ void MarkdownWidget::mouseReleaseEvent(QMouseEvent *event) {
 	}
 
 	QTextEdit::mouseReleaseEvent(event);
+}
+
+void MarkdownWidget::contextMenuEvent(QContextMenuEvent *event) {
+	QMenu *menu = createStandardContextMenu();
+
+	// Separator before the first action.
+	QAction *separator = menu->insertSeparator(menu->actions().first());
+
+	// Custom node link action before separator.
+	QString connectMenu = tr("Connect thought...");
+	QAction *action = new QAction(connectMenu, this);
+	connect(action, SIGNAL(triggered()), this, SLOT(onInsertNodeLink()));
+	menu->insertAction(separator, action);
+
+	// Show the menu.
+	menu->exec(mapToGlobal(event->pos()));
+}
+
+// Linking nodes.
+
+void MarkdownWidget::onInsertNodeLink() {
+	QRect rect = cursorRect();
+	emit nodeInsertionActivated(rect.bottomLeft());
 }
 
 // Cursor.

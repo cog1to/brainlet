@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
 	widget.resize(600, 600);
 
 	// Make presenter.
-	TextEditorPresenter presenter(&repo, &widget);
+	TextEditorPresenter presenter(&repo, &repo, &widget);
 
 	// Show window.
 	widget.show();

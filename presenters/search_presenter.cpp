@@ -17,6 +17,16 @@ SearchPresenter::SearchPresenter(
 		widget, SIGNAL(thoughtSelected(SearchWidget*, ThoughtId, QString)),
 		this, SLOT(onThoughtSelected(SearchWidget*, ThoughtId, QString))
 	);
+	connect(
+		widget,
+		SIGNAL(connectionSelected(SearchWidget*, ThoughtId, QString, ConnectionType, bool)),
+		this,
+		SLOT(onConnectionSelected(SearchWidget*, ThoughtId, QString, ConnectionType, bool))
+	);
+	connect(
+		widget, SIGNAL(searchCanceled(SearchWidget*)),
+		this, SLOT(onSearchCanceled(SearchWidget*))
+	);
 }
 
 void SearchPresenter::onTextChanged(SearchWidget *widget, QString text) {
@@ -55,6 +65,22 @@ void SearchPresenter::onThoughtSelected(
 ) {
 	emit searchItemSelected(id, name);
 }
+
+void SearchPresenter::onSearchCanceled(SearchWidget*) {
+	emit searchCanceled();
+}
+
+void SearchPresenter::onConnectionSelected(
+	SearchWidget*,
+	ThoughtId id,
+	QString name,
+	ConnectionType type,
+	bool incoming
+) {
+	emit connectionSelected(id, name, type, incoming);
+}
+
+// State manipulation.
 
 void SearchPresenter::clear() {
 	if (m_widget != nullptr) {

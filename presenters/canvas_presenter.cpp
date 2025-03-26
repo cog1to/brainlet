@@ -183,6 +183,10 @@ void CanvasPresenter::onNewThoughtTextChanged(QString text) {
 	}
 }
 
+void CanvasPresenter::reload() {
+	reloadState();
+}
+
 // Helpers.
 
 void CanvasPresenter::reloadState() {

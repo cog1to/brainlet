@@ -25,6 +25,7 @@ protected slots:
 	void onThoughtRenamed(ThoughtId, QString);
 	void onSearchItemSelected(ThoughtId, QString);
 	void onThoughtLinkSelected(ThoughtId);
+	void onConnectionCreated();
 
 private:
 	BrainWidget *m_view;

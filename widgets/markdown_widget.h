@@ -13,6 +13,8 @@
 #include <QKeyEvent>
 #include <QMimeData>
 #include <QTimer>
+#include <QPoint>
+#include <QFocusEvent>
 
 #include "model/thought.h"
 #include "model/text_model.h"
@@ -54,13 +56,20 @@ public:
 	void keyPressEvent(QKeyEvent*) override;
 	void mousePressEvent(QMouseEvent*) override;
 	void mouseReleaseEvent(QMouseEvent*) override;
+	void contextMenuEvent(QContextMenuEvent*) override;
 	// State.
 	bool isDirty() const;
 	QString text() const;
+	Style *style();
+	// Node search.
+	void showSearchWidget(QWidget*, QPoint);
+	void hideSearchWidget();
+	void insertNodeLink(ThoughtId, QString);
 
 signals:
 	void textChanged(QString&);
 	void nodeLinkSelected(ThoughtId);
+	void nodeInsertionActivated(QPoint);
 
 public slots:
 	void onError(MarkdownError);
@@ -68,16 +77,23 @@ public slots:
 protected slots:
 	void onCursorMoved();
 	void saveText();
+	void onInsertNodeLink();
 
 private:
 	// State.
 	Style *m_style;
 	MarkdownHighlighter *m_highlighter;
+	// Text model and cursor state.
 	TextModel m_model;
 	int m_prevBlock = -1;
+	// Link text under cursor.
 	QString m_anchor;
+	// Saving timer.
 	bool m_isDirty = false;
 	QTimer *m_saveTimer = nullptr;
+	// Search.
+	QWidget *m_search = nullptr;
+	QTextCursor m_menuCursor;
 	// Helpers.
 	void formatBlock(QTextBlock, QString*, std::vector<FormatRange>*);
 	int adjustForUnfolding(const QString*, const std::vector<FormatRange>*, int) const;

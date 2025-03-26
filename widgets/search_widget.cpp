@@ -7,10 +7,13 @@
 #include "widgets/search_widget.h"
 #include "widgets/thought_edit_widget.h"
 
+#include <QDebug>
+
 SearchWidget::SearchWidget(
 	QWidget *parent,
 	Style *style,
-	bool showButtons
+	bool showButtons,
+	QString placeholder
 ) : QFrame(parent),
 	m_style(style),
 	m_showButtons(showButtons),
@@ -35,7 +38,8 @@ SearchWidget::SearchWidget(
 	m_edit->setMaximumHeight(metrics.height() + 4);
 	m_edit->setAlignment(Qt::AlignLeft);
 	m_edit->setWordWrapMode(QTextOption::NoWrap);
-	m_edit->setPlaceholderText(tr("Go to..."));
+	m_edit->setPlaceholderText(placeholder);
+	setFocusProxy(m_edit);
 
 	// Setup icon.
 	m_icon = new QLabel(nullptr);
@@ -120,8 +124,8 @@ SearchWidget::SearchWidget(
 	);
 
 	connect(
-		m_list, SIGNAL(connectionSelected(ThoughtId, ConnectionType, bool)),
-		this, SLOT(onConnectionSelected(ThoughtId, ConnectionType, bool))
+		m_list, SIGNAL(connectionSelected(ThoughtId, QString, ConnectionType, bool)),
+		this, SLOT(onConnectionSelected(ThoughtId, QString, ConnectionType, bool))
 	);
 }
 
@@ -217,10 +221,11 @@ void SearchWidget::onThoughtSelected(ThoughtId id, QString name) {
 
 void SearchWidget::onConnectionSelected(
 	ThoughtId id,
+	QString name,
 	ConnectionType type,
 	bool inc
 ) {
-	emit connectionSelected(this, id, type, inc);
+	emit connectionSelected(this, id, name, type, inc);
 }
 
 // Helpers

@@ -14,7 +14,7 @@ ContainerWidget::ContainerWidget(
 	CanvasWidget *canvas
 ) : BaseWidget(parent, style),
 	m_canvas(canvas),
-	m_search(this, style, false)
+	m_search(this, style, false, tr("Go to..."))
 {
 	canvas->setParent(this);
 	m_search.raise();

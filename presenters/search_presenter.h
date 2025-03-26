@@ -21,10 +21,14 @@ public:
 
 signals:
 	void searchItemSelected(ThoughtId, QString);
+	void connectionSelected(ThoughtId, QString, ConnectionType, bool);
+	void searchCanceled();
 
 private slots:
 	void onTextChanged(SearchWidget*, QString);
 	void onThoughtSelected(SearchWidget*, ThoughtId, QString);
+	void onSearchCanceled(SearchWidget*);
+	void onConnectionSelected(SearchWidget*, ThoughtId, QString, ConnectionType, bool);
 
 private:
 	SearchRepository *m_repo = nullptr;
