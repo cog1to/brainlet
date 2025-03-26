@@ -13,7 +13,8 @@ SearchWidget::SearchWidget(
 	QWidget *parent,
 	Style *style,
 	bool showButtons,
-	QString placeholder
+	QString placeholder,
+	bool dark
 ) : QFrame(parent),
 	m_style(style),
 	m_showButtons(showButtons),
@@ -75,9 +76,15 @@ SearchWidget::SearchWidget(
 	m_layout.addWidget(m_list);
 
 	// Style.
-	setStyleSheet(
-		QString("background: #74000000; border-radius: 10px;")
-	);
+	if (dark) {
+		setStyleSheet(
+			QString("background: #E0000000; border-radius: 10px;")
+		);
+	} else {
+		setStyleSheet(
+			QString("background: #74000000; border-radius: 10px;")
+		);
+	}
 
 	// Edit signals.
 

@@ -455,9 +455,10 @@ void MarkdownWidget::showSearchWidget(QWidget *widget, QPoint belowPoint) {
 	// Calculate position.
 	QSize hint = widget->sizeHint();
 	QSize cur = size();
-	int width = std::min(cur.width(), 300);
+	int width = std::min(cur.width(), 400);
 	int x = std::max(belowPoint.x() - width / 2, 0);
 
+	widget->setMinimumWidth(width);
 	widget->setGeometry(
 		x, belowPoint.y() + 5,
 		width, hint.height()

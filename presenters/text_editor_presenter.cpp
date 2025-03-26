@@ -103,7 +103,8 @@ void TextEditorPresenter::onNodeInsertion(QPoint point) {
 		nullptr,
 		m_view->style(),
 		true,
-		tr("Connect to...")
+		tr("Connect to..."),
+		true
 	);
 	SearchPresenter *presenter = new SearchPresenter(m_searchRepository, widget);
 	m_search = presenter;
@@ -115,6 +116,10 @@ void TextEditorPresenter::onNodeInsertion(QPoint point) {
 	connect(
 		presenter, SIGNAL(connectionSelected(ThoughtId, QString, ConnectionType, bool)),
 		this, SLOT(onConnectionSelected(ThoughtId, QString, ConnectionType, bool))
+	);
+	connect(
+		presenter, SIGNAL(searchItemSelected(ThoughtId, QString)),
+		this, SLOT(onThoughtSelected(ThoughtId, QString))
 	);
 
 	m_view->showSearchWidget(widget, point);
@@ -154,5 +159,10 @@ void TextEditorPresenter::onConnectionSelected(
 	} else {
 		m_view->onError(MarkdownIOError);
 	}
+}
+
+void TextEditorPresenter::onThoughtSelected(ThoughtId id, QString name) {
+	m_view->hideSearchWidget();
+	m_view->insertNodeLink(id, name);
 }
 

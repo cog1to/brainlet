@@ -103,9 +103,6 @@ void ConnectionItemWidget::paintEvent(QPaintEvent* event) {
 }
 
 void ConnectionItemWidget::mousePressEvent(QMouseEvent *) {
-	if (m_showButtons)
-		return;
-
 	m_pressed = true;
 	update();
 }

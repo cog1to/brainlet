@@ -33,6 +33,7 @@ private slots:
 	void onNodeInsertion(QPoint);
 	void onSearchCanceled();
 	void onConnectionSelected(ThoughtId, QString, ConnectionType, bool);
+	void onThoughtSelected(ThoughtId, QString);
 
 private:
 	ThoughtId m_id = InvalidThoughtId;

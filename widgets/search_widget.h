@@ -21,7 +21,7 @@ class SearchWidget: public QFrame {
 	Q_OBJECT
 
 public:
-	SearchWidget(QWidget*, Style*, bool, QString);
+	SearchWidget(QWidget*, Style*, bool, QString, bool dark);
 	// Updates.
 	void setItems(std::vector<ConnectionItem>);
 	// Removes text and frees focus.
