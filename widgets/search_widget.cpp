@@ -7,8 +7,6 @@
 #include "widgets/search_widget.h"
 #include "widgets/thought_edit_widget.h"
 
-#include <QDebug>
-
 SearchWidget::SearchWidget(
 	QWidget *parent,
 	Style *style,
@@ -188,6 +186,7 @@ void SearchWidget::onTextEdit() {
 
 void SearchWidget::onTextCanceled() {
 	m_edit->clearFocus();
+	emit searchCanceled(this);
 }
 
 void SearchWidget::onTextConfirmed(std::function<void(bool)> callback) {
@@ -217,7 +216,7 @@ void SearchWidget::onPrevSuggestion() {
 
 void SearchWidget::onFocusLost() {
 	m_active = false;
-	emit searchCanceled(this);
+	emit searchFocusLost(this);
 }
 
 // List selection.

@@ -970,7 +970,7 @@ void MarkdownWidget::mousePressEvent(QMouseEvent *event) {
 }
 
 void MarkdownWidget::mouseReleaseEvent(QMouseEvent *event) {
-	static QRegularExpression expr("(.+?)://(.+?)");
+	static QRegularExpression expr("(.+)://(.+)");
 
 	if (!m_anchor.isEmpty()) {
 		QRegularExpressionMatch match = expr.match(m_anchor);

@@ -144,3 +144,6 @@ mocs/%widget.moc.cpp: widgets/%widget.h
 mocs/%presenter.moc.cpp: presenters/%presenter.h
 	$(MOC) $< -o $@
 
+mocs/style.moc.cpp: widgets/style.h
+	$(MOC) $< -o $@
+

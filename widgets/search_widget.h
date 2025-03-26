@@ -34,6 +34,7 @@ public:
 signals:
 	void searchActivated(SearchWidget*);
 	void searchCanceled(SearchWidget*);
+	void searchFocusLost(SearchWidget*);
 	void textChanged(SearchWidget*, QString);
 	void thoughtSelected(SearchWidget*, ThoughtId, QString);
 	void connectionSelected(SearchWidget*, ThoughtId, QString, ConnectionType, bool);

@@ -6,8 +6,6 @@
 #include "widgets/style.h"
 #include "widgets/canvas_widget.h"
 
-#include <QDebug>
-
 ContainerWidget::ContainerWidget(
 	QWidget *parent,
 	Style *style,
@@ -22,6 +20,10 @@ ContainerWidget::ContainerWidget(
 	// Events.
 	connect(
 		&m_search, SIGNAL(searchCanceled(SearchWidget*)),
+		this, SLOT(onSearchCanceled(SearchWidget*))
+	);
+	connect(
+		&m_search, SIGNAL(searchFocusLost(SearchWidget*)),
 		this, SLOT(onSearchCanceled(SearchWidget*))
 	);
 	connect(

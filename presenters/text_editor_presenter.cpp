@@ -6,8 +6,6 @@
 #include "widgets/markdown_widget.h"
 #include "widgets/search_widget.h"
 
-#include <QDebug>
-
 TextEditorPresenter::TextEditorPresenter(
 	TextRepository *repo,
 	SearchRepository *search,
