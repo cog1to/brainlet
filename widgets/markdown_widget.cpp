@@ -431,11 +431,12 @@ bool MarkdownWidget::isDirty() const {
 }
 
 QString MarkdownWidget::text() const {
-	// Select all text.
-	QTextCursor cursor = QTextCursor(document());
-	cursor.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
-	QString txt = getSelection(cursor);
-	// Return all text.
+	QStringList strings;
+	const std::vector<Line> *lines = m_model.const_lines();
+	for (auto line = lines->begin(); line != lines->end(); line++) {
+		strings.append((*line).text);
+	}
+	QString txt = strings.join("\n\n");
 	return txt;
 }
 
@@ -1399,12 +1400,10 @@ void MarkdownWidget::saveText() {
 		return;
 
 	// Select all text.
-	QTextCursor cursor = QTextCursor(document());
-	cursor.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
-	QString text = getSelection(cursor);
+	QString txt = text();
 
 	// Emit text change event.
-	emit textChanged(text);
+	emit textChanged(txt);
 
 	// Reset dirty flag.
 	m_isDirty = false;
