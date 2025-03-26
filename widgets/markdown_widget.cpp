@@ -480,10 +480,24 @@ void MarkdownWidget::hideSearchWidget() {
 }
 
 void MarkdownWidget::insertNodeLink(ThoughtId id, QString title) {
+	QString linkName = title;
+
+	// If we have a selection, put it as a link title.
+	QTextCursor cursor = textCursor();
+	if (cursor.selectionStart() != cursor.selectionEnd()) {
+		// But only if the selection is within single block.
+		int startBlock = document()->findBlock(cursor.selectionStart()).blockNumber();
+		int endBlock = document()->findBlock(cursor.selectionEnd()).blockNumber();
+
+		if (startBlock == endBlock) {
+			linkName = cursor.selectedText();
+		}
+	}
+
 	QMimeData *data = new QMimeData();
 	data->setText(
 		QString("[%1](node://%2)")
-		.arg(title)
+		.arg(linkName)
 		.arg(id)
 	);
 	insertFromMimeData(data);
