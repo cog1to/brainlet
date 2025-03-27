@@ -37,6 +37,8 @@ inline int blockStartOffset(BlockFormat format) {
 			return -1;
 		case PlainLink:
 			return 0;
+		case Escape:
+			return 1;
 	}
 
 	assert(false); // Should be unreachable.
@@ -51,6 +53,9 @@ inline int blockEndOffset(BlockFormat format) {
 		case Heading4:
 		case Heading5:
 		case Heading6:
+		case CodeBlock:
+		case Escape:
+		case PlainLink:
 			return 0;
 		case Italic:
 			return 1;
@@ -60,14 +65,10 @@ inline int blockEndOffset(BlockFormat format) {
 			return 3;
 		case Code:
 			return 1;
-		case CodeBlock:
-			return 0;
 		case Link: // Links are handled separately.
 			return -1;
 		case NodeLink: // Links are handled separately.
 			return -1;
-		case PlainLink:
-			return 0;
 	}
 
 	assert(false); // Should be unreachable.
@@ -132,6 +133,8 @@ QTextCharFormat FormatRange::qtFormat(Style *style, QTextCharFormat fmt) {
 			fmt.setForeground(style->linkColor());
 			fmt.setAnchor(true);
 			fmt.setAnchorHref(link.target);
+			break;
+		case Escape:
 			break;
 	}
 
@@ -291,8 +294,7 @@ void Line::parseSimpleLinks(QString *input) {
 void Line::apply(
 	QString *input,
 	BlockFormat fmt,
-	QRegularExpression expr,
-	int size
+	QRegularExpression expr
 ) {
 	int offset = 0;
 	int prefix = blockStartOffset(fmt);
@@ -409,7 +411,7 @@ void Line::setText(QString& input) {
 		foldedFormats.push_back(FormatRange(0, folded.size(), BlockFormat::Heading6));
 		formats.push_back(FormatRange(0, input.size(), BlockFormat::Heading6));
 	} else if (QRegularExpressionMatch match = listExp.match(input); match.hasMatch()) {
-		// TODO: Sublist support.
+		// TODO: Levels support.
 		list = ListItem(ListBullet, 0, "- ");
 		folded = input.right(input.size() - 2);
 		text = input.right(input.size() - 2);
@@ -420,36 +422,39 @@ void Line::setText(QString& input) {
 		text = input.right(input.size() - match.captured(0).size());
 	}
 
+	// Escaping.
+	apply(
+		&text,
+		BlockFormat::Escape,
+		QRegularExpression("()\\\\[\\*]()")
+	);
+
 	// Code.
 	apply(
 		&text,
 		BlockFormat::Code,
-		QRegularExpression("()`[^\n]*?`()"),
-		1		
+		QRegularExpression("()`[^\n]*?`()")
 	);
 
 	// Bold italic.
 	apply(
 		&text,
 		BlockFormat::BoldItalic,
-		QRegularExpression("(^|[^\\*])\\*\\*\\*[^\n]*?\\*\\*\\*($|[^\\*])"),
-		3
+		QRegularExpression("(^|[^\\*\\\\])\\*\\*\\*[^\n]*?\\*\\*\\*($|[^\\*])")
 	);
 
 	// Bold.
 	apply(
 		&text,
 		BlockFormat::Bold,
-		QRegularExpression("(^|[^\\*])\\*\\*[^\\*][^\n]*?\\*\\*($|[^\\*])"),
-		2
+		QRegularExpression("(^|[^\\*\\\\])\\*\\*[^\\*][^\n]*?\\*\\*($|[^\\*])")
 	);
 
 	// Italic.
 	apply(
 		&text,
 		BlockFormat::Italic,
-		QRegularExpression("(^|[^\\*])\\*[^\\*\n]+?\\*($|[^\\*])"),
-		1
+		QRegularExpression("(^|[^\\*\\\\])\\*[^\\*\n]+?\\*($|[^\\*])")
 	);
 
 	// Remaining Links.

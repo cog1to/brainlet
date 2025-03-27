@@ -21,7 +21,8 @@ enum BlockFormat {
 	CodeBlock,
 	Link,
 	PlainLink,
-	NodeLink
+	NodeLink,
+	Escape
 };
 
 struct LinkFormat {
@@ -34,8 +35,12 @@ struct FormatRange {
 	BlockFormat format;
 	LinkFormat link;
 	// Constructor.
-	FormatRange(int _from, int _to, BlockFormat _format, LinkFormat _link = LinkFormat())
-		: from(_from), to(_to), format(_format), link(_link) {};
+	FormatRange(
+		int _from,
+		int _to,
+		BlockFormat _format,
+		LinkFormat _link = LinkFormat()
+	) : from(_from), to(_to), format(_format), link(_link) {};
 	// Convert to QTextCharFormat
 	QTextCharFormat qtFormat(Style*, QTextCharFormat);
 	// Symbolic offset due to formatting symbols.
@@ -78,9 +83,9 @@ public:
 	void setText(QString&);
 
 private:
-	void apply(QString *input, BlockFormat format, QRegularExpression expr, int size);
-	void parseLinks(QString *input);
-	void parseSimpleLinks(QString *input);
+	void apply(QString*, BlockFormat, QRegularExpression);
+	void parseLinks(QString*);
+	void parseSimpleLinks(QString*);
 };
 
 class TextModel {
