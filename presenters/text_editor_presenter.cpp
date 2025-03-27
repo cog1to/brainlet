@@ -104,7 +104,10 @@ void TextEditorPresenter::onNodeInsertion(QPoint point) {
 		tr("Connect to..."),
 		true
 	);
-	SearchPresenter *presenter = new SearchPresenter(m_searchRepository, widget);
+	SearchPresenter *presenter = new SearchPresenter(
+		m_searchRepository,
+		widget
+	);
 	m_search = presenter;
 
 	connect(
@@ -112,8 +115,8 @@ void TextEditorPresenter::onNodeInsertion(QPoint point) {
 		this, SLOT(onSearchCanceled())
 	);
 	connect(
-		presenter, SIGNAL(connectionSelected(ThoughtId, QString, ConnectionType, bool)),
-		this, SLOT(onConnectionSelected(ThoughtId, QString, ConnectionType, bool))
+		presenter, &SearchPresenter::connectionSelected,
+		this, &TextEditorPresenter::onConnectionSelected
 	);
 	connect(
 		presenter, SIGNAL(searchItemSelected(ThoughtId, QString)),
@@ -160,7 +163,10 @@ void TextEditorPresenter::onConnectionSelected(
 	}
 }
 
-void TextEditorPresenter::onThoughtSelected(ThoughtId id, QString name) {
+void TextEditorPresenter::onThoughtSelected(
+	ThoughtId id,
+	QString name
+) {
 	m_view->hideSearchWidget();
 	m_view->insertNodeLink(id, name);
 	m_view->setFocus();
