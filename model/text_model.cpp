@@ -167,7 +167,7 @@ void Line::parseLinks(QString *input) {
 	QRegularExpression expr("\\[(.+?)\\]\\(((.+?)://(.+?))\\)");
 	QRegularExpressionMatch match = expr.match(*input);
 	int offset;
-	
+
 	while (match.hasMatch()) {
 		// Calcualate offset in the folded string by counting offsets applied
 		// from previous folding operations.
@@ -258,17 +258,17 @@ void Line::parseSimpleLinks(QString *input) {
 	QRegularExpression expr("(^| )(\\w+?://.+?)($| |[\\.,;!?\\-] )");
 	QRegularExpressionMatch match = expr.match(*input);
 	int offset;
-	
+
 	while (match.hasMatch()) {
 		// Get offset from formats before.
 		offset = 0;
-		for (auto& format: formats) {
+		for (auto& format: foldedFormats) {
 			if (format.from < match.capturedStart())
 				offset += format.startOffset();
 			if (format.to < match.capturedStart())
 				offset += format.endOffset();
 		}
-		
+
 		FormatRange foldedRange = FormatRange(
 			match.capturedStart() - offset + match.captured(1).size(),
 			match.capturedStart() - offset + match.captured(1).size() + match.captured(2).size(),
@@ -304,7 +304,7 @@ void Line::apply(
 	while (match.hasMatch()) {
 		// Get offset from formats before.
 		offset = 0;
-		for (auto& format: formats) {
+		for (auto& format: foldedFormats) {
 			if (format.from < match.capturedStart())
 				offset += format.startOffset();
 			if (format.to < match.capturedStart())
@@ -315,7 +315,7 @@ void Line::apply(
 			.remove(match.capturedStart() - offset + match.captured(1).size(), prefix);
 		folded
 			.remove(
-				match.capturedEnd() 
+				match.capturedEnd()
 					- match.captured(2).size()
 					- offset - prefix - suffix,
 				suffix
