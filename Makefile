@@ -60,9 +60,6 @@ bin:
 moc: mocs
 	mkdir -p mocs
 
-objs:
-	mkdir -p obj obj/widgets obj/mocs obj/entity obj/presenters obj/layout obj/model
-
 # Tests with debug graphics
 debug: CFLAGS += -DDEBUG_GUI=1
 debug: tests
@@ -80,7 +77,8 @@ mocs/style.moc.cpp: widgets/style.h
 	$(MOC) $< -o $@
 
 # Object rules
-obj/%.o: %.cpp objs
+obj/%.o: %.cpp
+	@mkdir -p $(@D)
 	$(CXX) -c $< -g $(INCLUDEDIRS) $(CFLAGS) \
 		-o $@
 
