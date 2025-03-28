@@ -1,3 +1,4 @@
 mocs/
 bin/
+obj/
 *.swp

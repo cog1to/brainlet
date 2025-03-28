@@ -70,28 +70,28 @@ int main(int argc, char *argv[]) {
 	QObject::connect(
 		&listWidget,
 		&ConnectionListWidget::thoughtSelected,
-		[&](ThoughtId id){
+		[&](ThoughtId id, QString name){
 			qDebug() << "thought selected from first list:" << id;
 		}	
 	);
 	QObject::connect(
 		&listWidget,
 		&ConnectionListWidget::connectionSelected,
-		[&](ThoughtId id, ConnectionType type, bool incoming){
+		[&](ThoughtId id, QString name, ConnectionType type, bool incoming){
 			qDebug() << "connection selected from first list:" << id << type << incoming;
 		}	
 	);
 	QObject::connect(
 		&noButtonsWidget,
 		&ConnectionListWidget::thoughtSelected,
-		[&](ThoughtId id){
+		[&](ThoughtId id, QString name){
 			qDebug() << "thought selected from second list:" << id;
 		}	
 	);
 	QObject::connect(
 		&noButtonsWidget,
 		&ConnectionListWidget::connectionSelected,
-		[&](ThoughtId id, ConnectionType type, bool incoming){
+		[&](ThoughtId id, QString name, ConnectionType type, bool incoming){
 			qDebug() << "connection selected from second list:" << id << type << incoming;
 		}	
 	);
