@@ -164,3 +164,10 @@ test_conn: $(OBJECTS) tests/test_conn_list.cpp
 		-o bin/test_conn_list \
 		$(LIBDIRS) $(LIBS)
 
+test_brain_item: $(OBJECTS) tests/test_brain_item.cpp
+	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
+		$(OBJECTS) \
+		tests/test_brain_item.cpp \
+		-o bin/test_brain_item \
+		$(LIBDIRS) $(LIBS)
+
