@@ -9,12 +9,10 @@
 TextEditorPresenter::TextEditorPresenter(
 	TextRepository *repo,
 	SearchRepository *search,
-	GraphRepository *graph,
 	MarkdownWidget *view
 )
 	: m_repository(repo),
 	m_searchRepository(search),
-	m_graph(graph),
 	m_view(view)
 {
 	connect(
@@ -143,14 +141,15 @@ void TextEditorPresenter::onConnectionSelected(
 	ConnectionType type,
 	bool incoming
 ) {
-	if (m_graph == nullptr)
+	bool result = false;
+
+	if (m_repository == nullptr)
 		return;
 
-	bool result = false;
 	if (incoming) {
-		result = m_graph->connect(id, m_id, type);
+		result = m_repository->connectThoughts(id, m_id, type);
 	} else {
-		result = m_graph->connect(m_id, id, type);
+		result = m_repository->connectThoughts(m_id, id, type);
 	}
 
 	if (result) {

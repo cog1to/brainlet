@@ -22,13 +22,13 @@ public:
 		bool incoming,
 		std::string text
 	) = 0;
-	virtual bool connect(
+	virtual bool connectThoughts(
 		ThoughtId fromId,
 		ThoughtId toId,
 		ConnectionType type
 	) = 0;
 	virtual bool deleteThought(ThoughtId) = 0;
-	virtual bool disconnect(ThoughtId, ThoughtId) = 0;
+	virtual bool disconnectThoughts(ThoughtId, ThoughtId) = 0;
 };
 
 #endif

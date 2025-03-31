@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
 
 	// Make text widget.
 	MarkdownWidget *markdownWidget = new MarkdownWidget(nullptr, &style);
-	TextEditorPresenter markdownPresenter(&repo, &repo, &repo, markdownWidget);
+	TextEditorPresenter markdownPresenter(&repo, &repo, markdownWidget);
 
 	// Make thought details widget.
 	ThoughtDetailsWidget *detailsWidget = new ThoughtDetailsWidget(

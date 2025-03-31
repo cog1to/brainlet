@@ -1,7 +1,9 @@
 #ifndef H_MODEL
 #define H_MODEL
 
-#include "thought.h"
-#include "state.h"
+#include "model/thought.h"
+#include "model/state.h"
+#include "model/brain.h"
+#include "model/text_model.h"
 
 #endif

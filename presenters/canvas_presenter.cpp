@@ -117,7 +117,7 @@ void CanvasPresenter::onThoughtConnected(
 	ConnectionType type,
 	std::function<void(bool)> callback
 ) {
-	bool result = m_repo->connect(fromId, toId, type);
+	bool result = m_repo->connectThoughts(fromId, toId, type);
 	callback(result);
 
 	if (result) {
@@ -135,7 +135,7 @@ void CanvasPresenter::onThoughtDeleted(ThoughtId id) {
 }
 
 void CanvasPresenter::onThoughtsDisconnected(ThoughtId from, ThoughtId to) {
-	bool result = m_repo->disconnect(from, to);
+	bool result = m_repo->disconnectThoughts(from, to);
 	if (result) {
 		reloadState();
 	}

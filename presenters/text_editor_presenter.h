@@ -18,7 +18,6 @@ public:
 	TextEditorPresenter(
 		TextRepository*,
 		SearchRepository*,
-		GraphRepository*, 
 		MarkdownWidget*
 	);
 	void setThought(ThoughtId);
@@ -37,13 +36,13 @@ private slots:
 
 private:
 	ThoughtId m_id = InvalidThoughtId;
+	// Dependencies.
 	TextRepository *m_repository = nullptr;
 	MarkdownWidget *m_view = nullptr;
 	// Search.
 	SearchRepository *m_searchRepository = nullptr;
 	SearchPresenter *m_search = nullptr;
-	// Graph.
-	GraphRepository *m_graph;
 };
 
 #endif
+

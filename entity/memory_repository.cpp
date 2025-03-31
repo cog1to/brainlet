@@ -3,9 +3,11 @@
 #include <ctime>
 
 #include <QString>
+#include <QRegularExpression>
 
 #include "entity/memory_repository.h"
 #include "entity/thought_entity.h"
+#include "entity/brain_entity.h"
 #include "entity/connection_entity.h"
 
 #include <QDebug>
@@ -69,7 +71,7 @@ CreateResult MemoryRepository::createThought(
 	return CreateResult(true, result);
 }
 
-bool MemoryRepository::connect(
+bool MemoryRepository::connectThoughts(
 	ThoughtId fromId,
 	ThoughtId toId,
 	ConnectionType type
@@ -114,12 +116,15 @@ bool MemoryRepository::deleteThought(ThoughtId id) {
 	return true;
 }
 
-bool MemoryRepository::disconnect(ThoughtId from, ThoughtId to) {
+bool MemoryRepository::disconnectThoughts(ThoughtId from, ThoughtId to) {
 	std::vector<ConnectionEntity>::iterator it;
 
 	bool found = false;
 	for (it = m_connections.begin(); it != m_connections.end();) {
-		if (((*it).from == from && (*it).to == to) || ((*it).from == to && (*it).to == from)) {
+		if (
+			((*it).from == from && (*it).to == to) ||
+			((*it).from == to && (*it).to == from)
+		) {
 			it = m_connections.erase(it);
 			found = true;
 		} else {
@@ -348,6 +353,65 @@ SaveResult MemoryRepository::saveText(ThoughtId id, std::string text) {
 	qDebug() << "-- Text saved --";
 	qDebug() << text;
 	return SaveResult(TextRepositoryNone);
+}
+
+// BrainRepository
+
+std::vector<Brain> MemoryRepository::listBrains() {
+	std::vector<Brain> result;
+
+	for (auto it = m_brains.begin(); it != m_brains.end(); it++) {
+		result.push_back(
+			Brain((*it).id, (*it).name, (*it).timestamp)
+		);
+	}
+
+	return result;
+}
+
+CreateBrainResult MemoryRepository::createBrain(std::string name) {
+	QString id = QString::fromStdString(name).toLower();
+	bool hasDuplicate = true;
+	int idx = 0;
+
+	// Replace everything that is not alphanumeric with underscore.
+	QRegularExpression expr("[^\\w ]");
+	id.replace(expr, "_");
+
+	// Iterate over existing brains and modify ID until it's unique.
+	do {
+		bool found = false;
+		for (auto it = m_brains.begin(); it != m_brains.end(); it++) {
+			if ((*it).id == id) {
+				found = true;
+				break;
+			}
+		}
+		if (found) {
+			id = QString("%1_%2").arg(id).arg(++idx);
+		} else {
+			hasDuplicate = false;
+		}
+	} while (hasDuplicate);
+
+	std::time_t timestamp = std::time(nullptr);
+	CreateBrainResult result = CreateBrainResult(
+		BrainRepositoryErrorNone,
+		Brain(id.toStdString(), name, timestamp)
+	);
+
+	return result;
+}
+
+BrainRepositoryError MemoryRepository::deleteBrain(std::string id) {
+	std::vector<BrainEntity> result;
+	for (auto it = m_brains.begin(); it != m_brains.end(); it++) {
+		if ((*it).id == id) continue;
+		result.push_back(*it);
+	}
+
+	m_brains = result;
+	return BrainRepositoryErrorNone;
 }
 
 // Helpers.

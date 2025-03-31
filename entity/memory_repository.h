@@ -8,13 +8,16 @@
 #include "entity/graph_repository.h"
 #include "entity/text_repository.h"
 #include "entity/search_repository.h"
+#include "entity/brains_repository.h"
 #include "entity/thought_entity.h"
 #include "entity/connection_entity.h"
+#include "entity/brain_entity.h"
 
 class MemoryRepository:
 	public GraphRepository,
 	public TextRepository,
-	public SearchRepository
+	public SearchRepository,
+	public BrainsRepository
 {
 public:
 	MemoryRepository(
@@ -33,20 +36,27 @@ public:
 		bool incoming,
 		std::string text
 	) override;
-	bool connect(
+	bool connectThoughts(
 		ThoughtId fromId,
 		ThoughtId toId,
 		ConnectionType type
 	) override;
 	bool deleteThought(ThoughtId) override;
-	bool disconnect(ThoughtId, ThoughtId) override;
+	bool disconnectThoughts(ThoughtId, ThoughtId) override;
 	// TextRepository.
 	GetResult getText(ThoughtId) override;
 	SaveResult saveText(ThoughtId, std::string) override;
 	// SearchRepository.
 	SearchResult search(std::string) override;
+	// BrainRepository.
+	std::vector<Brain> listBrains() override;
+	CreateBrainResult createBrain(std::string) override;
+	BrainRepositoryError deleteBrain(std::string) override;
 
 private:
+	// List of brains.
+	std::vector<BrainEntity> m_brains;
+	// Brain.
 	std::vector<ThoughtEntity> m_thoughts;
 	std::vector<ConnectionEntity> m_connections;
 	ThoughtId m_rootId;
