@@ -259,6 +259,42 @@ QString Style::menuStyle() {
 	return stylesheet;
 }
 
+QString Style::brainListButtonStyle(QString align, QColor foreground) {
+	QString stylesheet = QString(
+		"QPushButton{\
+			font: %1 %2px \"%3\";\
+			color: %4;\
+			border-width: 1px;\
+			border-color: %5;\
+			padding: 8px;\
+			padding-left: 12px;\
+			padding-right: 12px;\
+			background-color: %6;\
+			text-align: %10;\
+			border-radius: 10px;\
+			border-style: solid;\
+		}\
+		QPushButton:hover{\
+			background-color: %9;\
+		}\
+		QPushButton:hover:pressed{\
+			border-color: %7;\
+			background-color: %8;\
+		}")
+		.arg("bold")
+		.arg(18)
+		.arg(m_font.family())
+		.arg(foreground.name(QColor::HexArgb))
+		.arg(foreground.darker(200).name(QColor::HexArgb))
+		.arg(m_background.lighter(110).name(QColor::HexRgb))
+		.arg(foreground.darker(300).name(QColor::HexArgb))
+		.arg(m_background.darker(110).name(QColor::HexRgb))
+		.arg(m_background.lighter(130).name(QColor::HexRgb))
+		.arg(align);
+
+	return stylesheet;
+}
+
 const QFont Style::iconFont() const {
 	return m_iconFont;
 }

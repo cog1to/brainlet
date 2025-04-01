@@ -16,6 +16,9 @@ public:
 	BrainItemWidget(QWidget*, Style*, QString, QString);
 	const QString id() const;
 	const QString name() const;
+	void setName(QString);
+
+protected:
 	// Event overrides.
 	void resizeEvent(QResizeEvent*) override;
 	void enterEvent(QEnterEvent*) override;

@@ -20,35 +20,7 @@ BrainItemWidget::BrainItemWidget(
 	m_deleteButton(tr("Delete"), this)
 {
 	setStyleSheet(
-		QString("QPushButton{\
-				font: %1 %2px \"%3\";\
-				color: %4;\
-				border-width: 1px;\
-				border-color: %5;\
-				padding: 8px;\
-				padding-left: 12px;\
-				padding-right: 12px;\
-				background-color: %6;\
-				text-align: left;\
-				border-radius: 10px;\
-				border-style: solid;\
-			}\
-			QPushButton:hover{\
-				background-color: %9;\
-			}\
-			QPushButton:hover:pressed{\
-				border-color: %7;\
-				background-color: %8;\
-			}")
-		.arg("bold")
-		.arg(18)
-		.arg(style->font().family())
-		.arg(style->textColor().name(QColor::HexArgb))
-		.arg(style->textColor().darker(200).name(QColor::HexArgb))
-		.arg(style->background().lighter(110).name(QColor::HexRgb))
-		.arg(style->textColor().darker(300).name(QColor::HexArgb))
-		.arg(style->background().darker(110).name(QColor::HexRgb))
-		.arg(style->background().lighter(130).name(QColor::HexRgb))
+		style->brainListButtonStyle("left", style->textColor())
 	);
 
 	m_deleteButton.setStyleSheet(
@@ -103,6 +75,11 @@ const QString BrainItemWidget::name() const {
 	return m_name;
 }
 
+void BrainItemWidget::setName(QString name) {
+	m_name = name;
+	setText(name);
+}
+
 // Events
 
 void BrainItemWidget::resizeEvent(QResizeEvent *event) {
@@ -133,3 +110,4 @@ void BrainItemWidget::onClick() {
 void BrainItemWidget::onDeleteClick() {
 	emit deleteClicked(this);
 }
+

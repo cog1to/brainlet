@@ -85,7 +85,8 @@ obj/%.o: %.cpp
 # Tests
 tests: bin test_anchor test_thought test_resize test_edit test_base \
 	test_memory test_presenter test_markdown test_text_presenter \
-	test_brain_presenter test_conn
+	test_brain_presenter test_conn test_brain_item \
+	test_brain_list
 
 test_anchor: $(OBJECTS) tests/test_anchor.cpp
 	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
@@ -169,5 +170,12 @@ test_brain_item: $(OBJECTS) tests/test_brain_item.cpp
 		$(OBJECTS) \
 		tests/test_brain_item.cpp \
 		-o bin/test_brain_item \
+		$(LIBDIRS) $(LIBS)
+
+test_brain_list: $(OBJECTS) tests/test_brain_list.cpp
+	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
+		$(OBJECTS) \
+		tests/test_brain_list.cpp \
+		-o bin/test_brain_list \
 		$(LIBDIRS) $(LIBS)
 
