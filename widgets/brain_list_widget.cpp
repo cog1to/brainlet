@@ -3,6 +3,7 @@
 #include <QVBoxLayout>
 #include <QInputDialog>
 #include <QLineEdit>
+#include <QMessageBox>
 
 #include "widgets/brain_list_widget.h"
 #include "widgets/brain_item_widget.h"
@@ -121,21 +122,29 @@ void BrainListWidget::onItemClicked(BrainItemWidget *view) {
 }
 
 void BrainListWidget::onItemDeleteClicked(BrainItemWidget *view) {
-	emit itemDeleteClicked(view->id().toStdString());	
+	QMessageBox dialog;
+	dialog.setText(tr("Delete \"%1\"?").arg(view->name()));
+	dialog.setInformativeText(
+		tr("Are you sure you want to delete \"%1\"? All of the Brain's data will be erased from disk.")
+		.arg(view->name())
+	);
+	dialog.setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
+	dialog.setDefaultButton(QMessageBox::Cancel);
+	int ret = dialog.exec();
+
+	if (ret == QMessageBox::Yes) {
+		emit itemDeleteClicked(view->id().toStdString());
+	}
 }
 
 void BrainListWidget::onNewItemClicked() {
-	bool ok = false;
-	QString text = QInputDialog::getText(
-		this, tr("New Brain"),
-    tr("Enter a name for the new Brain:"),
-		QLineEdit::Normal,
-    "", 
-		&ok
-	);
+	QInputDialog dialog;
+	dialog.setLabelText(tr("Enter a unique name for the new brain:"));
+	dialog.setWindowTitle(tr("Create new brain"));
+	int ret = dialog.exec();
 
-  if (ok && !text.isEmpty()) {
-		emit newItemCreated(text.toStdString());
+  if (ret == QDialog::Accepted && !dialog.textValue().isEmpty()) {
+		emit newItemCreated(dialog.textValue().toStdString());
 	}
 }
 

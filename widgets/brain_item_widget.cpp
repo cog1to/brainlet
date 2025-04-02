@@ -38,11 +38,14 @@ BrainItemWidget::BrainItemWidget(
 				border-style: solid;\
 			}\
 			QPushButton:hover{\
+				color: %7;\
+				border-color: %8;\
 				background-color: %9;\
 			}\
 			QPushButton:hover:pressed{\
-				border-color: %7;\
-				background-color: %8;\
+				color: %10;\
+				border-color: %11;\
+				background-color: %12;\
 			}")
 		.arg("normal")
 		.arg(14)
@@ -50,9 +53,12 @@ BrainItemWidget::BrainItemWidget(
 		.arg(style->textColor().name(QColor::HexArgb))
 		.arg(style->textColor().darker(200).name(QColor::HexArgb))
 		.arg(style->background().lighter(110).name(QColor::HexRgb))
-		.arg(style->textColor().darker(300).name(QColor::HexArgb))
-		.arg(style->background().darker(110).name(QColor::HexRgb))
+		.arg(style->activeAnchorColor().name(QColor::HexRgb))
+		.arg(style->activeAnchorColor().darker(150).name(QColor::HexRgb))
 		.arg(style->background().lighter(120).name(QColor::HexRgb))
+		.arg(style->activeAnchorColor().darker(150).name(QColor::HexRgb))
+		.arg(style->activeAnchorColor().darker(200).name(QColor::HexArgb))
+		.arg(style->background().darker(110).name(QColor::HexRgb))
 	);
 
 	m_deleteButton.setVisible(false);
