@@ -22,6 +22,7 @@ public:
 	BrainListWidget(QWidget*, Style*);
 	// Model.
 	void setItems(std::vector<Brain>);
+	void showError(QString);
 
 protected:
 	void resizeEvent(QResizeEvent*) override;
@@ -30,7 +31,7 @@ signals:
 	void shown();
 	void itemClicked(std::string);
 	void itemDeleteClicked(std::string);
-	void newItemClicked();
+	void newItemCreated(std::string);
 
 private slots:
 	void onItemClicked(BrainItemWidget*);

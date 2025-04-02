@@ -1,6 +1,8 @@
 #include <QWidget>
 #include <QResizeEvent>
 #include <QVBoxLayout>
+#include <QInputDialog>
+#include <QLineEdit>
 
 #include "widgets/brain_list_widget.h"
 #include "widgets/brain_item_widget.h"
@@ -13,9 +15,10 @@ BrainListWidget::BrainListWidget(QWidget *parent, Style *style)
 {
 	m_area.setWidget(&m_container);
 	m_area.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	m_area.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 	m_area.setStyleSheet(QString("border: none"));
 	m_container.show();
-	m_layout.setContentsMargins(0, 0, 20, 0);
+	m_layout.setContentsMargins(0, 0, 16, 0);
 	m_layout.setSpacing(20);
 
 	// Add new brain button.
@@ -31,6 +34,10 @@ BrainListWidget::BrainListWidget(QWidget *parent, Style *style)
 		this, &BrainListWidget::onNewItemClicked
 	);
 	m_layout.addWidget(newItemButton);
+}
+
+void BrainListWidget::showError(QString name) {
+	// TODO: Show error.
 }
 
 void BrainListWidget::resizeEvent(QResizeEvent *event) {
@@ -118,6 +125,17 @@ void BrainListWidget::onItemDeleteClicked(BrainItemWidget *view) {
 }
 
 void BrainListWidget::onNewItemClicked() {
-	emit newItemClicked();
+	bool ok = false;
+	QString text = QInputDialog::getText(
+		this, tr("New Brain"),
+    tr("Enter a name for the new Brain:"),
+		QLineEdit::Normal,
+    "", 
+		&ok
+	);
+
+  if (ok && !text.isEmpty()) {
+		emit newItemCreated(text.toStdString());
+	}
 }
 
