@@ -1,6 +1,7 @@
 #ifndef BRAIN_H
 #define BRAIN_H
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
