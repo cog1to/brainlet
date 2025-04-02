@@ -9,7 +9,8 @@
 
 enum BrainRepositoryError {
 	BrainRepositoryErrorNone,
-	BrainRepositoryErrorIO
+	BrainRepositoryErrorIO,
+	BrainRepositoryErrorDuplicate
 };
 
 struct CreateBrainResult {

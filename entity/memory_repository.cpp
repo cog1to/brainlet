@@ -370,34 +370,26 @@ std::vector<Brain> MemoryRepository::listBrains() {
 }
 
 CreateBrainResult MemoryRepository::createBrain(std::string name) {
-	QString id = QString::fromStdString(name).toLower();
-	bool hasDuplicate = true;
-	int idx = 0;
-
-	// Replace everything that is not alphanumeric with underscore.
-	QRegularExpression expr("[^\\w ]");
-	id.replace(expr, "_");
-
-	// Iterate over existing brains and modify ID until it's unique.
-	do {
-		bool found = false;
-		for (auto it = m_brains.begin(); it != m_brains.end(); it++) {
-			if ((*it).id == id) {
-				found = true;
-				break;
-			}
-		}
-		if (found) {
-			id = QString("%1_%2").arg(id).arg(++idx);
-		} else {
-			hasDuplicate = false;
-		}
-	} while (hasDuplicate);
-
 	std::time_t timestamp = std::time(nullptr);
+
+	bool found = false;
+	for (auto it = m_brains.begin(); it != m_brains.end(); it++) {
+		if ((*it).name == name) {
+			found = true;
+			break;
+		}
+	}
+
+	if (found) {
+		return CreateBrainResult(
+			BrainRepositoryErrorDuplicate,
+			Brain("", "", timestamp)
+		);
+	}
+
 	CreateBrainResult result = CreateBrainResult(
 		BrainRepositoryErrorNone,
-		Brain(id.toStdString(), name, timestamp)
+		Brain(name, name, timestamp)
 	);
 
 	return result;
