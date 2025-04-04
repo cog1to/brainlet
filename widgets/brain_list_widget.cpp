@@ -130,8 +130,15 @@ void BrainListWidget::onItemDeleteClicked(BrainItemWidget *view) {
 	);
 	dialog.setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
 	dialog.setDefaultButton(QMessageBox::Cancel);
-	int ret = dialog.exec();
 
+	QSize size = dialog.sizeHint();
+	QRect windowPos = window()->geometry();
+	dialog.move(
+		windowPos.x() + (windowPos.width() - size.width()) / 2,
+		windowPos.y() + (windowPos.height() - size.height()) / 2
+	);
+
+	int ret = dialog.exec();
 	if (ret == QMessageBox::Yes) {
 		emit itemDeleteClicked(view->id().toStdString());
 	}
@@ -141,9 +148,16 @@ void BrainListWidget::onNewItemClicked() {
 	QInputDialog dialog;
 	dialog.setLabelText(tr("Enter a unique name for the new brain:"));
 	dialog.setWindowTitle(tr("Create new brain"));
-	int ret = dialog.exec();
 
-  if (ret == QDialog::Accepted && !dialog.textValue().isEmpty()) {
+	QSize size = dialog.sizeHint();
+	QRect windowPos = window()->geometry();
+	dialog.move(
+		windowPos.x() + (windowPos.width() - size.width()) / 2,
+		windowPos.y() + (windowPos.height() - size.height()) / 2
+	);
+
+	int ret = dialog.exec();
+	if (ret == QDialog::Accepted && !dialog.textValue().isEmpty()) {
 		emit newItemCreated(dialog.textValue().toStdString());
 	}
 }
