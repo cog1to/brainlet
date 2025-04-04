@@ -57,11 +57,22 @@ void BrainListWidget::resizeEvent(QResizeEvent *event) {
 // Model.
 
 void BrainListWidget::setItems(std::vector<Brain> items) {
+	int idx = 1;
+
 	// Create new widgets.
 	for (auto it = items.begin(); it != items.end(); it++) {
 		BrainItemWidget *widget = nullptr;
 		if (auto found = m_widgets.find((*it).id()); found != m_widgets.end()) {
 			widget = found->second;
+
+			if (
+				int foundIndex = m_layout.indexOf(widget);
+				foundIndex != -1
+			) {
+				QLayoutItem *item = m_layout.takeAt(foundIndex);
+				m_layout.insertItem(idx, item);
+				idx += 1;
+			}
 		} else {
 			widget = new BrainItemWidget(
 				nullptr, m_style,
@@ -80,6 +91,11 @@ void BrainListWidget::setItems(std::vector<Brain> items) {
 
 			m_widgets.insert_or_assign((*it).id(), widget);
 			m_layout.addWidget(widget);
+
+			// Rearrange.
+			QLayoutItem *item = m_layout.takeAt(m_layout.count() - 1);
+			m_layout.insertItem(idx, item);
+			idx += 1;
 		}
 
 		widget->setName(QString::fromStdString((*it).name()));
