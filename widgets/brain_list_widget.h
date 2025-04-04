@@ -9,6 +9,7 @@
 #include <QScrollArea>
 #include <QResizeEvent>
 #include <QVBoxLayout>
+#include <QShowEvent>
 
 #include "widgets/base_widget.h"
 #include "widgets/style.h"
@@ -26,6 +27,7 @@ public:
 
 protected:
 	void resizeEvent(QResizeEvent*) override;
+	void showEvent(QShowEvent*) override;
 
 signals:
 	void shown();

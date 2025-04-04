@@ -41,6 +41,10 @@ void BrainListWidget::showError(QString name) {
 	// TODO: Show error.
 }
 
+void BrainListWidget::showEvent(QShowEvent*) {
+	emit shown();
+}
+
 void BrainListWidget::resizeEvent(QResizeEvent *event) {
 	QSize size = event->size();
 
@@ -100,6 +104,9 @@ void BrainListWidget::setItems(std::vector<Brain> items) {
 	// Resize container.
 	QSize hint = m_container.sizeHint();
 	m_container.resize(size().width() - 20, hint.height());
+
+	// Repaint.
+	update();
 }
 
 bool BrainListWidget::findInItems(

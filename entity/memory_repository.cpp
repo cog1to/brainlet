@@ -387,6 +387,9 @@ CreateBrainResult MemoryRepository::createBrain(std::string name) {
 		);
 	}
 
+	BrainEntity brain = BrainEntity(name, name, timestamp);
+	m_brains.insert(m_brains.begin(), brain);
+
 	CreateBrainResult result = CreateBrainResult(
 		BrainRepositoryErrorNone,
 		Brain(name, name, timestamp)
