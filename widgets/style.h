@@ -87,6 +87,7 @@ public:
 	void setIconFont(QFont);
 	// Brain list style.
 	QString brainListButtonStyle(QString, QColor);
+	QString brainItemButtonStyle();
 
 signals:
 	void styleChanged(Style*);

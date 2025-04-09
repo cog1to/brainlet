@@ -404,6 +404,32 @@ CreateBrainResult MemoryRepository::createBrain(std::string name) {
 	return result;
 }
 
+BrainRepositoryError MemoryRepository::renameBrain(
+	std::string id,
+	std::string name
+) {
+	bool found = false;
+	for (auto it = m_brains.begin(); it != m_brains.end(); it++) {
+		if ((*it).name == name) {
+			found = true;
+			break;
+		}
+	}
+
+	if (found) {
+		return BrainRepositoryErrorDuplicate;
+	}
+
+	for (auto it = m_brains.begin(); it != m_brains.end(); it++) {
+		if ((*it).id == id) {
+			(*it).name = name;
+			break;
+		}
+	}
+
+	return BrainRepositoryErrorNone;
+}
+
 BrainRepositoryError MemoryRepository::deleteBrain(std::string id) {
 	std::vector<BrainEntity> result;
 	for (auto it = m_brains.begin(); it != m_brains.end(); it++) {

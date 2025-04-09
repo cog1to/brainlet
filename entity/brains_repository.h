@@ -26,6 +26,7 @@ public:
 	virtual BrainList listBrains() = 0;
 	virtual CreateBrainResult createBrain(std::string) = 0;
 	virtual BrainRepositoryError deleteBrain(std::string) = 0;
+	virtual BrainRepositoryError renameBrain(std::string, std::string) = 0;
 };
 
 #endif

@@ -39,11 +39,13 @@ protected:
 
 signals:
 	void deleteClicked(BrainItemWidget*);
+	void renameClicked(BrainItemWidget*);
 	void buttonClicked(BrainItemWidget*);
 
 private slots:
 	void onClick();
 	void onDeleteClick();
+	void onRenameClick();
 
 private:
 	Style *m_style;
@@ -56,6 +58,7 @@ private:
 	// color left-to-right while pressing it, and sends the signal
 	// when filled completely.
 	QPushButton *m_deleteButton = nullptr;
+	QPushButton *m_renameButton = nullptr;
 	// Helpers.
 	static inline QString getStyle(Style *style, Status status);
 };

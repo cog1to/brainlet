@@ -37,10 +37,12 @@ signals:
 	void itemClicked(std::string);
 	void itemDeleteClicked(std::string);
 	void newItemCreated(std::string);
+	void itemRenamed(std::string, std::string);
 
 private slots:
 	void onItemClicked(BrainItemWidget*);
 	void onItemDeleteClicked(BrainItemWidget*);
+	void onItemRenameClicked(BrainItemWidget*);
 	void onNewItemClicked();
 
 private:

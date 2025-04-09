@@ -22,6 +22,7 @@ private slots:
 	void onBrainSelected(std::string);
 	void onBrainDeleted(std::string);
 	void onBrainCreated(std::string);
+	void onBrainRenamed(std::string, std::string);
 
 private:
 	BrainListWidget *m_widget;

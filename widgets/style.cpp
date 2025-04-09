@@ -295,6 +295,44 @@ QString Style::brainListButtonStyle(QString align, QColor foreground) {
 	return stylesheet;
 }
 
+QString Style::brainItemButtonStyle() {
+	return QString("QPushButton{\
+			font: %1 %2px \"%3\";\
+			color: %4;\
+			border-width: 1px;\
+			border-color: %5;\
+			padding: 5px;\
+			padding-left: 12px;\
+			padding-right: 12px;\
+			background-color: %6;\
+			text-align: left;\
+			border-radius: 10px;\
+			border-style: solid;\
+		}\
+		QPushButton:hover{\
+			color: %7;\
+			border-color: %8;\
+			background-color: %9;\
+		}\
+		QPushButton:hover:pressed{\
+			color: %10;\
+			border-color: %11;\
+			background-color: %12;\
+		}")
+	.arg("normal")
+	.arg(14)
+	.arg(font().family())
+	.arg(textColor().name(QColor::HexArgb))
+	.arg(textColor().darker(200).name(QColor::HexArgb))
+	.arg(background().lighter(110).name(QColor::HexRgb))
+	.arg(activeAnchorColor().name(QColor::HexRgb))
+	.arg(activeAnchorColor().darker(150).name(QColor::HexRgb))
+	.arg(background().lighter(120).name(QColor::HexRgb))
+	.arg(activeAnchorColor().darker(150).name(QColor::HexRgb))
+	.arg(activeAnchorColor().darker(200).name(QColor::HexArgb))
+	.arg(background().darker(110).name(QColor::HexRgb));
+}
+
 const QFont Style::iconFont() const {
 	return m_iconFont;
 }

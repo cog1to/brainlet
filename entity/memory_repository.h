@@ -52,6 +52,7 @@ public:
 	BrainList listBrains() override;
 	CreateBrainResult createBrain(std::string) override;
 	BrainRepositoryError deleteBrain(std::string) override;
+	BrainRepositoryError renameBrain(std::string, std::string) override;
 
 private:
 	// List of brains.

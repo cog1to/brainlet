@@ -103,7 +103,7 @@ void BrainListWidget::setItems(BrainList list) {
 
 	// Update text.
 	if (list.items.size() == 0) {
-		QString textPattern = tr("<h2>Welcome!</h2>\n\nYou currently have 0 brains. Let's create one!");
+		QString textPattern = tr("<h2>Welcome!</h2>\n\nYou currently have no saved Brains. Let's create one!");
 		m_text.setText(textPattern);
 	} else {
 		QString textPattern = tr("<h2>Welcome!</h2>\n\n<p>You currently have %1 brain(s).</p>\n\n<p>All of your data is stored in <b>%2</b>.</p>\n\n<p>Total size of saved thoughts: <b>%3</b></p>")
@@ -113,8 +113,13 @@ void BrainListWidget::setItems(BrainList list) {
 		m_text.setText(textPattern);
 	}
 
-	// Create new widgets.
+	// Sort by timestamp.
 	std::vector<Brain>& items = list.items;
+	std::sort(items.begin(), items.end(), [](const Brain& a, const Brain& b) {
+		return a.timestamp() > b.timestamp();
+	});
+
+	// Create new widgets.
 	for (auto it = items.begin(); it != items.end(); it++) {
 		BrainItemWidget *widget = nullptr;
 		if (auto found = m_widgets.find((*it).id()); found != m_widgets.end()) {
@@ -142,6 +147,10 @@ void BrainListWidget::setItems(BrainList list) {
 			connect(
 				widget, &BrainItemWidget::buttonClicked,
 				this, &BrainListWidget::onItemClicked
+			);
+			connect(
+				widget, &BrainItemWidget::renameClicked,
+				this, &BrainListWidget::onItemRenameClicked
 			);
 
 			m_widgets.insert_or_assign((*it).id(), widget);
@@ -235,7 +244,33 @@ void BrainListWidget::onNewItemClicked() {
 
 	int ret = dialog.exec();
 	if (ret == QDialog::Accepted && !dialog.textValue().isEmpty()) {
-		emit newItemCreated(dialog.textValue().toStdString());
+		emit newItemCreated(dialog.textValue().trimmed().toStdString());
+	}
+}
+
+void BrainListWidget::onItemRenameClicked(BrainItemWidget *widget) {
+	assert(widget != nullptr);
+
+	QString oldName = widget->name();
+
+	QInputDialog dialog;
+	dialog.setLabelText(tr("Enter a new unique name for the brain:"));
+	dialog.setWindowTitle(tr("Rename a brain"));
+	dialog.setTextValue(oldName);
+
+	QSize size = dialog.sizeHint();
+	QRect windowPos = window()->geometry();
+	dialog.move(
+		windowPos.x() + (windowPos.width() - size.width()) / 2,
+		windowPos.y() + (windowPos.height() - size.height()) / 2
+	);
+
+	int ret = dialog.exec();
+	if (ret == QDialog::Accepted && !dialog.textValue().isEmpty()) {
+		emit itemRenamed(
+			widget->id().toStdString(),
+			dialog.textValue().trimmed().toStdString()
+		);
 	}
 }
 

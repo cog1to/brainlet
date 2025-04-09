@@ -34,53 +34,30 @@ BrainItemWidget::BrainItemWidget(
 
 	m_deleteButton = new QPushButton(tr("Delete"), nullptr);
 	m_deleteButton->setStyleSheet(
-		QString("QPushButton{\
-				font: %1 %2px \"%3\";\
-				color: %4;\
-				border-width: 1px;\
-				border-color: %5;\
-				padding: 5px;\
-				padding-left: 12px;\
-				padding-right: 12px;\
-				background-color: %6;\
-				text-align: left;\
-				border-radius: 10px;\
-				border-style: solid;\
-			}\
-			QPushButton:hover{\
-				color: %7;\
-				border-color: %8;\
-				background-color: %9;\
-			}\
-			QPushButton:hover:pressed{\
-				color: %10;\
-				border-color: %11;\
-				background-color: %12;\
-			}")
-		.arg("normal")
-		.arg(14)
-		.arg(style->font().family())
-		.arg(style->textColor().name(QColor::HexArgb))
-		.arg(style->textColor().darker(200).name(QColor::HexArgb))
-		.arg(style->background().lighter(110).name(QColor::HexRgb))
-		.arg(style->activeAnchorColor().name(QColor::HexRgb))
-		.arg(style->activeAnchorColor().darker(150).name(QColor::HexRgb))
-		.arg(style->background().lighter(120).name(QColor::HexRgb))
-		.arg(style->activeAnchorColor().darker(150).name(QColor::HexRgb))
-		.arg(style->activeAnchorColor().darker(200).name(QColor::HexArgb))
-		.arg(style->background().darker(110).name(QColor::HexRgb))
+		style->brainItemButtonStyle()
 	);
-
 	m_deleteButton->setVisible(false);
+
+	m_renameButton = new QPushButton(tr("Rename"), nullptr);
+	m_renameButton->setStyleSheet(
+		style->brainItemButtonStyle()
+	);
+	m_renameButton->setVisible(false);
 
 	connect(
 		m_deleteButton, &QPushButton::clicked,
 		this, &BrainItemWidget::onDeleteClick
 	);
 
+	connect(
+		m_renameButton, &QPushButton::clicked,
+		this, &BrainItemWidget::onRenameClick
+	);
+
 	m_label->setContentsMargins(0, 1, 0, 1);
 	m_layout.setContentsMargins(0, 0, 0, 0);
 	m_layout.addWidget(m_label);
+	m_layout.addWidget(m_renameButton);
 	m_layout.addWidget(m_deleteButton);
 }
 
@@ -113,6 +90,7 @@ QSize BrainItemWidget::sizeHint() const {
 
 void BrainItemWidget::enterEvent(QEnterEvent*) {
 	m_deleteButton->setVisible(true);
+	m_renameButton->setVisible(true);
 	setStyleSheet(
 		getStyle(m_style, StatusHover)
 	);
@@ -120,6 +98,7 @@ void BrainItemWidget::enterEvent(QEnterEvent*) {
 
 void BrainItemWidget::leaveEvent(QEvent *) {
 	m_deleteButton->setVisible(false);
+	m_renameButton->setVisible(false);
 	setStyleSheet(
 		getStyle(m_style, StatusNormal)
 	);
@@ -154,6 +133,10 @@ void BrainItemWidget::onClick() {
 
 void BrainItemWidget::onDeleteClick() {
 	emit deleteClicked(this);
+}
+
+void BrainItemWidget::onRenameClick() {
+	emit renameClicked(this);
 }
 
 // Helpers
