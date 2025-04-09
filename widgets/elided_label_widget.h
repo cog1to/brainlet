@@ -12,6 +12,8 @@ class ElidedLabelWidget: public QFrame {
 public:
 	ElidedLabelWidget(QWidget*, QString);
 	QSize sizeHint() const override;
+	// State.
+	void setText(QString);
 
 protected:
 	void paintEvent(QPaintEvent*) override;

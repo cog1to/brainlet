@@ -357,16 +357,22 @@ SaveResult MemoryRepository::saveText(ThoughtId id, std::string text) {
 
 // BrainRepository
 
-std::vector<Brain> MemoryRepository::listBrains() {
+BrainList MemoryRepository::listBrains() {
 	std::vector<Brain> result;
+	int size = 0;
 
 	for (auto it = m_brains.begin(); it != m_brains.end(); it++) {
 		result.push_back(
 			Brain((*it).id, (*it).name, (*it).timestamp)
 		);
+		size += ((*it).id.length() + (*it).name.length());
 	}
 
-	return result;
+	return BrainList(
+		result,
+		size + sizeof(Brain) * result.size(),
+		"memory"
+	);
 }
 
 CreateBrainResult MemoryRepository::createBrain(std::string name) {

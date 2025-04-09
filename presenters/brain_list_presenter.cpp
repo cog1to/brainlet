@@ -49,7 +49,7 @@ void BrainListPresenter::onBrainDeleted(std::string id) {
 	if (error != BrainRepositoryErrorNone) {
 		m_widget->showError(tr("Failed to access file system"));
 	} else {
-		std::vector<Brain> list = m_repo->listBrains();
+		BrainList list = m_repo->listBrains();
 		m_widget->setItems(list);
 	}
 }
@@ -62,7 +62,7 @@ void BrainListPresenter::onBrainCreated(std::string name) {
 
 	CreateBrainResult result = m_repo->createBrain(name);
 	if (result.error == BrainRepositoryErrorNone) {
-		std::vector<Brain> list = m_repo->listBrains();
+		BrainList list = m_repo->listBrains();
 		m_widget->setItems(list);
 	} else if (result.error == BrainRepositoryErrorIO) {
 		m_widget->showError(tr("Failed to access file system"));
@@ -77,7 +77,7 @@ void BrainListPresenter::onShown() {
 	if (m_widget == nullptr)
 		return;
 
-	std::vector<Brain> list = m_repo->listBrains();
+	BrainList list = m_repo->listBrains();
 	m_widget->setItems(list);
 }
 

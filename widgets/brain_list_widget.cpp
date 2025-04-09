@@ -12,8 +12,10 @@ BrainListWidget::BrainListWidget(QWidget *parent, Style *style)
 	: BaseWidget(parent, style),
 	m_area(this),
 	m_container(nullptr),
-	m_layout(&m_container)
+	m_layout(&m_container),
+	m_text(this)
 {
+	setContentsMargins(QMargins(8, 8, 8, 8));
 	m_area.setWidget(&m_container);
 	m_area.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	m_area.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
@@ -35,6 +37,17 @@ BrainListWidget::BrainListWidget(QWidget *parent, Style *style)
 		this, &BrainListWidget::onNewItemClicked
 	);
 	m_layout.addWidget(newItemButton);
+
+	// Set welcome text.
+	m_text.setStyleSheet(
+		QString("font-size: 16px; color: %1")
+		.arg(style->textEditColor().name(QColor::HexArgb))
+	);
+	QString textPattern = QString("<h2>Welcome!</h2>");
+	m_text.setTextFormat(Qt::RichText);
+	m_text.setText(textPattern);
+	m_text.setWordWrap(true);
+	m_text.setAlignment(Qt::AlignHCenter | Qt::AlignTop);
 }
 
 void BrainListWidget::showError(QString name) {
@@ -46,20 +59,62 @@ void BrainListWidget::showEvent(QShowEvent*) {
 }
 
 void BrainListWidget::resizeEvent(QResizeEvent *event) {
+	const int spacing = 8;
 	QSize size = event->size();
+	QMargins margins = contentsMargins();
+	QSize areaSize = QSize(
+		(size.width() - margins.left() - margins.right() - spacing) / 2,
+		size.height() - margins.top() - margins.bottom()
+	);
 
-	m_area.setGeometry(0, 0, size.width(), size.height());
+	m_area.setGeometry(
+		margins.left(), margins.top(),
+		areaSize.width(),
+		areaSize.height()
+	);
 
 	QSize hint = m_container.sizeHint();
-	m_container.resize(size.width() - 20, hint.height());
+	m_container.resize(areaSize.width() - 16, hint.height());
+
+	m_text.setGeometry(
+		margins.left() + areaSize.width() + spacing,
+		margins.top(),
+		areaSize.width(),
+		areaSize.height()
+	);
+}
+
+void BrainListWidget::layoutContainer() {
+	const int spacing = 8;
+	QSize currentSize = size();
+	QMargins margins = contentsMargins();
+	QSize areaSize = QSize(
+		(currentSize.width() - margins.left() - margins.right() - spacing) / 2,
+		currentSize.height() - margins.top() - margins.bottom()
+	);
+	QSize hint = m_container.sizeHint();
+	m_container.resize(areaSize.width() - 16, hint.height());
 }
 
 // Model.
 
-void BrainListWidget::setItems(std::vector<Brain> items) {
+void BrainListWidget::setItems(BrainList list) {
 	int idx = 1;
 
+	// Update text.
+	if (list.items.size() == 0) {
+		QString textPattern = tr("<h2>Welcome!</h2>\n\nYou currently have 0 brains. Let's create one!");
+		m_text.setText(textPattern);
+	} else {
+		QString textPattern = tr("<h2>Welcome!</h2>\n\n<p>You currently have %1 brain(s).</p>\n\n<p>All of your data is stored in <b>%2</b>.</p>\n\n<p>Total size of saved thoughts: <b>%3</b></p>")
+			.arg(list.items.size())
+			.arg(QString::fromStdString(list.location))
+			.arg(formatSize(list.sizeBytes));
+		m_text.setText(textPattern);
+	}
+
 	// Create new widgets.
+	std::vector<Brain>& items = list.items;
 	for (auto it = items.begin(); it != items.end(); it++) {
 		BrainItemWidget *widget = nullptr;
 		if (auto found = m_widgets.find((*it).id()); found != m_widgets.end()) {
@@ -118,8 +173,7 @@ void BrainListWidget::setItems(std::vector<Brain> items) {
 	}
 
 	// Resize container.
-	QSize hint = m_container.sizeHint();
-	m_container.resize(size().width() - 20, hint.height());
+	layoutContainer();
 
 	// Repaint.
 	update();
@@ -183,5 +237,30 @@ void BrainListWidget::onNewItemClicked() {
 	if (ret == QDialog::Accepted && !dialog.textValue().isEmpty()) {
 		emit newItemCreated(dialog.textValue().toStdString());
 	}
+}
+
+// Helpers
+
+QString BrainListWidget::formatSize(uint64_t sizeInBytes) {
+	const char* prefixes[] = {
+		"B",
+		"KB",
+		"MB",
+		"GB",
+		"TB"
+	};
+
+	int idx = 0;
+	double sizeDouble = sizeInBytes;
+	while (sizeDouble > 1024.0) {
+		idx += 1;
+		sizeDouble /= 1024.0;
+	}
+
+	char buffer[256] = {0};
+	snprintf(buffer, 255, "%.2f %s", sizeDouble, prefixes[idx]);
+
+	QString result = QString(buffer);
+	return result;
 }
 

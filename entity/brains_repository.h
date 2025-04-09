@@ -23,7 +23,7 @@ public:
 
 class BrainsRepository {
 public:
-	virtual std::vector<Brain> listBrains() = 0;
+	virtual BrainList listBrains() = 0;
 	virtual CreateBrainResult createBrain(std::string) = 0;
 	virtual BrainRepositoryError deleteBrain(std::string) = 0;
 };

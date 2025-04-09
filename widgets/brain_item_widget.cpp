@@ -13,17 +13,27 @@ BrainItemWidget::BrainItemWidget(
 	QString id,
 	QString name
 )
-	: QPushButton(name, parent),
+	: QFrame(parent),
 	m_style(style),
 	m_id(id),
 	m_name(name),
-	m_deleteButton(tr("Delete"), this)
+	m_layout(this)
 {
-	setStyleSheet(
-		style->brainListButtonStyle("left", style->textColor())
+	setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+	m_label = new ElidedLabelWidget(parent, name);
+	m_label->setStyleSheet(
+		QString("background-color: #00000000; font: %1 %2px \"%3\"")
+		.arg("bold")
+		.arg(18)
+		.arg(style->font().family())
 	);
 
-	m_deleteButton.setStyleSheet(
+	setStyleSheet(
+		getStyle(style, StatusNormal)
+	);
+
+	m_deleteButton = new QPushButton(tr("Delete"), nullptr);
+	m_deleteButton->setStyleSheet(
 		QString("QPushButton{\
 				font: %1 %2px \"%3\";\
 				color: %4;\
@@ -61,16 +71,17 @@ BrainItemWidget::BrainItemWidget(
 		.arg(style->background().darker(110).name(QColor::HexRgb))
 	);
 
-	m_deleteButton.setVisible(false);
+	m_deleteButton->setVisible(false);
 
 	connect(
-		&m_deleteButton, &QPushButton::clicked,
+		m_deleteButton, &QPushButton::clicked,
 		this, &BrainItemWidget::onDeleteClick
 	);
-	connect (
-		this, &QPushButton::clicked,
-		this, &BrainItemWidget::onClick
-	);
+
+	m_label->setContentsMargins(0, 1, 0, 1);
+	m_layout.setContentsMargins(0, 0, 0, 0);
+	m_layout.addWidget(m_label);
+	m_layout.addWidget(m_deleteButton);
 }
 
 const QString BrainItemWidget::id() const {
@@ -83,28 +94,56 @@ const QString BrainItemWidget::name() const {
 
 void BrainItemWidget::setName(QString name) {
 	m_name = name;
-	setText(name);
+
+	if (m_label != nullptr)
+		m_label->setText(name);
+}
+
+// Sizing
+
+QSize BrainItemWidget::sizeHint() const {
+	QSize labelSize = m_label->sizeHint();
+	return QSize(
+		labelSize.width(),
+		labelSize.height() + 18
+	);	
 }
 
 // Events
 
-void BrainItemWidget::resizeEvent(QResizeEvent *event) {
-	QSize current = event->size();
-
-	QSize hint = m_deleteButton.sizeHint();
-	m_deleteButton.setGeometry(
-		current.width() - 12 - hint.width(),
-		(current.height() - hint.height()) / 2,
-		hint.width(), hint.height()
+void BrainItemWidget::enterEvent(QEnterEvent*) {
+	m_deleteButton->setVisible(true);
+	setStyleSheet(
+		getStyle(m_style, StatusHover)
 	);
 }
 
-void BrainItemWidget::enterEvent(QEnterEvent*) {
-	m_deleteButton.setVisible(true);
+void BrainItemWidget::leaveEvent(QEvent *) {
+	m_deleteButton->setVisible(false);
+	setStyleSheet(
+		getStyle(m_style, StatusNormal)
+	);
 }
 
-void BrainItemWidget::leaveEvent(QEvent *) {
-	m_deleteButton.setVisible(false);
+void BrainItemWidget::mousePressEvent(QMouseEvent*) {
+	setStyleSheet(
+		getStyle(m_style, StatusPressed)
+	);
+}
+
+void BrainItemWidget::mouseReleaseEvent(QMouseEvent *event) {
+	QPoint pos = event->pos();
+	QSize s = size();
+
+	if (
+		pos.x() >= 0 && pos.y() >= 0 &&
+		pos.x() <= s.width() && pos.y() < s.height()
+	) {
+		emit buttonClicked(this);
+		setStyleSheet(getStyle(m_style, StatusHover));
+	} else {
+		setStyleSheet(getStyle(m_style, StatusNormal));
+	}
 }
 
 // Slots
@@ -115,5 +154,39 @@ void BrainItemWidget::onClick() {
 
 void BrainItemWidget::onDeleteClick() {
 	emit deleteClicked(this);
+}
+
+// Helpers
+
+inline QString BrainItemWidget::getStyle(Style *style, Status status) {
+	int backTint = 110;
+	int borderTint = 100;
+
+	switch (status) {
+		case StatusNormal:
+			break;
+		case StatusHover:
+			backTint = 130;
+			break;
+		case StatusPressed:
+			backTint = 90;
+			borderTint = 300;
+			break;
+	}
+
+	return QString("BrainItemWidget{\
+		color: %1;\
+		border-width: 1px;\
+		border-color: %2;\
+		padding: 0px;\
+		padding-left: 12px;\
+		padding-right: 12px;\
+		background-color: %3;\
+		border-radius: 10px;\
+		border-style: solid;\
+	}")
+	.arg(style->textColor().name(QColor::HexArgb))
+	.arg(style->textColor().darker(borderTint).name(QColor::HexArgb))
+	.arg(style->background().lighter(backTint).name(QColor::HexArgb));
 }
 

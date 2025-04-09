@@ -25,6 +25,10 @@ int main(int argc, char *argv[]) {
 	BrainListWidget widget = BrainListWidget(nullptr, &style);
 	BrainListPresenter presenter = BrainListPresenter(&widget, &repo);
 
+	widget.setStyleSheet(
+		QString("background-color: %1")
+		.arg(style.background().name(QColor::HexArgb))
+	);
 	widget.resize(600, 600);
 	widget.show();
 

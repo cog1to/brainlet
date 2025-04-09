@@ -49,7 +49,7 @@ public:
 	// SearchRepository.
 	SearchResult search(std::string) override;
 	// BrainRepository.
-	std::vector<Brain> listBrains() override;
+	BrainList listBrains() override;
 	CreateBrainResult createBrain(std::string) override;
 	BrainRepositoryError deleteBrain(std::string) override;
 

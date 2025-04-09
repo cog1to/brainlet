@@ -73,7 +73,7 @@ Style& Style::defaultStyle() {
 		12,
 		QColor(255, 255, 255, 255),
 		textFont,
-		QColor(171, 181, 181, 255),
+		QColor(185, 195, 195, 255),
 		codeFont,
 		QColor(43, 63, 72, 255),
 		QColor(162, 187, 219),
