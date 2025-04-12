@@ -22,10 +22,11 @@ BrainItemWidget::BrainItemWidget(
 	setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 	m_label = new ElidedLabelWidget(parent, name);
 	m_label->setStyleSheet(
-		QString("background-color: #00000000; font: %1 %2px \"%3\"")
+		QString("background-color: #00000000; font: %1 %2px \"%3\"; color: %4;")
 		.arg("bold")
 		.arg(18)
 		.arg(style->font().family())
+		.arg(style->textColor().name(QColor::HexRgb))
 	);
 
 	setStyleSheet(
