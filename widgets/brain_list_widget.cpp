@@ -232,7 +232,7 @@ void BrainListWidget::onItemDeleteClicked(BrainItemWidget *view) {
 
 void BrainListWidget::onNewItemClicked() {
 	QInputDialog dialog;
-	dialog.setLabelText(tr("Enter a unique name for the new brain:"));
+	dialog.setLabelText(tr("Enter a unique name for the new brain.\nAvoid using special symbols that might not be supported by the filesystem."));
 	dialog.setWindowTitle(tr("Create new brain"));
 
 	QSize size = dialog.sizeHint();
