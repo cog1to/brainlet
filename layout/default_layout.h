@@ -11,6 +11,7 @@ class DefaultLayout: public BaseLayout {
 
 public:
 	DefaultLayout(Style*);
+	~DefaultLayout() override;
 	void reload() override;
 	void setSize(QSize) override;
 	void setState(const State*) override;

@@ -106,3 +106,6 @@ void BrainListPresenter::onShown() {
 	m_widget->setItems(list);
 }
 
+void BrainListPresenter::onDismiss() {
+	// TODO: Cleanup if needed.
+}

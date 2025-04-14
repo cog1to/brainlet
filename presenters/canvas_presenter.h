@@ -14,6 +14,7 @@ class CanvasPresenter: public QObject {
 
 public:
 	CanvasPresenter(BaseLayout*, GraphRepository*, SearchRepository*, CanvasWidget*);
+	~CanvasPresenter();
 	void setThought(ThoughtId id);
 
 signals:

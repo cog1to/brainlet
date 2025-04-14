@@ -26,3 +26,4 @@ void BaseLayout::setStyle(Style* style) {
 }
 
 void BaseLayout::onScroll(unsigned int, int) {}
+

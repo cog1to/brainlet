@@ -27,7 +27,8 @@ int main(int argc, char **argv) {
 	};
 	
 	BrainListWidget listWidget(nullptr, &style);
-	listWidget.setItems(items);
+	BrainList list = BrainList(items, 100, "memory");
+	listWidget.setItems(list);
 
 	QVBoxLayout layout(&parent);
 	layout.addWidget(&listWidget);

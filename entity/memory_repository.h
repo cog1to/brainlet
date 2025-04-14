@@ -5,18 +5,14 @@
 #include <unordered_map>
 
 #include "model/model.h"
-#include "entity/graph_repository.h"
-#include "entity/text_repository.h"
-#include "entity/search_repository.h"
+#include "entity/brain_repository.h"
 #include "entity/brains_repository.h"
 #include "entity/thought_entity.h"
 #include "entity/connection_entity.h"
 #include "entity/brain_entity.h"
 
 class MemoryRepository:
-	public GraphRepository,
-	public TextRepository,
-	public SearchRepository,
+	public BrainRepository,
 	public BrainsRepository
 {
 public:

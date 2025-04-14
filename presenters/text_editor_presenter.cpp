@@ -171,3 +171,10 @@ void TextEditorPresenter::onThoughtSelected(
 	m_view->setFocus();
 }
 
+void TextEditorPresenter::onDismiss() {
+	if (m_view->isDirty()) {
+		QString text = m_view->text();
+		onTextChanged(text);
+	}
+}
+

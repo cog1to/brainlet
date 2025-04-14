@@ -47,7 +47,11 @@ int main(int argc, char *argv[]) {
 
 	// Make text widget.
 	MarkdownWidget *markdownWidget = new MarkdownWidget(nullptr, &style);
-	TextEditorPresenter markdownPresenter(&repo, &repo, markdownWidget);
+	TextEditorPresenter *markdownPresenter = new TextEditorPresenter(
+		&repo,
+		&repo,
+		markdownWidget
+	);
 
 	// Make thought details widget.
 	ThoughtDetailsWidget *detailsWidget = new ThoughtDetailsWidget(
@@ -57,22 +61,43 @@ int main(int argc, char *argv[]) {
 	);
 
 	// Make canvas widget.
-	DefaultLayout layout(&style);
-	CanvasWidget *canvasWidget = new CanvasWidget(nullptr, &style, &layout);
-	CanvasPresenter canvasPresenter(&layout, &repo, &repo, canvasWidget);
+	DefaultLayout *layout = new DefaultLayout(&style);
+	CanvasWidget *canvasWidget = new CanvasWidget(
+		nullptr,
+		&style,
+		layout
+	);
+	CanvasPresenter *canvasPresenter = new CanvasPresenter(
+		layout,
+		&repo,
+		&repo,
+		canvasWidget
+	);
 	// Make canvas container.
-	ContainerWidget *containerWidget = new ContainerWidget(nullptr, &style, canvasWidget);
+	ContainerWidget *containerWidget = new ContainerWidget(
+		nullptr,
+		&style,
+		canvasWidget
+	);
 
 	// Make search presenter.
-	SearchPresenter searchPresenter(&repo, containerWidget->search());
+	SearchPresenter *searchPresenter = new SearchPresenter(
+		&repo,
+		containerWidget->search()
+	);
 
 	// Make brain widget.
-	BrainWidget brainWidget = BrainWidget(nullptr, &style, containerWidget, detailsWidget);
+	BrainWidget brainWidget = BrainWidget(
+		nullptr,
+		&style,
+		containerWidget,
+		detailsWidget
+	);
 	BrainPresenter brainPresenter(
 		&brainWidget,
-		&canvasPresenter,
-		&markdownPresenter,
-		&searchPresenter
+		canvasPresenter,
+		markdownPresenter,
+		searchPresenter
 	);
 
 	// Show window.

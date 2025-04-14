@@ -5,10 +5,11 @@
 
 #include <QObject>
 
+#include "presenters/dismissable_presenter.h"
 #include "widgets/brain_list_widget.h"
 #include "entity/brains_repository.h"
 
-class BrainListPresenter: public QObject {
+class BrainListPresenter: public DismissablePresenter {
 	Q_OBJECT
 
 public:
@@ -23,6 +24,7 @@ private slots:
 	void onBrainDeleted(std::string);
 	void onBrainCreated(std::string);
 	void onBrainRenamed(std::string, std::string);
+	void onDismiss() override;
 
 private:
 	BrainListWidget *m_widget;

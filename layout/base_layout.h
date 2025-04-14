@@ -16,6 +16,7 @@
 class BaseLayout {
 public:
 	BaseLayout(Style*);
+	virtual ~BaseLayout() {};
 	// State manipulation.
 	virtual void setState(const State*);
 	virtual void setSize(QSize);

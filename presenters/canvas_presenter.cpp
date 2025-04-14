@@ -7,7 +7,9 @@ CanvasPresenter::CanvasPresenter(
 	GraphRepository *repo,
 	SearchRepository *search,
 	CanvasWidget *view
-) : m_layout(layout), m_repo(repo), m_search(search), m_view(view) {
+) : m_repo(repo), m_search(search), m_view(view) {
+	m_layout = layout;
+
 	connect(
 		view, SIGNAL(textChanged(ThoughtId, QString, std::function<void(bool)>)),
 		this, SLOT(onThoughtChanged(ThoughtId, QString, std::function<void(bool)>))
@@ -19,13 +21,13 @@ CanvasPresenter::CanvasPresenter(
 	);
 
 	connect(
-		view,SIGNAL(thoughtCreated(ThoughtId, ConnectionType, bool, QString, std::function<void(bool, ThoughtId)>)),
-		this, SLOT(onThoughtCreated(ThoughtId, ConnectionType, bool, QString, std::function<void(bool, ThoughtId)>))
+		view, &CanvasWidget::thoughtCreated,
+		this, &CanvasPresenter::onThoughtCreated
 	);
 
 	connect(
-		view, SIGNAL(thoughtConnected(ThoughtId, ThoughtId, ConnectionType, std::function<void(bool)>)),
-		this, SLOT(onThoughtConnected(ThoughtId, ThoughtId, ConnectionType, std::function<void(bool)>))
+		view, &CanvasWidget::thoughtConnected,
+		this, &CanvasPresenter::onThoughtConnected
 	);
 
 	connect(
@@ -47,6 +49,11 @@ CanvasPresenter::CanvasPresenter(
 		view, SIGNAL(newThoughtTextChanged(QString)),
 		this, SLOT(onNewThoughtTextChanged(QString))	
 	);
+}
+
+CanvasPresenter::~CanvasPresenter() {
+	if (m_layout != nullptr)
+		delete m_layout;
 }
 
 void CanvasPresenter::setThought(ThoughtId id) {

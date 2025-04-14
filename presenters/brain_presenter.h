@@ -7,9 +7,10 @@
 #include "presenters/canvas_presenter.h"
 #include "presenters/text_editor_presenter.h"
 #include "presenters/search_presenter.h"
+#include "presenters/dismissable_presenter.h"
 #include "widgets/brain_widget.h"
 
-class BrainPresenter: public QObject {
+class BrainPresenter: public DismissablePresenter {
 	Q_OBJECT
 
 public:
@@ -19,6 +20,7 @@ public:
 		TextEditorPresenter*,
 		SearchPresenter*
 	);
+	~BrainPresenter();
 
 protected slots:
 	void onThoughtSelected(ThoughtId, QString);
@@ -26,6 +28,7 @@ protected slots:
 	void onSearchItemSelected(ThoughtId, QString);
 	void onThoughtLinkSelected(ThoughtId);
 	void onConnectionCreated();
+	void onDismiss() override;
 
 private:
 	BrainWidget *m_view;
