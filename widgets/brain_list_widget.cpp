@@ -204,7 +204,10 @@ bool BrainListWidget::findInItems(
 // Slots.
 
 void BrainListWidget::onItemClicked(BrainItemWidget *view) {
-	emit itemClicked(view->id().toStdString());
+	emit itemClicked(
+		view->id().toStdString(),
+		view->name().toStdString()
+	);
 }
 
 void BrainListWidget::onItemDeleteClicked(BrainItemWidget *view) {

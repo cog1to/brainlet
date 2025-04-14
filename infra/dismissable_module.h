@@ -1,20 +1,21 @@
 #ifndef H_INFRA_MODULE
 #define H_INFRA_MODULE
 
-#include <vector>
+#include <QWidget>
 
 #include "presenters/dismissable_presenter.h"
+#include "entity/base_repository.h"
 
 struct DismissableModule {
 public:
 	DismissablePresenter *presenter;
-	void *widget;
-	void *repo;
+	QWidget *widget;
+	BaseRepository *repo;
 
 	DismissableModule(
 		DismissablePresenter *presenter,
-		void *widget,
-		void *repo
+		QWidget *widget,
+		BaseRepository *repo
 	);
 };
 

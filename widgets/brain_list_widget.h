@@ -34,7 +34,7 @@ protected:
 
 signals:
 	void shown();
-	void itemClicked(std::string);
+	void itemClicked(std::string, std::string);
 	void itemDeleteClicked(std::string);
 	void newItemCreated(std::string);
 	void itemRenamed(std::string, std::string);

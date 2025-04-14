@@ -5,6 +5,7 @@
 #include <unordered_map>
 
 #include "model/model.h"
+#include "entity/base_repository.h"
 #include "entity/brain_repository.h"
 #include "entity/brains_repository.h"
 #include "entity/thought_entity.h"
@@ -12,6 +13,7 @@
 #include "entity/brain_entity.h"
 
 class MemoryRepository:
+	public BaseRepository,
 	public BrainRepository,
 	public BrainsRepository
 {
@@ -21,7 +23,7 @@ public:
 		std::vector<ConnectionEntity>,
 		ThoughtId
 	);
-	~MemoryRepository();
+	~MemoryRepository() override;
 	// GraphRepository.
 	bool select(ThoughtId) override;
 	const State* getState() const override;
@@ -49,6 +51,8 @@ public:
 	CreateBrainResult createBrain(std::string) override;
 	BrainRepositoryError deleteBrain(std::string) override;
 	BrainRepositoryError renameBrain(std::string, std::string) override;
+	// Helpers
+	std::string getBrainName(std::string);
 
 private:
 	// List of brains.

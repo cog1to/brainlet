@@ -40,8 +40,11 @@ BrainListPresenter::BrainListPresenter(
 
 // Slots
 
-void BrainListPresenter::onBrainSelected(std::string id) {
-	emit brainSelected(id);
+void BrainListPresenter::onBrainSelected(
+	std::string id,
+	std::string name
+) {
+	emit brainSelected(id, name);
 }
 
 void BrainListPresenter::onBrainDeleted(std::string id) {

@@ -30,6 +30,8 @@ DismissableModule MemoryFactory::makeBrainsModule() {
 	std::vector<ConnectionEntity> conns;
 
 	MemoryRepository *repo = new MemoryRepository(thoughts, conns, 0);
+	m_list_repo = repo;
+
 	BrainListWidget *widget = new BrainListWidget(nullptr, m_style);
 	BrainListPresenter *presenter = new BrainListPresenter(widget, repo);
 
@@ -37,6 +39,7 @@ DismissableModule MemoryFactory::makeBrainsModule() {
 		QString("background-color: %1")
 		.arg(m_style->background().name(QColor::HexArgb))
 	);
+
 
 	return DismissableModule(
 		presenter,
@@ -46,15 +49,21 @@ DismissableModule MemoryFactory::makeBrainsModule() {
 }
 
 DismissableModule MemoryFactory::makeBrainModule(std::string id) {
-	// TODO: Needs a mechanism to destroy every sub-presenter and
+	// TODO: Need a mechanism to destroy every sub-presenter and
 	// sub-widget.
 	//
 	// 1. Dispose bag pattern as part of the module/widget.
 	// 2. Ownership of sub-components in every component.
-	// 3. ?
+	//
+	// Will go with 2 for now, as we don't have a lot of dependencies
+	// right now and it seems more logical. Just bear in mind that
+	// this approach does not scale well for UI applications.
 
 	// Get or create a repo.
-	std::vector<ThoughtEntity> thoughts;
+	std::string name = m_list_repo->getBrainName(id);
+	std::vector<ThoughtEntity> thoughts = {
+		ThoughtEntity(0, name)
+	};
 	std::vector<ConnectionEntity> conns;
 	MemoryRepository *repo = new MemoryRepository(thoughts, conns, 0);
 

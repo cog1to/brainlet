@@ -15,10 +15,7 @@ DefaultLayout::DefaultLayout(Style* style)
 	m_sidePadding = style->scrollWidth();
 }
 
-DefaultLayout::~DefaultLayout() {
-	// Do nothing.
-	qDebug() << "~dl";
-}
+DefaultLayout::~DefaultLayout() {}
 
 void DefaultLayout::reload() {
 	if (m_state == nullptr) {

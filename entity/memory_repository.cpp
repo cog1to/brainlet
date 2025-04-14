@@ -490,3 +490,15 @@ bool MemoryRepository::listContains(std::vector<ThoughtId>& list, ThoughtId id) 
 	return false;
 }
 
+// Helpers
+
+std::string MemoryRepository::getBrainName(std::string id) {
+	for (auto it = m_brains.begin(); it != m_brains.end(); it++) {
+		if ((*it).id == id) {
+			return (*it).name;
+		}
+	}
+
+	return "";
+}
+
