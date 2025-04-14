@@ -3,7 +3,7 @@
 
 #include <QApplication>
 #include <QString>
-#include <QIODevice>
+#include <QStyleFactory>
 
 #include "widgets/tabs_widget.h"
 #include "presenters/tabs_presenter.h"
@@ -11,6 +11,7 @@
 
 int main(int argc, char **argv) {
 	QApplication app(argc, argv);
+	//app.setStyle(QStyleFactory::create("Fusion"));
 
 	Style& style = Style::defaultStyle();
 

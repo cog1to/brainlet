@@ -39,10 +39,13 @@ void TabsPresenter::onShown() {
 	BrainListPresenter *presenter =
 		(BrainListPresenter *)listModule.presenter;
 
-	// Connect signal to open brains on cell select.
 	connect(
 		presenter, &BrainListPresenter::brainSelected,
 		this,	&TabsPresenter::onBrainSelected
+	);
+	connect(
+		presenter, &BrainListPresenter::brainDeleted,
+		this,	&TabsPresenter::onBrainDeleted
 	);
 
 	m_tabs.push_back(TabModule("", listModule));
@@ -69,6 +72,16 @@ void TabsPresenter::onBrainSelected(std::string id, std::string name) {
 	m_widget->addTab(brainModule.widget, QString::fromStdString(name), true);
 }
 
+void TabsPresenter::onBrainDeleted(std::string id) {
+	for (auto it = m_tabs.begin(); it != m_tabs.end(); it++) {
+		if ((*it).id == id) {
+			m_widget->deleteWidget((*it).mod.widget);
+			m_tabs.erase(it);
+			return;
+		}
+	}
+}
+
 void TabsPresenter::onTabClose(int idx) {
 	assert(idx < m_tabs.size());
 
@@ -79,5 +92,7 @@ void TabsPresenter::onTabClose(int idx) {
 	delete mod.presenter;
 	delete mod.widget;
 	delete mod.repo;
+
+	m_tabs.erase(m_tabs.begin() + idx);
 }
 

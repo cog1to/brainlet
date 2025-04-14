@@ -21,6 +21,7 @@ public:
 	void addTab(QWidget*, QString, bool);
 	void removeTab(int);
 	void selectWidget(QWidget*);
+	void deleteWidget(QWidget*);
 
 signals:
 	void shown();

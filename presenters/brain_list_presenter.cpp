@@ -60,6 +60,8 @@ void BrainListPresenter::onBrainDeleted(std::string id) {
 		BrainList list = m_repo->listBrains();
 		m_widget->setItems(list);
 	}
+
+	emit brainDeleted(id);
 }
 
 void BrainListPresenter::onBrainCreated(std::string name) {

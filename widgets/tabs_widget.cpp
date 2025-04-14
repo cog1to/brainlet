@@ -53,6 +53,13 @@ void TabsWidget::selectWidget(QWidget *widget) {
 	m_tabWidget->setCurrentWidget(widget);
 }
 
+void TabsWidget::deleteWidget(QWidget* widget) {
+	int idx = m_tabWidget->indexOf(widget);
+	if (idx != -1) {
+		m_tabWidget->removeTab(idx);
+	}
+}
+
 // Events
 
 void TabsWidget::showEvent(QShowEvent*) {

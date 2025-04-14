@@ -29,6 +29,7 @@ public:
 private slots:
 	void onShown();
 	void onBrainSelected(std::string, std::string);
+	void onBrainDeleted(std::string);
 	void onTabClose(int);
 
 private:
