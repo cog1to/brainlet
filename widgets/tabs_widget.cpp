@@ -29,17 +29,16 @@ TabsWidget::TabsWidget(
 	m_tabWidget->setElideMode(Qt::ElideRight);
 	m_tabWidget->setStyleSheet(
 		QString("QTabBar::tab {\
-				padding: 4px;\
-				padding-left: 12px;\
-				padding-right: 12px;\
+				padding: 8px;\
+				padding-left: 16px;\
+				padding-right: 16px;\
 				font: normal %1px \"%2\";\
 				color: %3;\
 				background: %4;\
 				border-top-left-radius: 4px;\
 				border-top-right-radius: 4px;\
-			}\
-			QTabBar::tab {\
 				border-bottom: none;\
+				right: 4px;\
 			}\
 			QTabBar::tab:selected, QTabBar::tab:hover {\
 				background: %5;\
@@ -95,6 +94,10 @@ void TabsWidget::addTab(
 
 void TabsWidget::removeTab(int idx) {
 	m_tabWidget->removeTab(idx);
+}
+
+void TabsWidget::renameTab(int idx, QString name) {
+	m_tabWidget->setTabText(idx, name);
 }
 
 void TabsWidget::selectWidget(QWidget *widget) {

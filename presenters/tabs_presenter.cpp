@@ -47,6 +47,10 @@ void TabsPresenter::onShown() {
 		presenter, &BrainListPresenter::brainDeleted,
 		this,	&TabsPresenter::onBrainDeleted
 	);
+	connect(
+		presenter, &BrainListPresenter::brainRenamed,
+		this,	&TabsPresenter::onBrainRenamed
+	);
 
 	m_tabs.push_back(TabModule("", listModule));
 
@@ -78,6 +82,15 @@ void TabsPresenter::onBrainDeleted(std::string id) {
 			m_widget->deleteWidget((*it).mod.widget);
 			m_tabs.erase(it);
 			return;
+		}
+	}
+}
+
+void TabsPresenter::onBrainRenamed(std::string id, std::string name) {
+	for (int idx = 0; idx < m_tabs.size(); idx++) {
+		if (m_tabs[idx].id == id) {
+			m_widget->renameTab(idx, QString::fromStdString(name));
+			break;
 		}
 	}
 }

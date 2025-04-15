@@ -94,6 +94,7 @@ void BrainListPresenter::onBrainRenamed(
 	if (result == BrainRepositoryErrorNone) {
 		BrainList list = m_repo->listBrains();
 		m_widget->setItems(list);
+		emit brainRenamed(id, name);
 	} else if (result == BrainRepositoryErrorIO) {
 		m_widget->showError(tr("Failed to access file system"));
 	} else if (result == BrainRepositoryErrorDuplicate) {

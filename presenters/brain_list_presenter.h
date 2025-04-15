@@ -17,6 +17,7 @@ public:
 
 signals:
 	void brainSelected(std::string, std::string);
+	void brainRenamed(std::string, std::string);
 	void brainDeleted(std::string);
 
 private slots:

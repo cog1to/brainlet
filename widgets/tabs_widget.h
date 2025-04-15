@@ -20,6 +20,7 @@ public:
 	TabsWidget(QWidget*, Style*);
 	void addTab(QWidget*, QString, bool);
 	void removeTab(int);
+	void renameTab(int, QString);
 	void selectWidget(QWidget*);
 	void deleteWidget(QWidget*);
 
