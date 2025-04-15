@@ -35,18 +35,22 @@ TabsWidget::TabsWidget(
 				font: normal %1px \"%2\";\
 				color: %3;\
 				background: %4;\
+				border-bottom: none;\
 				border-top-left-radius: 4px;\
 				border-top-right-radius: 4px;\
-				border-bottom: none;\
-				right: 4px;\
 			}\
-			QTabBar::tab:selected, QTabBar::tab:hover {\
+			QTabBar::tab:selected {\
 				background: %5;\
 			}\
 			QTabBar::tab:!selected {\
-				background: %6;\
-				border-bottom: none;\
+				background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,\
+															 stop: 0 %6,\
+															 stop: 0.9 %8,\
+															 stop: 1.0 %9);\
 				color: %7;\
+			}\
+			QTabBar::tab:!selected:hover {\
+				background: %10;\
 			}\
 			QTabWidget::tab-bar {\
 				alignment: left;\
@@ -66,6 +70,9 @@ TabsWidget::TabsWidget(
 		.arg(style->background().name(QColor::HexRgb))
 		.arg(style->background().darker(130).name(QColor::HexRgb))
 		.arg(style->textColor().darker(120).name(QColor::HexRgb))
+		.arg(style->background().darker(130).name(QColor::HexRgb))
+		.arg(style->background().darker(140).name(QColor::HexRgb))
+		.arg(style->background().lighter(120).name(QColor::HexRgb))
 	);
 	// TODO: Customize/subclass QTabBar. Looks out of place on Mac.
 
