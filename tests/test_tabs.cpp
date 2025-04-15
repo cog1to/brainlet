@@ -19,10 +19,6 @@ int main(int argc, char **argv) {
 	TabsWidget widget = TabsWidget(nullptr, &style);
 	TabsPresenter presenter = TabsPresenter(&widget, &factory);
 
-	widget.setStyleSheet(
-		QString("background-color: %1")
-		.arg(style.background().name(QColor::HexArgb))
-	);
 	widget.resize(900, 600);
 	widget.show();
 

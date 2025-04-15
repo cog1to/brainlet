@@ -40,7 +40,6 @@ void DefaultLayout::reload() {
 }
 
 void DefaultLayout::setSize(QSize size) {
-	qDebug() << "dl:setSize";
 	m_size = size;
 	m_topSideHeight = (int)((float)size.height() * s_sideRatio);
 	m_leftSideWidth = (int)((float)size.width() * s_sideRatio);
