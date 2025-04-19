@@ -25,7 +25,7 @@ ThoughtDetailsWidget::ThoughtDetailsWidget(
 			.arg(style->textEditFont().family())
 	);
 	m_title.setWordWrap(true);
-	m_title.setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+	m_title.setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Minimum);
 
 	m_separator.setMinimumSize(1, 1);
 	m_separator.setStyleSheet(
