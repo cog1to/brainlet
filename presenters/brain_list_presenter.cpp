@@ -56,12 +56,12 @@ void BrainListPresenter::onBrainDeleted(std::string id) {
 	BrainRepositoryError error = m_repo->deleteBrain(id);
 	if (error != BrainRepositoryErrorNone) {
 		m_widget->showError(tr("Failed to access file system"));
-	} else {
-		BrainList list = m_repo->listBrains();
-		m_widget->setItems(list);
+		return;
 	}
 
 	emit brainDeleted(id);
+
+	reload();
 }
 
 void BrainListPresenter::onBrainCreated(std::string name) {
@@ -71,14 +71,15 @@ void BrainListPresenter::onBrainCreated(std::string name) {
 		return;
 
 	CreateBrainResult result = m_repo->createBrain(name);
-	if (result.error == BrainRepositoryErrorNone) {
-		BrainList list = m_repo->listBrains();
-		m_widget->setItems(list);
-	} else if (result.error == BrainRepositoryErrorIO) {
+	if (result.error == BrainRepositoryErrorIO) {
 		m_widget->showError(tr("Failed to access file system"));
+		return;
 	} else if (result.error == BrainRepositoryErrorDuplicate) {
 		m_widget->showError(tr("A brain with this name already exists"));
+		return;
 	}
+
+	reload();
 }
 
 void BrainListPresenter::onBrainRenamed(
@@ -91,15 +92,15 @@ void BrainListPresenter::onBrainRenamed(
 		return;
 
 	BrainRepositoryError result = m_repo->renameBrain(id, name);
-	if (result == BrainRepositoryErrorNone) {
-		BrainList list = m_repo->listBrains();
-		m_widget->setItems(list);
-		emit brainRenamed(id, name);
-	} else if (result == BrainRepositoryErrorIO) {
+	if (result == BrainRepositoryErrorIO) {
 		m_widget->showError(tr("Failed to access file system"));
 	} else if (result == BrainRepositoryErrorDuplicate) {
 		m_widget->showError(tr("A brain with this name already exists"));
 	}
+
+	emit brainRenamed(id, name);
+
+	reload();
 }
 
 void BrainListPresenter::onShown() {
@@ -108,10 +109,24 @@ void BrainListPresenter::onShown() {
 	if (m_widget == nullptr)
 		return;
 
-	BrainList list = m_repo->listBrains();
-	m_widget->setItems(list);
+	reload();
 }
 
 void BrainListPresenter::onDismiss() {
 	// TODO: Cleanup if needed.
+}
+
+// Helpers.
+
+void BrainListPresenter::reload() {
+	assert(m_repo != nullptr);
+	assert(m_widget != nullptr);
+
+	ListBrainsResult result = m_repo->listBrains();
+	if (result.error != BrainRepositoryErrorNone) {
+		m_widget->showError(tr("Failed to access file system"));
+		return;
+	}
+
+	m_widget->setItems(result.list);
 }

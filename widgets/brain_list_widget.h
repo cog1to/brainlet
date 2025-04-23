@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 
+#include <QObject>
 #include <QWidget>
 #include <QScrollArea>
 #include <QResizeEvent>
@@ -16,6 +17,7 @@
 #include "widgets/base_widget.h"
 #include "widgets/style.h"
 #include "widgets/brain_item_widget.h"
+#include "widgets/toast_widget.h"
 #include "model/brain.h"
 #include "model/brain_list.h"
 
@@ -51,6 +53,7 @@ private:
 	QWidget m_container;
 	QVBoxLayout m_layout;
 	QLabel m_text;
+	ToastWidget *m_error = nullptr;
 	// Helpers.
 	bool findInItems(const std::vector<Brain>&, std::string);
 	void layoutContainer();

@@ -47,7 +47,7 @@ public:
 	// SearchRepository.
 	SearchResult search(std::string) override;
 	// BrainRepository.
-	BrainList listBrains() override;
+	ListBrainsResult listBrains() override;
 	CreateBrainResult createBrain(std::string) override;
 	BrainRepositoryError deleteBrain(std::string) override;
 	BrainRepositoryError renameBrain(std::string, std::string) override;

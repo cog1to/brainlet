@@ -4,6 +4,7 @@
 #include <QVBoxLayout>
 
 #include "model/thought.h"
+#include "widgets/toast_widget.h"
 #include "widgets/search_widget.h"
 #include "widgets/thought_edit_widget.h"
 
@@ -160,6 +161,14 @@ void SearchWidget::clear() {
 	m_active = false;
 	m_edit->clearFocus();
 	emit updated(this);
+}
+
+void SearchWidget::onError(QString name) {
+	if (m_error != nullptr)
+		delete m_error;
+
+	m_error = new ToastWidget(m_style, name);
+	m_error->show(this);
 }
 
 // State.

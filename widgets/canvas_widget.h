@@ -13,6 +13,7 @@
 #include "layout/base_layout.h"
 #include "widgets/style.h"
 #include "widgets/base_widget.h"
+#include "widgets/toast_widget.h"
 #include "widgets/anchor_highlight_widget.h"
 #include "widgets/thought_widget.h"
 #include "widgets/scroll_area_widget.h"
@@ -42,6 +43,9 @@ public:
 	// Suggestions.
 	void showSuggestions(std::vector<ConnectionItem>);
 	void hideSuggestions();
+
+public slots:
+	void showError(QString);
 
 signals:
 	void textChanged(ThoughtId, QString, std::function<void(bool)>);
@@ -77,6 +81,8 @@ private:
 	ThoughtWidget *m_menuThought = nullptr;
 	QWidget m_overlay;
 	std::optional<Path> m_pathHighlight;
+	// Errors
+	ToastWidget *m_error = nullptr;
 	// Suggestions.
 	ConnectionListWidget *m_suggestions = nullptr;	
 	QFrame *m_suggestionsContainer = nullptr;

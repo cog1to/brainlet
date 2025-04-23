@@ -31,6 +31,10 @@ SearchPresenter::SearchPresenter(
 		widget, SIGNAL(searchFocusLost(SearchWidget*)),
 		this, SLOT(onSearchCanceled(SearchWidget*))
 	);
+	connect(
+		this, SIGNAL(onError(QString)),
+		widget, SLOT(onError(QString))
+	);
 }
 
 void SearchPresenter::onTextChanged(SearchWidget *widget, QString text) {
@@ -45,9 +49,9 @@ void SearchPresenter::onTextChanged(SearchWidget *widget, QString text) {
 	std::string term = text.toStdString();
 	SearchResult result = m_repo->search(term);
 
-	if (result.error != SearchErrorNone) {
-		// TODO: show error
-	} else {
+	if (result.error == SearchErrorIO) {
+		emit onError(tr("Failed to read from the database"));
+	} else if (result.error == SearchErrorNone) {
 		std::vector<ConnectionItem> items;
 
 		for (auto it = result.items.begin(); it != result.items.end(); it++) {

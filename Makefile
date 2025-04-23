@@ -77,7 +77,12 @@ mocs/style.moc.cpp: widgets/style.h
 	$(MOC) $< -o $@
 
 # Object rules
-obj/%.o: %.cpp
+obj/%.o: %.cpp %.h
+	@mkdir -p $(@D)
+	$(CXX) -c $< -g $(INCLUDEDIRS) $(CFLAGS) \
+		-o $@
+
+obj/mocs/%.o: mocs/%.cpp
 	@mkdir -p $(@D)
 	$(CXX) -c $< -g $(INCLUDEDIRS) $(CFLAGS) \
 		-o $@
@@ -191,5 +196,12 @@ test_tabs: $(OBJECTS) tests/test_tabs.cpp
 		$(OBJECTS) \
 		tests/test_tabs.cpp \
 		-o bin/test_tabs \
+		$(LIBDIRS) $(LIBS)
+
+test_brain_list_folder: $(OBJECTS) tests/test_brain_list_folder.cpp
+	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
+		$(OBJECTS) \
+		tests/test_brain_list_folder.cpp \
+		-o bin/test_brain_list_folder \
 		$(LIBDIRS) $(LIBS)
 

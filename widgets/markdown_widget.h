@@ -20,6 +20,7 @@
 #include "model/text_model.h"
 #include "widgets/style.h"
 #include "widgets/base_widget.h"
+#include "widgets/toast_widget.h"
 
 enum MarkdownError {
 	MarkdownIOError
@@ -94,6 +95,8 @@ private:
 	// Search.
 	QWidget *m_search = nullptr;
 	QTextCursor m_menuCursor;
+	// Error.
+	ToastWidget *m_error = nullptr;
 	// Helpers.
 	void formatBlock(QTextBlock, QString*, std::vector<FormatRange>*);
 	int adjustForUnfolding(const QString*, const std::vector<FormatRange>*, int) const;

@@ -514,7 +514,13 @@ void MarkdownWidget::insertNodeLink(ThoughtId id, QString title) {
 // Control events.
 
 void MarkdownWidget::onError(MarkdownError error) {
-	// TODO: Show error popup/toast.
+	if (m_error != nullptr)
+		delete m_error;
+
+	if (error == MarkdownIOError) {
+		m_error = new ToastWidget(m_style, tr("Failed to access file system"));
+		m_error->show(this);
+	}
 }
 
 // UI Events.

@@ -168,7 +168,11 @@ void CanvasPresenter::onNewThoughtTextChanged(QString text) {
 	SearchResult result = m_search->search(term);
 
 	if (result.error != SearchErrorNone) {
-		// TODO: show error
+		switch (result.error) {
+			case SearchErrorIO:
+				m_view->showError(tr("Could not read from the database."));
+				break;
+		}
 	} else {
 		std::vector<ConnectionItem> items;
 

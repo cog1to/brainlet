@@ -13,6 +13,14 @@ enum BrainRepositoryError {
 	BrainRepositoryErrorDuplicate
 };
 
+struct ListBrainsResult {
+public:
+	ListBrainsResult(BrainRepositoryError _err, BrainList _res)
+		: error(_err), list(_res) {}
+	BrainRepositoryError error;
+	BrainList list;
+};
+
 struct CreateBrainResult {
 public:
 	CreateBrainResult(BrainRepositoryError _err, Brain _res)
@@ -23,7 +31,7 @@ public:
 
 class BrainsRepository {
 public:
-	virtual BrainList listBrains() = 0;
+	virtual ListBrainsResult listBrains() = 0;
 	virtual CreateBrainResult createBrain(std::string) = 0;
 	virtual BrainRepositoryError deleteBrain(std::string) = 0;
 	virtual BrainRepositoryError renameBrain(std::string, std::string) = 0;

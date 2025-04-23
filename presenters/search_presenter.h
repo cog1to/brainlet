@@ -23,6 +23,7 @@ signals:
 	void searchItemSelected(ThoughtId, QString);
 	void connectionSelected(ThoughtId, QString, ConnectionType, bool);
 	void searchCanceled();
+	void onError(QString);
 
 private slots:
 	void onTextChanged(SearchWidget*, QString);

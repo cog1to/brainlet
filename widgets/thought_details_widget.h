@@ -1,6 +1,7 @@
 #ifndef H_THOUGHT_DETAILS_WIDGET
 #define H_THOUGHT_DETAILS_WIDGET
 
+#include <QObject>
 #include <QWidget>
 #include <QVBoxLayout>
 #include <QLabel>

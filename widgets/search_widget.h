@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include <QObject>
 #include <QString>
 #include <QLabel>
 #include <QWidget>
@@ -14,6 +15,7 @@
 #include "model/thought.h"
 #include "widgets/style.h"
 #include "widgets/base_widget.h"
+#include "widgets/toast_widget.h"
 #include "widgets/connection_list_widget.h"
 #include "widgets/thought_edit_widget.h"
 
@@ -40,6 +42,9 @@ signals:
 	void connectionSelected(SearchWidget*, ThoughtId, QString, ConnectionType, bool);
 	void updated(SearchWidget*);
 
+public slots:
+	void onError(QString);
+
 private slots:
 	// Text editing.
 	void onTextChanged();
@@ -62,6 +67,7 @@ private:
 	ConnectionListWidget *m_list = nullptr;
 	QVBoxLayout m_layout;
 	QWidget m_separator;
+	ToastWidget *m_error = nullptr;
 	// State.
 	bool m_showButtons = false;
 	bool m_active = false;

@@ -31,6 +31,7 @@ private slots:
 private:
 	BrainListWidget *m_widget;
 	BrainsRepository *m_repo;
+	void reload();
 };
 
 #endif

@@ -7,6 +7,7 @@
 
 #include "widgets/brain_list_widget.h"
 #include "widgets/brain_item_widget.h"
+#include "widgets/toast_widget.h"
 
 BrainListWidget::BrainListWidget(QWidget *parent, Style *style)
 	: BaseWidget(parent, style),
@@ -51,7 +52,11 @@ BrainListWidget::BrainListWidget(QWidget *parent, Style *style)
 }
 
 void BrainListWidget::showError(QString name) {
-	// TODO: Show error.
+	if (m_error != nullptr)
+		delete m_error;
+
+	m_error = new ToastWidget(m_style, name);
+	m_error->show(this);
 }
 
 void BrainListWidget::showEvent(QShowEvent*) {

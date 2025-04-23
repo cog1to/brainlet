@@ -14,6 +14,7 @@ public:
 	std::string location;
 	// Constructor.
 	BrainList(std::vector<Brain>, uint64_t size, std::string);
+	BrainList();
 };
 
 #endif

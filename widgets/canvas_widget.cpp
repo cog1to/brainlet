@@ -108,6 +108,14 @@ void CanvasWidget::hideSuggestions() {
 	update();
 }
 
+void CanvasWidget::showError(QString error) {
+	if (m_error != nullptr)
+		delete m_error;
+
+	m_error = new ToastWidget(m_style, error);
+	m_error->show(this);
+}
+
 // Events
 
 void CanvasWidget::showEvent(QShowEvent *) {
