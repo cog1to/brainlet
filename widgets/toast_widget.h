@@ -28,6 +28,7 @@ private:
 	QString m_text;
 	QLabel m_label;
 	QHBoxLayout m_layout;
+	// TODO: Add close button and/or fade animation.
 };
 
 #endif
