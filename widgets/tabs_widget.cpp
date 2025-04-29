@@ -43,10 +43,9 @@ TabsWidget::TabsWidget(
 				background: %5;\
 			}\
 			QTabBar::tab:!selected {\
-				background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,\
-															 stop: 0 %6,\
-															 stop: 0.9 %8,\
-															 stop: 1.0 %9);\
+				background: qlineargradient(\
+					x1: 0, y1: 0, x2: 1, y2: 0,\
+					stop: 0 %6, stop: 0.9 %8, stop: 1.0 %9);\
 				color: %7;\
 			}\
 			QTabBar::tab:!selected:hover {\
@@ -81,7 +80,7 @@ TabsWidget::TabsWidget(
 
 	connect(
 		m_tabWidget, &QTabWidget::tabCloseRequested,
-		this, &TabsWidget::onTabClose		
+		this, &TabsWidget::onTabClose
 	);
 }
 

@@ -438,14 +438,15 @@ QString MarkdownWidget::text() const {
 
 	for (auto line = lines->begin(); line != lines->end(); line++) {
 		if ((*line).isListItem()) {
-			if (mode != InList) {
-				mode = InList;
-			}
+			if (mode == InCode)
+				strings.append("```\n\n");
+			mode = InList;
 			strings.append((*line).getText() + "\n");
 		} else if ((*line).isCodeBlock) {
-			if (mode != InCode) {
+			if (mode == InList)
+				strings.append("\n");
+			if (mode != InCode)
 				strings.append("```\n");
-			}
 			mode = InCode;
 			strings.append((*line).getText() + "\n");
 		} else if (mode != None) {

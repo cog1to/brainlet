@@ -84,7 +84,7 @@ QSize BrainItemWidget::sizeHint() const {
 	return QSize(
 		labelSize.width(),
 		labelSize.height() + 18
-	);	
+	);
 }
 
 // Events

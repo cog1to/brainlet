@@ -264,8 +264,8 @@ bool DatabaseBrainRepository::connectThoughts(
 	model.setTable("connections");
 
 	QSqlRecord record = model.record();
-	record.setValue("conn_from", fromId);
-	record.setValue("conn_to", toId);
+	record.setValue("conn_from", (qlonglong)fromId);
+	record.setValue("conn_to", (qlonglong)toId);
 	record.setValue("conn_type", type);
 
 	if (!model.insertRecord(-1, record)) {
@@ -291,7 +291,7 @@ bool DatabaseBrainRepository::deleteThought(ThoughtId id) {
 	query.prepare(
 		"DELETE FROM connections WHERE (conn_from == :f OR conn_to == :f)"
 	);
-	query.bindValue(":f", id);
+	query.bindValue(":f", (qlonglong)id);
 
 	result = query.exec();
 	if (!result)
@@ -302,7 +302,7 @@ bool DatabaseBrainRepository::deleteThought(ThoughtId id) {
 	query.prepare(
 		"DELETE FROM thoughts WHERE (id == :tid)"
 	);
-	query.bindValue(":tid", id);
+	query.bindValue(":tid", (qlonglong)id);
 
 	result = query.exec();
 	if (!result)
@@ -330,8 +330,8 @@ bool DatabaseBrainRepository::disconnectThoughts(
 	// Clear connections.
 	query = QSqlQuery(nullptr, m_conn);
 	query.prepare("DELETE FROM connections WHERE (conn_from == :f AND conn_to == :t) OR (conn_from == :t AND conn_to == :f)");
-	query.bindValue(":f", from);
-	query.bindValue(":t", to);
+	query.bindValue(":f", (qlonglong)from);
+	query.bindValue(":t", (qlonglong)to);
 
 	result = query.exec();
 	if (!result)
