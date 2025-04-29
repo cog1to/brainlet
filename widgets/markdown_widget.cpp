@@ -771,8 +771,8 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 						(*(current - 1)).isCodeBlock &&
 						(current + 1) == lines->end() || (*(current + 1)).isCodeBlock
 					) {
-						// TODO: Bug. Don't allow delete lines between code blocks or at the end
-						// of the document after a code block.
+						// TODO: Bug. Don't allow delete lines between code blocks
+						// or at the end of the document after a code block.
 						return;
 					}
 
@@ -797,14 +797,20 @@ void MarkdownWidget::keyPressEvent(QKeyEvent *event) {
 						cursor.endEditBlock();
 						setTextCursor(cursor);
 					} else {
-						disconnect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
+						disconnect(
+							this, SIGNAL(cursorPositionChanged()),
+							this, SLOT(onCursorMoved())
+						);
 
 						cursor.deletePreviousChar();
 						m_prevBlock = 0;
 						setTextCursor(cursor);
 						onCursorMoved();
 
-						connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorMoved()));
+						connect(
+							this, SIGNAL(cursorPositionChanged()),
+							this, SLOT(onCursorMoved())
+						);
 					}
 
 					// Rehighlight.
@@ -1423,7 +1429,7 @@ void MarkdownWidget::throttleSave() {
 		this, SLOT(saveText())
 	);
 	m_saveTimer->setSingleShot(true);
-	m_saveTimer->start(15000);
+	m_saveTimer->start(10000);
 }
 
 void MarkdownWidget::saveText() {
