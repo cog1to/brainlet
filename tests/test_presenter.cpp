@@ -33,14 +33,14 @@ int main(int argc, char *argv[]) {
 	MemoryRepository repo = MemoryRepository(thoughts, conns, 0);
 
 	// Make layout.
-	DefaultLayout layout(&style);
+	DefaultLayout *layout = new DefaultLayout(&style);
 
 	// Make widget.
-	CanvasWidget widget(nullptr, &style, &layout);
+	CanvasWidget widget(nullptr, &style, layout);
 	widget.resize(800, 800);
 
 	// Make presenter.
-	CanvasPresenter presenter(&layout, &repo, &repo, &widget);
+	CanvasPresenter presenter(layout, &repo, &repo, &widget);
 
 	// Show window.
 	widget.show();

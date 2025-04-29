@@ -4,6 +4,8 @@
 #include <vector>
 #include <unordered_map>
 
+#include <QString>
+
 #include "model/model.h"
 #include "entity/base_repository.h"
 #include "entity/brain_repository.h"
@@ -43,7 +45,7 @@ public:
 	bool disconnectThoughts(ThoughtId, ThoughtId) override;
 	// TextRepository.
 	GetResult getText(ThoughtId) override;
-	SaveResult saveText(ThoughtId, std::string) override;
+	SaveResult saveText(ThoughtId, QString) override;
 	// SearchRepository.
 	SearchResult search(std::string) override;
 	// BrainRepository.
@@ -63,7 +65,7 @@ private:
 	ThoughtId m_rootId;
 	ThoughtId m_currentId;
 	State *m_state = nullptr;
-	std::unordered_map<ThoughtId, std::string> m_texts;
+	std::unordered_map<ThoughtId, QString> m_texts;
 	// Helpers.
 	void loadState(ThoughtId);
 	ThoughtEntity *getThought(ThoughtId);

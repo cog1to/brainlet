@@ -79,6 +79,7 @@ public:
 	static Line codeLine(QString&);
 	// Properties.
 	const bool isListItem() const { return list.listType != ListNone; };
+	QString getText() const;
 	// Modificators.
 	void setText(QString&);
 

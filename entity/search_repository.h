@@ -12,7 +12,7 @@ enum SearchError {
 
 struct SearchItem {
 	ThoughtId id;
-	std::string *name;
+	std::string name;
 };
 
 struct SearchResult {

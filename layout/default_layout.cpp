@@ -89,14 +89,26 @@ void DefaultLayout::loadSiblings() {
 			if (id == mainId)
 				continue;
 			if (auto found = thoughts->find(id); found != thoughts->end()) {
-				if (!listContains(m_links, id)) {
+				bool inLinks = listContains(m_links, id);
+				bool inParents = listContains(m_parents, id);
+
+				if (!inLinks && !inParents) {
 					m_siblings.push_back(found->second);
 				}
-				m_connections.push_back(ItemConnection{
-					.from = parent->id(),
-					.to = id,
-					.type = ConnectionType::child
-				});
+
+				if (inParents) {
+					m_subconnections.push_back(ItemConnection{
+						.from = parent->id(),
+						.to = id,
+						.type = ConnectionType::child
+					});
+				} else {
+					m_connections.push_back(ItemConnection{
+						.from = parent->id(),
+						.to = id,
+						.type = ConnectionType::child
+					});
+				}
 			}
 		}
 	}
@@ -140,7 +152,7 @@ void DefaultLayout::updateWidgets() {
 	QSize centralSize = widgetSize(thought->name(), m_size.width() * 0.4);
 	ItemLayout centralLayout = ItemLayout(
 		thought->id(),
-		&thought->name(),
+		thought->name(),
 		(m_size.width() - centralSize.width()) / 2,
 		(m_size.height() - centralSize.height()) / 2,
 		centralSize.width(),
@@ -287,7 +299,7 @@ void DefaultLayout::layoutVerticalSide(
 
 		ItemLayout layout(
 			thought->id(),
-			&thought->name(),
+			thought->name(),
 			rect.x() + (rect.width() - size.width()) / 2,
 			y,
 			size.width(),
@@ -404,7 +416,7 @@ void DefaultLayout::layoutHorizontalSide(
 
 			ItemLayout layout(
 				thought->id(),
-				&thought->name(),
+				thought->name(),
 				x + (columnWidth - size.width()) / 2,
 				y + ((rect.height() - height) / 2) + (row * m_widgetHeight),
 				size.width(),
@@ -446,7 +458,7 @@ void DefaultLayout::layoutHorizontalSide(
 }
 
 QSize DefaultLayout::widgetSize(std::string text, int maxWidth) {
-	m_template.setText(text);
+	m_template.setText(QString::fromStdString(text));
 
 	// Get size hint to estimate the full text length.
 	QSize sizeHint = m_template.sizeHint();

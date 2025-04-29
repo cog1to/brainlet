@@ -99,6 +99,7 @@ bool MemoryRepository::connectThoughts(
 
 bool MemoryRepository::deleteThought(ThoughtId id) {
 	std::vector<ThoughtEntity> newList;
+
 	for (auto it = m_thoughts.begin(); it != m_thoughts.end(); it++) {
 		if ((*it).id == id) continue;
 		newList.push_back(*it);
@@ -146,8 +147,8 @@ SearchResult MemoryRepository::search(std::string term) {
 	QString qterm = QString::fromStdString(term);
 
 	for (auto it = m_thoughts.begin(); it != m_thoughts.end(); it++) {
-		std::string *name = &(*it).name;
-		QString qstr = QString::fromStdString(*name);
+		std::string name = (*it).name;
+		QString qstr = QString::fromStdString(name);
 
 		if (qstr.contains(qterm, Qt::CaseInsensitive)) {
 			result.push_back(SearchItem{
@@ -340,19 +341,19 @@ ThoughtEntity *MemoryRepository::getThought(ThoughtId id) {
 
 GetResult MemoryRepository::getText(ThoughtId id) {
 	if (auto found = m_texts.find(id); found != m_texts.end()) {
-		GetResult result = GetResult(TextRepositoryNone, found->second);
+		GetResult result = GetResult(TextRepositoryErrorNone, found->second);
 		return result;
 	}
 
 	qDebug() << "Text loaded";
-	return GetResult(TextRepositoryNone, "");
+	return GetResult(TextRepositoryErrorNone, "");
 }
 
-SaveResult MemoryRepository::saveText(ThoughtId id, std::string text) {
+SaveResult MemoryRepository::saveText(ThoughtId id, QString text) {
 	m_texts.insert_or_assign(id, text);
 	qDebug() << "-- Text saved --";
 	qDebug() << text;
-	return SaveResult(TextRepositoryNone);
+	return SaveResult(TextRepositoryErrorNone);
 }
 
 // BrainRepository

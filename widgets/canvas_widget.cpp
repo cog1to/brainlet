@@ -398,12 +398,13 @@ void CanvasWidget::updateLayout() {
 	std::unordered_map<ThoughtId, ItemLayout>::const_iterator it;
 	for (it = items->begin(); it != items->end(); it++) {
 		ThoughtWidget *widget = cachedWidget(it->first);
+
 		if (widget == nullptr) {
 			widget = createWidget(it->second, it->first != *main);
 		} else {
 			widget->setReadOnly(it->first != *main);
-			if (widget->text() != *it->second.name)
-				widget->setText(*it->second.name);
+			if (widget->text() != it->second.name)
+				widget->setText(it->second.name);
 		}
 
 		// Save the widget to the cache.
@@ -597,7 +598,7 @@ ThoughtWidget *CanvasWidget::createWidget(
 		m_style,
 		layout.id,
 		readonly,
-		*layout.name,
+		layout.name,
 		layout.hasParents, layout.hasChildren, layout.hasLinks
 	);
 

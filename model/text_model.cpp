@@ -163,6 +163,16 @@ Line::Line(QString& input) {
 	setText(input);
 }
 
+QString Line::getText() const {
+	if (list.listType == ListBullet) {
+		return QString("%1%2").arg(list.value).arg(text);
+	} else if (list.listType == ListNumeric) {
+		return QString("%1%2").arg(list.value).arg(text);
+	}
+
+	return text;
+}
+
 void Line::parseLinks(QString *input) {
 	QRegularExpression expr("\\[(.+?)\\]\\(((.+?)://(.+?))\\)");
 	QRegularExpressionMatch match = expr.match(*input);

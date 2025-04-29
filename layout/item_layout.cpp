@@ -1,8 +1,12 @@
+#include <string>
+
+#include <QString>
+
 #include "layout/item_layout.h"
 
 ItemLayout::ItemLayout(
 	ThoughtId _id,
-	const std::string *_name,
+	const std::string _name,
 	int _x, int _y,
 	int _w, int _h,
 	bool _visible,
@@ -11,7 +15,7 @@ ItemLayout::ItemLayout(
 	bool _canDelete
 ) {
 	id = _id;
-	name = _name;
+	name = QString::fromStdString(_name);
 	x = _x;
 	y = _y;
 	w = _w;

@@ -1,20 +1,20 @@
 #ifndef H_TEXT_REPOSITORY
 #define H_TEXT_REPOSITORY
 
-#include <string>
+#include <QString>
 
 #include "model/model.h"
 
 enum TextRepositoryError {
-	TextRepositoryNone,
-	TextRepositoryIOError
+	TextRepositoryErrorNone,
+	TextRepositoryErrorIO
 };
 
 struct GetResult {
 	TextRepositoryError error;
-	std::string result;	
+	QString result;	
 public:
-	GetResult(TextRepositoryError _err, std::string _res)
+	GetResult(TextRepositoryError _err, QString _res)
 		: error(_err), result(_res) {};
 };
 
@@ -27,7 +27,7 @@ public:
 class TextRepository {
 public:
 	virtual GetResult getText(ThoughtId) = 0;
-	virtual SaveResult saveText(ThoughtId, std::string) = 0;
+	virtual SaveResult saveText(ThoughtId, QString) = 0;
 	// This method copies the method from GraphRepository. I don't know
 	// if this is the "correct" way, but it feels right in terms of
 	// separation of data access interfaces for separate logical/UI
@@ -38,3 +38,4 @@ public:
 };
 
 #endif
+

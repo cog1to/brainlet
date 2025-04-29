@@ -3,13 +3,15 @@
 
 #include <string>
 
+#include <QString>
+
 #include "model/thought.h"
 
 class ItemLayout {
 public:
 	ItemLayout(
 		ThoughtId id,
-		const std::string *name,
+		const std::string name,
 		int x, int y,
 		int w, int h,
 		bool visible,
@@ -18,7 +20,7 @@ public:
 		bool canDelete
 	);
 	ThoughtId id;
-	const std::string *name;
+	QString name;
 	int x, y, w, h;
 	bool visible;
 	bool hasParents;

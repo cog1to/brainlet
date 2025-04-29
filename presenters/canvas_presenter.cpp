@@ -172,6 +172,8 @@ void CanvasPresenter::onNewThoughtTextChanged(QString text) {
 			case SearchErrorIO:
 				m_view->showError(tr("Could not read from the database."));
 				break;
+			case SearchErrorNone:
+				break;
 		}
 	} else {
 		std::vector<ConnectionItem> items;
@@ -185,7 +187,7 @@ void CanvasPresenter::onNewThoughtTextChanged(QString text) {
 
 			ConnectionItem item = {
 				.id = (*it).id,
-				.name = QString::fromStdString(*((*it).name))
+				.name = QString::fromStdString((*it).name)
 			};
 			items.push_back(item);
 		}

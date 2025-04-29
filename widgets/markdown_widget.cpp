@@ -431,12 +431,40 @@ bool MarkdownWidget::isDirty() const {
 }
 
 QString MarkdownWidget::text() const {
+	const int None = 0, InCode = 1, InList = 2;
 	QStringList strings;
 	const std::vector<Line> *lines = m_model.const_lines();
+	int mode = None;
+
 	for (auto line = lines->begin(); line != lines->end(); line++) {
-		strings.append((*line).text);
+		if ((*line).isListItem()) {
+			if (mode != InList) {
+				mode = InList;
+			}
+			strings.append((*line).getText() + "\n");
+		} else if ((*line).isCodeBlock) {
+			if (mode != InCode) {
+				strings.append("```\n");
+			}
+			mode = InCode;
+			strings.append((*line).getText() + "\n");
+		} else if (mode != None) {
+			if (mode == InCode) {
+				strings.append("```\n\n");
+			} else if (mode == InList) {
+				strings.append("\n");
+			}
+			mode = None;
+			strings.append((*line).getText() + "\n\n");
+		} else {
+			if ((line+1) == lines->end())
+				strings.append((*line).getText());
+			else
+				strings.append((*line).getText() + "\n\n");
+		}
 	}
-	QString txt = strings.join("\n\n");
+
+	QString txt = strings.join("");
 	return txt;
 }
 

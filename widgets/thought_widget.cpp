@@ -11,7 +11,7 @@ ThoughtWidget::ThoughtWidget(
 	Style *style,
 	ThoughtId id,
 	bool readOnly,
-	std::string text,
+	QString text,
 	bool hasParent,
 	bool hasChild,
 	bool hasLink,
@@ -24,7 +24,7 @@ ThoughtWidget::ThoughtWidget(
 	m_textEdit(this, style, readOnly, "")
 {
 	m_id = id;
-	m_text = QString::fromStdString(text);
+	m_text = text;
 	m_rightSideLink = rightSideLink;
 
 	QObject::connect(
@@ -137,8 +137,8 @@ const std::string ThoughtWidget::text() const {
 	return m_text.toStdString();
 }
 
-void ThoughtWidget::setText(std::string value) {
-	m_text = QString::fromStdString(value);
+void ThoughtWidget::setText(QString value) {
+	m_text = value;
 	updateText();
 }
 

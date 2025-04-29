@@ -30,7 +30,7 @@ public:
 		Style *style,
 		ThoughtId id,
 		bool readOnly,
-		std::string name,
+		QString name,
 		bool hasParent, bool hasChild, bool hasLink,
 		bool rightSideLink = false,
 		bool canDelete = true
@@ -49,7 +49,7 @@ public:
 	const bool hasLink() const;
 	void setHasLink(bool);
 	const std::string text() const;
-	void setText(std::string);
+	void setText(QString);
 	const bool rightSideLink() const;
 	void setRightSideLink(bool);
 	const bool canDelete() const;

@@ -57,7 +57,7 @@ void SearchPresenter::onTextChanged(SearchWidget *widget, QString text) {
 		for (auto it = result.items.begin(); it != result.items.end(); it++) {
 			ConnectionItem item = {
 				.id = (*it).id,
-				.name = QString::fromStdString(*((*it).name))
+				.name = QString::fromStdString((*it).name)
 			};
 			items.push_back(item);
 		}

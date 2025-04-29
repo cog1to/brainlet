@@ -63,13 +63,13 @@ void TextEditorPresenter::setThought(ThoughtId id) {
 
 	// Valid state.
 	GetResult result = m_repository->getText(m_id);
-	if (result.error != TextRepositoryError::TextRepositoryNone) {
+	if (result.error != TextRepositoryError::TextRepositoryErrorNone) {
 		m_id = InvalidThoughtId;
 		emit textError(MarkdownError::MarkdownIOError);
 		return;
 	}
 
-	QString text = QString::fromStdString(result.result);
+	QString text = result.result;
 	m_view->load(text);
 }
 
@@ -81,10 +81,9 @@ void TextEditorPresenter::onTextChanged(QString& text) {
 	if (m_id == InvalidThoughtId)
 		return;
 
-	std::string value = text.toStdString();
-	SaveResult result = m_repository->saveText(m_id, value);
+	SaveResult result = m_repository->saveText(m_id, text);
 
-	if (result.error != TextRepositoryError::TextRepositoryNone) {
+	if (result.error != TextRepositoryError::TextRepositoryErrorNone) {
 		emit textError(MarkdownError::MarkdownIOError);
 	}
 }

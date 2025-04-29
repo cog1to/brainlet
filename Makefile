@@ -3,9 +3,10 @@ INCLUDEDIRS = -I${QTDIR}/include \
 							-I${QTDIR}/include/QtCore \
 							-I${QTDIR}/include/QtWidgets \
 							-I${QTDIR}/include/QtGui \
+							-I${QTDIR}/include/QtSql \
 							-I.
 LIBDIRS = -L${QTDIR}/lib
-LIBS = -lQt6Core -lQt6Widgets -lQt6Gui -lQt6DBus
+LIBS = -lQt6Core -lQt6Widgets -lQt6Gui -lQt6DBus -lQtSql
 CFLAGS = ${FLAGS}
 # Utils
 MOC = ${QTDIR}/libexec/moc
@@ -14,7 +15,7 @@ UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
 	CXX = /opt/homebrew/opt/llvm/bin/clang++
 	LIBDIRS = -F${QTDIR}/lib
-	LIBS = -framework QtWidgets -framework QtCore -framework QtGui -framework QtDBus
+	LIBS = -framework QtWidgets -framework QtCore -framework QtGui -framework QtDBus -framework QtSql
 	MOC = ${QTDIR}/share/qt/libexec/moc
 	CFLAGS += -DDARWIN=1
 endif
@@ -91,7 +92,8 @@ obj/mocs/%.o: mocs/%.cpp
 tests: bin test_anchor test_thought test_resize test_edit test_base \
 	test_memory test_presenter test_markdown test_text_presenter \
 	test_brain_presenter test_conn test_brain_item \
-	test_brain_list test_brain_list_presenter test_tabs
+	test_brain_list test_brain_list_presenter test_tabs \
+	test_graph_repo test_text_repo
 
 test_anchor: $(OBJECTS) tests/test_anchor.cpp
 	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
@@ -203,5 +205,26 @@ test_brain_list_folder: $(OBJECTS) tests/test_brain_list_folder.cpp
 		$(OBJECTS) \
 		tests/test_brain_list_folder.cpp \
 		-o bin/test_brain_list_folder \
+		$(LIBDIRS) $(LIBS)
+
+test_database_brain_load: $(OBJECTS) tests/test_database_brain_load.cpp
+	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
+		$(OBJECTS) \
+		tests/test_database_brain_load.cpp \
+		-o bin/test_database_brain_load \
+		$(LIBDIRS) $(LIBS)
+
+test_graph_repo: $(OBJECTS) tests/test_graph_repository.cpp
+	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
+		$(OBJECTS) \
+		tests/test_graph_repository.cpp \
+		-o bin/test_graph_repository \
+		$(LIBDIRS) $(LIBS)
+
+test_text_repo: $(OBJECTS) tests/test_text_repository.cpp
+	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
+		$(OBJECTS) \
+		tests/test_text_repository.cpp \
+		-o bin/test_text_repository \
 		$(LIBDIRS) $(LIBS)
 
