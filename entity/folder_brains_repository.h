@@ -1,8 +1,7 @@
 #ifndef H_FOLDER_BRAINS_REPOSITORY
 #define H_FOLDER_BRAINS_REPOSITORY
 
-#include <string>
-
+#include <QString>
 #include <QDir>
 #include <QFileInfo>
 
@@ -18,9 +17,9 @@ public:
 	~FolderBrainsRepository();
 	// Brains repository.
 	ListBrainsResult listBrains() override;
-	CreateBrainResult createBrain(std::string) override;
-	BrainRepositoryError deleteBrain(std::string) override;
-	BrainRepositoryError renameBrain(std::string, std::string) override;
+	CreateBrainResult createBrain(QString) override;
+	BrainRepositoryError deleteBrain(QString) override;
+	BrainRepositoryError renameBrain(QString, QString) override;
 
 private:
 	QString m_base;

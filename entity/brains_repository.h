@@ -2,7 +2,8 @@
 #define H_BRAINS_REPOSITORY
 
 #include <vector>
-#include <string>
+
+#include <QString>
 
 #include "model/model.h"
 #include "entity/brain_entity.h"
@@ -32,9 +33,9 @@ public:
 class BrainsRepository {
 public:
 	virtual ListBrainsResult listBrains() = 0;
-	virtual CreateBrainResult createBrain(std::string) = 0;
-	virtual BrainRepositoryError deleteBrain(std::string) = 0;
-	virtual BrainRepositoryError renameBrain(std::string, std::string) = 0;
+	virtual CreateBrainResult createBrain(QString) = 0;
+	virtual BrainRepositoryError deleteBrain(QString) = 0;
+	virtual BrainRepositoryError renameBrain(QString, QString) = 0;
 };
 
 #endif

@@ -1,16 +1,13 @@
 #ifndef H_BRAIN_ENTITY
 #define H_BRAIN_ENTITY
 
-#include <string>
-
-using namespace std;
+#include <QString>
 
 class BrainEntity {
 public:
-	BrainEntity(string _id, string _name, uint64_t _timestamp)
-		: id(_id), name(_name), timestamp(_timestamp) {};
-	string id;
-	string name;	
+	BrainEntity(QString, QString, uint64_t);
+	QString id;
+	QString name;
 	uint64_t timestamp;
 };
 

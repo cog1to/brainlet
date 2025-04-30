@@ -1,9 +1,10 @@
-#include <string>
 #include <vector>
+
+#include <QString>
 
 #include "model/brain.h"
 
-Brain::Brain(std::string id, std::string name, uint64_t timestamp)
+Brain::Brain(QString id, QString name, uint64_t timestamp)
 	: m_id(id), m_name(name), m_timestamp(timestamp) {}
 
 Brain::~Brain() {}

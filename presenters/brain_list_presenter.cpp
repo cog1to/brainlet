@@ -1,7 +1,7 @@
-#include <string>
 #include <vector>
 
 #include <QObject>
+#include <QString>
 
 #include "model/brain.h"
 #include "entity/brains_repository.h"
@@ -41,13 +41,13 @@ BrainListPresenter::BrainListPresenter(
 // Slots
 
 void BrainListPresenter::onBrainSelected(
-	std::string id,
-	std::string name
+	QString id,
+	QString name
 ) {
 	emit brainSelected(id, name);
 }
 
-void BrainListPresenter::onBrainDeleted(std::string id) {
+void BrainListPresenter::onBrainDeleted(QString id) {
 	if (m_repo == nullptr)
 		return;
 	if (m_widget == nullptr)
@@ -64,7 +64,7 @@ void BrainListPresenter::onBrainDeleted(std::string id) {
 	reload();
 }
 
-void BrainListPresenter::onBrainCreated(std::string name) {
+void BrainListPresenter::onBrainCreated(QString name) {
 	if (m_repo == nullptr)
 		return;
 	if (m_widget == nullptr)
@@ -83,8 +83,8 @@ void BrainListPresenter::onBrainCreated(std::string name) {
 }
 
 void BrainListPresenter::onBrainRenamed(
-	std::string id,
-	std::string name
+	QString id,
+	QString name
 ) {
 	if (m_repo == nullptr)
 		return;
@@ -130,3 +130,4 @@ void BrainListPresenter::reload() {
 
 	m_widget->setItems(result.list);
 }
+

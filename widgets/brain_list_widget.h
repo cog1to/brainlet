@@ -7,6 +7,7 @@
 #include <string>
 
 #include <QObject>
+#include <QString>
 #include <QWidget>
 #include <QScrollArea>
 #include <QResizeEvent>
@@ -36,10 +37,10 @@ protected:
 
 signals:
 	void shown();
-	void itemClicked(std::string, std::string);
-	void itemDeleteClicked(std::string);
-	void newItemCreated(std::string);
-	void itemRenamed(std::string, std::string);
+	void itemClicked(QString, QString);
+	void itemDeleteClicked(QString);
+	void newItemCreated(QString);
+	void itemRenamed(QString, QString);
 
 private slots:
 	void onItemClicked(BrainItemWidget*);
@@ -48,14 +49,14 @@ private slots:
 	void onNewItemClicked();
 
 private:
-	std::unordered_map<std::string, BrainItemWidget*> m_widgets;
+	std::unordered_map<QString, BrainItemWidget*> m_widgets;
 	QScrollArea m_area;
 	QWidget m_container;
 	QVBoxLayout m_layout;
 	QLabel m_text;
 	ToastWidget *m_error = nullptr;
 	// Helpers.
-	bool findInItems(const std::vector<Brain>&, std::string);
+	bool findInItems(const std::vector<Brain>&, QString);
 	void layoutContainer();
 	QString formatSize(uint64_t);
 };

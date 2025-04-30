@@ -353,7 +353,7 @@ SearchResult DatabaseBrainRepository::search(std::string term) {
 	QSqlTableModel model(nullptr, m_conn);
 	model.setTable("thoughts");
 	model.setFilter(
-		QString("name LIKE \%%1\%").arg(qterm)
+		QString("name LIKE '%%%1%%'").arg(qterm)
 	);
 
 	model.select();

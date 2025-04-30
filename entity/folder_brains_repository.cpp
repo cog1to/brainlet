@@ -38,7 +38,6 @@ ListBrainsResult FolderBrainsRepository::listBrains() {
 
 		// Get name.
 		QString name = file.fileName();
-		std::string stdName = name.toStdString();
 
 		// Get timestamp.
 		QDateTime lastModified = file.lastModified();
@@ -48,22 +47,21 @@ ListBrainsResult FolderBrainsRepository::listBrains() {
 		size += getSize(file);
 
 		// Save to the list.
-		brains.push_back(Brain(stdName, stdName, timestamp));
+		brains.push_back(Brain(name, name, timestamp));
 	}
 
 	return ListBrainsResult(
 		BrainRepositoryErrorNone,
-		BrainList(brains, size, m_base.toStdString())
+		BrainList(brains, size, m_base)
 	);
 }
 
 CreateBrainResult FolderBrainsRepository::createBrain(
-	std::string name
+	QString dirName
 ) {
 	assert(m_dir != nullptr);
 
 	// Create a directory for the brain.
-	QString dirName = QString::fromStdString(name);
 	if (!m_dir->mkdir(dirName)) {
 		return CreateBrainResult(
 			BrainRepositoryErrorIO,
@@ -95,19 +93,16 @@ CreateBrainResult FolderBrainsRepository::createBrain(
 
 	return CreateBrainResult(
 		BrainRepositoryErrorNone,
-		Brain(name, name, timestamp)
+		Brain(dirName, dirName, timestamp)
 	);
 }
 
 BrainRepositoryError FolderBrainsRepository::deleteBrain(
-	std::string name
+	QString name
 ) {
 	assert(m_dir != nullptr);
 
-	bool result = m_dir->remove(
-		QString::fromStdString(name)
-	);
-
+	bool result = m_dir->remove(name);
 	if (!result) {
 		return BrainRepositoryErrorIO;
 	}
@@ -116,14 +111,14 @@ BrainRepositoryError FolderBrainsRepository::deleteBrain(
 }
 
 BrainRepositoryError FolderBrainsRepository::renameBrain(
-	std::string oldName,
-	std::string newName
+	QString oldName,
+	QString newName
 ) {
 	assert(m_dir != nullptr);
 
 	bool result = m_dir->rename(
-		QString::fromStdString(oldName),
-		QString::fromStdString(newName)
+		oldName,
+		newName
 	);
 
 	if (!result) {

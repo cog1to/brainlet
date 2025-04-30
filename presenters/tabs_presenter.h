@@ -2,9 +2,9 @@
 #define H_TABS_PRESENTER
 
 #include <vector>
-#include <string>
 
 #include <QObject>
+#include <QString>
 #include <QWidget>
 
 #include "infra/module_factory.h"
@@ -13,9 +13,9 @@
 
 struct TabModule {
 public:
-	TabModule(std::string _id, DismissableModule _mod)
+	TabModule(QString _id, DismissableModule _mod)
 		: id(_id), mod(_mod) {};
-	std::string id;
+	QString id;
 	DismissableModule mod;
 
 };
@@ -28,9 +28,9 @@ public:
 
 private slots:
 	void onShown();
-	void onBrainSelected(std::string, std::string);
-	void onBrainDeleted(std::string);
-	void onBrainRenamed(std::string, std::string);
+	void onBrainSelected(QString, QString);
+	void onBrainDeleted(QString);
+	void onBrainRenamed(QString, QString);
 	void onTabClose(int);
 
 private:

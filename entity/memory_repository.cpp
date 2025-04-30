@@ -378,7 +378,7 @@ ListBrainsResult MemoryRepository::listBrains() {
 	return ListBrainsResult(BrainRepositoryErrorNone, list);
 }
 
-CreateBrainResult MemoryRepository::createBrain(std::string name) {
+CreateBrainResult MemoryRepository::createBrain(QString name) {
 	std::time_t timestamp = std::time(nullptr);
 
 	bool found = false;
@@ -408,8 +408,8 @@ CreateBrainResult MemoryRepository::createBrain(std::string name) {
 }
 
 BrainRepositoryError MemoryRepository::renameBrain(
-	std::string id,
-	std::string name
+	QString id,
+	QString name
 ) {
 	bool found = false;
 	for (auto it = m_brains.begin(); it != m_brains.end(); it++) {
@@ -433,7 +433,7 @@ BrainRepositoryError MemoryRepository::renameBrain(
 	return BrainRepositoryErrorNone;
 }
 
-BrainRepositoryError MemoryRepository::deleteBrain(std::string id) {
+BrainRepositoryError MemoryRepository::deleteBrain(QString id) {
 	std::vector<BrainEntity> result;
 	for (auto it = m_brains.begin(); it != m_brains.end(); it++) {
 		if ((*it).id == id) continue;
@@ -495,7 +495,7 @@ bool MemoryRepository::listContains(std::vector<ThoughtId>& list, ThoughtId id) 
 
 // Helpers
 
-std::string MemoryRepository::getBrainName(std::string id) {
+QString MemoryRepository::getBrainName(QString id) {
 	for (auto it = m_brains.begin(); it != m_brains.end(); it++) {
 		if ((*it).id == id) {
 			return (*it).name;

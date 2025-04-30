@@ -60,9 +60,9 @@ DismissableModule MemoryFactory::makeBrainModule(QString id) {
 	// this approach does not scale well for UI applications.
 
 	// Get or create a repo.
-	std::string name = m_list_repo->getBrainName(id.toStdString());
+	QString name = m_list_repo->getBrainName(id);
 	std::vector<ThoughtEntity> thoughts = {
-		ThoughtEntity(0, name)
+		ThoughtEntity(0, name.toStdString())
 	};
 	std::vector<ConnectionEntity> conns;
 	MemoryRepository *repo = new MemoryRepository(thoughts, conns, 0);

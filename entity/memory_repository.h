@@ -50,11 +50,11 @@ public:
 	SearchResult search(std::string) override;
 	// BrainRepository.
 	ListBrainsResult listBrains() override;
-	CreateBrainResult createBrain(std::string) override;
-	BrainRepositoryError deleteBrain(std::string) override;
-	BrainRepositoryError renameBrain(std::string, std::string) override;
+	CreateBrainResult createBrain(QString) override;
+	BrainRepositoryError deleteBrain(QString) override;
+	BrainRepositoryError renameBrain(QString, QString) override;
 	// Helpers
-	std::string getBrainName(std::string);
+	QString getBrainName(QString);
 
 private:
 	// List of brains.

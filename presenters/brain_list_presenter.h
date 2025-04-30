@@ -1,9 +1,8 @@
 #ifndef H_BRAIN_LIST_PRESENTER
 #define H_BRAIN_LIST_PRESENTER
 
-#include <string>
-
 #include <QObject>
+#include <QString>
 
 #include "presenters/dismissable_presenter.h"
 #include "widgets/brain_list_widget.h"
@@ -16,16 +15,16 @@ public:
 	BrainListPresenter(BrainListWidget*, BrainsRepository*);
 
 signals:
-	void brainSelected(std::string, std::string);
-	void brainRenamed(std::string, std::string);
-	void brainDeleted(std::string);
+	void brainSelected(QString, QString);
+	void brainRenamed(QString, QString);
+	void brainDeleted(QString);
 
 private slots:
 	void onShown();
-	void onBrainSelected(std::string, std::string);
-	void onBrainDeleted(std::string);
-	void onBrainCreated(std::string);
-	void onBrainRenamed(std::string, std::string);
+	void onBrainSelected(QString, QString);
+	void onBrainDeleted(QString);
+	void onBrainCreated(QString);
+	void onBrainRenamed(QString, QString);
 	void onDismiss() override;
 
 private:

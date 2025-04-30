@@ -113,7 +113,7 @@ void BrainListWidget::setItems(BrainList list) {
 	} else {
 		QString textPattern = tr("<h2>Welcome!</h2>\n\n<p>You currently have %1 brain(s).</p>\n\n<p>All of your data is stored in <b>%2</b>.</p>\n\n<p>Total size of saved thoughts: <b>%3</b></p>")
 			.arg(list.items.size())
-			.arg(QString::fromStdString(list.location))
+			.arg(list.location)
 			.arg(formatSize(list.sizeBytes));
 		m_text.setText(textPattern);
 	}
@@ -141,8 +141,8 @@ void BrainListWidget::setItems(BrainList list) {
 		} else {
 			widget = new BrainItemWidget(
 				nullptr, m_style,
-				QString::fromStdString((*it).id()),
-				QString::fromStdString((*it).name())
+				QString((*it).id()),
+				QString((*it).name())
 			);
 
 			connect(
@@ -167,12 +167,12 @@ void BrainListWidget::setItems(BrainList list) {
 			idx += 1;
 		}
 
-		widget->setName(QString::fromStdString((*it).name()));
+		widget->setName((*it).name());
 		widget->show();
 	}
 
 	// Gather missing ids.
-	std::vector<std::string> idsToDelete;
+	std::vector<QString> idsToDelete;
 	for (auto it = m_widgets.begin(); it != m_widgets.end(); it++) {
 		if (!findInItems(items, it->first)) {
 			idsToDelete.push_back(it->first);
@@ -195,10 +195,10 @@ void BrainListWidget::setItems(BrainList list) {
 
 bool BrainListWidget::findInItems(
 	const std::vector<Brain>& items,
-	std::string id
+	QString id
 ) {
 	for (auto it = items.begin(); it != items.end(); it++) {
-		if (QString str = QString::fromStdString((*it).id()); str == id) {
+		if (QString str = (*it).id(); str == id) {
 			return true;
 		}
 	}
@@ -210,8 +210,8 @@ bool BrainListWidget::findInItems(
 
 void BrainListWidget::onItemClicked(BrainItemWidget *view) {
 	emit itemClicked(
-		view->id().toStdString(),
-		view->name().toStdString()
+		view->id(),
+		view->name()
 	);
 }
 
@@ -234,7 +234,7 @@ void BrainListWidget::onItemDeleteClicked(BrainItemWidget *view) {
 
 	int ret = dialog.exec();
 	if (ret == QMessageBox::Yes) {
-		emit itemDeleteClicked(view->id().toStdString());
+		emit itemDeleteClicked(view->id());
 	}
 }
 
@@ -252,7 +252,7 @@ void BrainListWidget::onNewItemClicked() {
 
 	int ret = dialog.exec();
 	if (ret == QDialog::Accepted && !dialog.textValue().isEmpty()) {
-		emit newItemCreated(dialog.textValue().trimmed().toStdString());
+		emit newItemCreated(dialog.textValue().trimmed());
 	}
 }
 
@@ -276,8 +276,8 @@ void BrainListWidget::onItemRenameClicked(BrainItemWidget *widget) {
 	int ret = dialog.exec();
 	if (ret == QDialog::Accepted && !dialog.textValue().isEmpty()) {
 		emit itemRenamed(
-			widget->id().toStdString(),
-			dialog.textValue().trimmed().toStdString()
+			widget->id(),
+			dialog.textValue().trimmed()
 		);
 	}
 }

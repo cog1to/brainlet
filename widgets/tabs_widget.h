@@ -2,9 +2,9 @@
 #define H_TABS_WIDGET
 
 #include <vector>
-#include <string>
 
 #include <QObject>
+#include <QString>
 #include <QWidget>
 #include <QTabWidget>
 #include <QShowEvent>

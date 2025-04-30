@@ -58,7 +58,7 @@ void TabsPresenter::onShown() {
 	m_widget->addTab(listModule.widget, tr("Welcome"), false);
 }
 
-void TabsPresenter::onBrainSelected(std::string id, std::string name) {
+void TabsPresenter::onBrainSelected(QString id, QString name) {
 	assert(m_factory != nullptr);
 
 	for (auto it = m_tabs.begin(); it != m_tabs.end(); it++) {
@@ -68,16 +68,15 @@ void TabsPresenter::onBrainSelected(std::string id, std::string name) {
 		}
 	}
 
-	QString qId = QString::fromStdString(id);
-	DismissableModule brainModule = m_factory->makeBrainModule(qId);
+	DismissableModule brainModule = m_factory->makeBrainModule(id);
 	assert(brainModule.presenter != nullptr);
 	assert(brainModule.widget != nullptr);
 
 	m_tabs.push_back(TabModule(id, brainModule));
-	m_widget->addTab(brainModule.widget, QString::fromStdString(name), true);
+	m_widget->addTab(brainModule.widget, name, true);
 }
 
-void TabsPresenter::onBrainDeleted(std::string id) {
+void TabsPresenter::onBrainDeleted(QString id) {
 	for (auto it = m_tabs.begin(); it != m_tabs.end(); it++) {
 		if ((*it).id == id) {
 			m_widget->deleteWidget((*it).mod.widget);
@@ -87,10 +86,10 @@ void TabsPresenter::onBrainDeleted(std::string id) {
 	}
 }
 
-void TabsPresenter::onBrainRenamed(std::string id, std::string name) {
+void TabsPresenter::onBrainRenamed(QString id, QString name) {
 	for (int idx = 0; idx < m_tabs.size(); idx++) {
 		if (m_tabs[idx].id == id) {
-			m_widget->renameTab(idx, QString::fromStdString(name));
+			m_widget->renameTab(idx, name);
 			break;
 		}
 	}
