@@ -52,7 +52,7 @@ ListBrainsResult FolderBrainsRepository::listBrains() {
 
 	return ListBrainsResult(
 		BrainRepositoryErrorNone,
-		BrainList(brains, size, m_base)
+		BrainList(brains, size, m_dir->absolutePath())
 	);
 }
 
@@ -150,8 +150,24 @@ BrainRepositoryError FolderBrainsRepository::openOrCreateFolder() {
 	return BrainRepositoryErrorNone;
 }
 
-size_t FolderBrainsRepository::getSize(QFileInfo dir) {
-	// TODO: Recursive file check.
-	return dir.size();
+size_t FolderBrainsRepository::getSize(QFileInfo info) {
+	size_t size = 0;
+
+	QDir dir = QDir(info.filePath());
+	if (dir.exists() == false) {
+		return 0;
+	}
+
+	QFileInfoList subfiles = dir.entryInfoList(
+		QDir::AllEntries | QDir::NoDotAndDotDot
+	);
+	for (auto file: subfiles) {
+		if (file.isDir())
+			size += getSize(file);
+		else
+			size += file.size();
+	}
+
+	return size;
 }
 
