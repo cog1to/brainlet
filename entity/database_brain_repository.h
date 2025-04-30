@@ -1,3 +1,6 @@
+#ifndef H_DATABASE_BRAIN_REPOSITORY
+#define H_DATABASE_BRAIN_REPOSITORY
+
 #include <string>
 
 #include <QDir>
@@ -8,12 +11,16 @@
 #include "model/model.h"
 #include "entity/thought_entity.h"
 #include "entity/connection_entity.h"
+#include "entity/base_repository.h"
 #include "entity/graph_repository.h"
 #include "entity/search_repository.h"
 #include "entity/text_repository.h"
 
 class DatabaseBrainRepository
-	: public GraphRepository, public SearchRepository, public TextRepository
+	: public BaseRepository, 
+	public GraphRepository,
+	public SearchRepository,
+	public TextRepository
 {
 public:
 	// Constructor.
@@ -73,4 +80,6 @@ private:
 	ThoughtId m_rootId;
 	ThoughtId m_currentId;
 };
+
+#endif
 

@@ -68,7 +68,8 @@ void TabsPresenter::onBrainSelected(std::string id, std::string name) {
 		}
 	}
 
-	DismissableModule brainModule = m_factory->makeBrainModule(id);
+	QString qId = QString::fromStdString(id);
+	DismissableModule brainModule = m_factory->makeBrainModule(qId);
 	assert(brainModule.presenter != nullptr);
 	assert(brainModule.widget != nullptr);
 

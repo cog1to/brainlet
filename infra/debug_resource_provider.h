@@ -1,16 +1,18 @@
 #ifndef H_DEBUG_RESOURCE_PROVIDER
 #define H_DEBUG_RESOURCE_PROVIDER
 
+#include <QString>
+
 #include "model/thought.h"
 #include "infra/resource_provider.h"
 
 class DebugResourceProvider: public ResourceProvider {
 public:
-	DebugResourceProvider(std::string);
-	std::string brainsFolderPath() override;
+	DebugResourceProvider(QString);
+	QString brainsFolderPath() override;
 
 private:
-	std::string m_base;
+	QString m_base;
 };
 
 #endif

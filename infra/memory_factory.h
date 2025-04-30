@@ -1,8 +1,9 @@
 #ifndef H_MEMORY_FACTORY
 #define H_MEMORY_FACTORY
 
-#include <string>
 #include <unordered_map>
+
+#include <QString>
 
 #include "widgets/style.h"
 #include "infra/dismissable_module.h"
@@ -13,7 +14,7 @@ class MemoryFactory: public ModuleFactory {
 public:
 	MemoryFactory(Style *style);
 	DismissableModule makeBrainsModule() override;
-	DismissableModule makeBrainModule(std::string id) override;
+	DismissableModule makeBrainModule(QString id) override;
 
 private:
 	Style *m_style;

@@ -1,4 +1,4 @@
-#include <string>
+#include <QString>
 
 #include "infra/dismissable_module.h"
 #include "infra/module_factory.h"
@@ -20,17 +20,16 @@
 #include "presenters/canvas_presenter.h"
 #include "presenters/brain_presenter.h"
 #include "presenters/search_presenter.h"
+#include "infra/database_module_factory.h"
 
-MemoryFactory::MemoryFactory(Style *style) {
-	m_style = style;
-}
+DatabaseModuleFactory::DatabaseModuleFactory(
+	Style *style,
+	ResourceProvider *provider
+) : m_style(style), m_provider(provider) {}
 
-DismissableModule MemoryFactory::makeBrainsModule() {
-	std::vector<ThoughtEntity> thoughts;
-	std::vector<ConnectionEntity> conns;
-
-	MemoryRepository *repo = new MemoryRepository(thoughts, conns, 0);
-	m_list_repo = repo;
+DismissableModule DatabaseModuleFactory::makeBrainsModule() {
+	QString path = m_provider->brainsFolderPath();
+	FolderBrainsRepository *repo = new FolderBrainsRepository(path);
 
 	BrainListWidget *widget = new BrainListWidget(nullptr, m_style);
 	BrainListPresenter *presenter = new BrainListPresenter(widget, repo);
@@ -40,32 +39,20 @@ DismissableModule MemoryFactory::makeBrainsModule() {
 		.arg(m_style->background().name(QColor::HexArgb))
 	);
 
-
 	return DismissableModule(
 		presenter,
 		widget,
-		repo		
+		repo
 	);
 }
 
-DismissableModule MemoryFactory::makeBrainModule(QString id) {
-	// TODO: Need a mechanism to destroy every sub-presenter and
-	// sub-widget.
-	//
-	// 1. Dispose bag pattern as part of the module/widget.
-	// 2. Ownership of sub-components in every component.
-	//
-	// Will go with 2 for now, as we don't have a lot of dependencies
-	// right now and it seems more logical. Just bear in mind that
-	// this approach does not scale well for UI applications.
-
+DismissableModule DatabaseModuleFactory::makeBrainModule(QString id) {
 	// Get or create a repo.
-	std::string name = m_list_repo->getBrainName(id.toStdString());
-	std::vector<ThoughtEntity> thoughts = {
-		ThoughtEntity(0, name)
-	};
-	std::vector<ConnectionEntity> conns;
-	MemoryRepository *repo = new MemoryRepository(thoughts, conns, 0);
+	QString path = QString("%1/%2")
+		.arg(m_provider->brainsFolderPath())
+		.arg(id);
+	QDir dir = QDir(path);
+	DatabaseBrainRepository *repo = DatabaseBrainRepository::fromDir(dir);
 
 	// Text editor widget and presenter.
 	MarkdownWidget *markdownWidget = new MarkdownWidget(nullptr, m_style);

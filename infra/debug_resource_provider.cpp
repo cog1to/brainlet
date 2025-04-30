@@ -1,14 +1,13 @@
-#include <string>
-#include <cstdio>
+#include <QString>
 
 #include "infra/resource_provider.h"
 #include "infra/debug_resource_provider.h"
 
-DebugResourceProvider::DebugResourceProvider(std::string path) {
+DebugResourceProvider::DebugResourceProvider(QString path) {
 	m_base = path;
 }
 
-std::string DebugResourceProvider::brainsFolderPath() {
+QString DebugResourceProvider::brainsFolderPath() {
 	return m_base;
 }
 

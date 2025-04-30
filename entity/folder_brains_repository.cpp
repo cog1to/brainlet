@@ -1,6 +1,7 @@
 #include <string>
 #include <vector>
 
+#include <QString>
 #include <QDir>
 #include <QFileInfoList>
 
@@ -8,7 +9,7 @@
 #include "entity/brains_repository.h"
 #include "model/model.h"
 
-FolderBrainsRepository::FolderBrainsRepository(std::string base) {
+FolderBrainsRepository::FolderBrainsRepository(QString base) {
 	m_base = base;
 }
 
@@ -52,7 +53,7 @@ ListBrainsResult FolderBrainsRepository::listBrains() {
 
 	return ListBrainsResult(
 		BrainRepositoryErrorNone,
-		BrainList(brains, size, m_base)
+		BrainList(brains, size, m_base.toStdString())
 	);
 }
 
@@ -138,8 +139,7 @@ BrainRepositoryError FolderBrainsRepository::openOrCreateFolder() {
 	if (m_dir != nullptr)
 		return BrainRepositoryErrorNone;
 
-	QString path = QString::fromStdString(m_base);
-	QDir *dir = new QDir(path);
+	QDir *dir = new QDir(m_base);
 
 	if (dir->exists() == true) {
 		m_dir = dir;

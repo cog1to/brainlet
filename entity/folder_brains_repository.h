@@ -6,12 +6,15 @@
 #include <QDir>
 #include <QFileInfo>
 
+#include "entity/base_repository.h"
 #include "entity/brains_repository.h"
 #include "model/model.h"
 
-class FolderBrainsRepository: public BrainsRepository {
+class FolderBrainsRepository: 
+	public BaseRepository, public BrainsRepository
+{
 public:
-	FolderBrainsRepository(std::string);
+	FolderBrainsRepository(QString);
 	~FolderBrainsRepository();
 	// Brains repository.
 	ListBrainsResult listBrains() override;
@@ -20,7 +23,7 @@ public:
 	BrainRepositoryError renameBrain(std::string, std::string) override;
 
 private:
-	std::string m_base;
+	QString m_base;
 	QDir *m_dir = nullptr;
 	BrainRepositoryError openOrCreateFolder();
 	size_t getSize(QFileInfo);
