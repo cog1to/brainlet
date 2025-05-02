@@ -1,4 +1,6 @@
+.DS_Store
 mocs/
 bin/
 obj/
+resources/resources.cpp
 *.swp

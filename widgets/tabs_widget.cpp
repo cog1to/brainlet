@@ -7,6 +7,7 @@
 #include <QShowEvent>
 #include <QBoxLayout>
 #include <QTabBar>
+#include <QPushButton>
 
 #include "widgets/style.h"
 #include "widgets/base_widget.h"
@@ -51,6 +52,15 @@ TabsWidget::TabsWidget(
 			QTabBar::tab:!selected:hover {\
 				background: %10;\
 			}\
+			QTabBar::close-button {\
+				image: url(:/icons/close.png);\
+				subcontrol-position: right;\
+				padding: 2px;\
+			}\
+			QTabBar::close-button:hover {\
+				background-color: #99999999;\
+				border-radius: 4px;\
+			}\
 			QTabWidget::tab-bar {\
 				alignment: left;\
 				background: black;\
@@ -93,6 +103,16 @@ void TabsWidget::addTab(
 	if (!closable) {
 		m_tabWidget->tabBar()->setTabButton(idx, QTabBar::RightSide, 0);
 		m_tabWidget->tabBar()->setTabButton(idx, QTabBar::LeftSide, 0);
+	} else {
+		m_tabWidget->tabBar()->setTabButton(idx, QTabBar::LeftSide, 0);
+
+		//QIcon icon = QIcon(":/icons/close.png");
+		//QString empty = "";
+		//m_tabWidget->tabBar()->setTabButton(
+		//	idx,
+		//	QTabBar::RightSide,
+		//	new QPushButton(icon, empty)
+		//);
 	}
 
 	m_tabWidget->setCurrentIndex(idx);

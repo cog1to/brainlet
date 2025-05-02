@@ -99,6 +99,8 @@ void ThoughtEditWidget::keyPressEvent(QKeyEvent *event) {
 		emit prevSuggestion();
 	} else if (event->key() == Qt::Key_Down) {
 		emit nextSuggestion();
+	} else if (event->key() == Qt::Key_Tab) {
+		emit cycleSuggestion();
 	} else {
 		QTextEdit::keyPressEvent(event);
 	}

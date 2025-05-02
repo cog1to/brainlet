@@ -89,6 +89,7 @@ signals:
 public slots:
 	void onNextItem();
 	void onPrevItem();
+	void onCycleItem();
 
 private slots:
 	void onConnectionSelected(ConnectionItemWidget*, ThoughtId, QString, ConnectionItemButton);

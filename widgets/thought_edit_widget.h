@@ -34,6 +34,7 @@ signals:
 	void menuRequested(const QPoint&);
 	void nextSuggestion();
 	void prevSuggestion();
+	void cycleSuggestion();
 
 protected:
 	void focusOutEvent(QFocusEvent *) override;

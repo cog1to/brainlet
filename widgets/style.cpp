@@ -1,6 +1,7 @@
 #include <QFont>
 #include <QColor>
 #include <QObject>
+#include <QFontDatabase>
 
 #include "widgets/style.h"
 
@@ -45,8 +46,10 @@ Style::Style(
 }
 
 Style& Style::defaultStyle() {
-	// TODO: Load fonts statically from resources. MacOS seem to have
-	// a bug with not loading font variants properly.
+	QFontDatabase::addApplicationFont(":/fonts/fa-solid-900.ttf");
+	QFontDatabase::addApplicationFont(":/fonts/noto-sans.ttf");
+	QFontDatabase::addApplicationFont(":/fonts/noto-sans-mono.ttf");
+
 	static QFont font = QFont("Noto Sans");
 	font.setPixelSize(15);
 

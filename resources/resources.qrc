@@ -1,0 +1,11 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource prefix="/icons">
+	<file alias="close.png">icons/close.png</file>
+	<file alias="app.png">icons/icon.png</file>
+</qresource>
+<qresource prefix="/fonts">
+	<file alias="fa-solid-900.ttf">fonts/fa-solid-900.ttf</file>
+	<file alias="noto-sans.ttf">fonts/noto-sans.ttf</file>
+	<file alias="noto-sans-mono.ttf">fonts/noto-sans-mono.ttf</file>
+</qresource>
+</RCC>

@@ -4,6 +4,7 @@
 #include <QApplication>
 #include <QString>
 #include <QStyleFactory>
+#include <QIcon>
 
 #include "widgets/tabs_widget.h"
 #include "presenters/tabs_presenter.h"
@@ -12,6 +13,7 @@
 
 int main(int argc, char **argv) {
 	QApplication app(argc, argv);
+	app.setWindowIcon(QIcon(":/icons/app.png"));
 
 	Style& style = Style::defaultStyle();
 
@@ -20,7 +22,7 @@ int main(int argc, char **argv) {
 	TabsWidget widget = TabsWidget(nullptr, &style);
 	TabsPresenter presenter = TabsPresenter(&widget, &factory);
 
-	widget.resize(900, 600);
+	widget.resize(1000, 700);
 	widget.show();
 
 	return app.exec();

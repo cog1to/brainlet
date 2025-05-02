@@ -113,6 +113,11 @@ SearchWidget::SearchWidget(
 	);
 
 	connect(
+		m_edit, SIGNAL(cycleSuggestion()),
+		this, SLOT(onCycleSuggestion())
+	);
+
+	connect(
 		m_edit, SIGNAL(prevSuggestion()),
 		this, SLOT(onPrevSuggestion())
 	);
@@ -221,6 +226,12 @@ void SearchWidget::onPrevSuggestion() {
 	if (m_list->isVisible() == false)
 		return;
 	m_list->onPrevItem();
+}
+
+void SearchWidget::onCycleSuggestion() {
+	if (m_list->isVisible() == false)
+		return;
+	m_list->onCycleItem();
 }
 
 void SearchWidget::onFocusLost() {

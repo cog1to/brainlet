@@ -296,6 +296,22 @@ void ConnectionListWidget::onNextItem() {
 	}
 }
 
+void ConnectionListWidget::onCycleItem() {
+	if (isVisible() == false)
+		return;
+	if (m_widgets.size() == 0)
+		return;
+	
+	int next = (m_selectedIdx + 1) % (int)m_items.size();
+	if (next != m_selectedIdx) {
+		if (m_selectedIdx != -1)
+			m_widgets[m_selectedIdx]->deactivate();
+
+		m_selectedIdx = next;
+		m_widgets[m_selectedIdx]->activate();
+	}
+}
+
 void ConnectionListWidget::onPrevItem() {
 	if (isVisible() == false)
 		return;

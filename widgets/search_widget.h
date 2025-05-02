@@ -58,6 +58,7 @@ private slots:
 	// List navigation.
 	void onNextSuggestion();
 	void onPrevSuggestion();
+	void onCycleSuggestion();
 
 private:
 	// Subviews.

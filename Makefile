@@ -1,15 +1,16 @@
 # Basic config
 INCLUDEDIRS = -I${QTDIR}/include \
-							-I${QTDIR}/include/QtCore \
-							-I${QTDIR}/include/QtWidgets \
-							-I${QTDIR}/include/QtGui \
-							-I${QTDIR}/include/QtSql \
-							-I.
+	-I${QTDIR}/include/QtCore \
+	-I${QTDIR}/include/QtWidgets \
+	-I${QTDIR}/include/QtGui \
+	-I${QTDIR}/include/QtSql \
+	-I.
 LIBDIRS = -L${QTDIR}/lib
 LIBS = -lQt6Core -lQt6Widgets -lQt6Gui -lQt6DBus -lQt6Sql
 CFLAGS = ${FLAGS}
 # Utils
 MOC = ${QTDIR}/libexec/moc
+RCC = ${QTDIR}/share/qt/libexec/rcc
 # MacOS overrides
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
@@ -43,6 +44,10 @@ PRESENTERS_H = $(wildcard presenters/*.h)
 PRESENTERS_O = $(patsubst %.cpp,obj/%.o,$(PRESENTERS_C))
 PRESENTERS_MOCS_C = $(patsubst presenters/%.cpp,mocs/%.cpp,$(PRESENTERS_H:.h=.moc.cpp))
 PRESENTERS_MOCS_O = $(patsubst %.cpp,obj/%.o,$(PRESENTERS_MOCS_C))
+# Resources
+RESOURCES = resources/resources.qrc
+RESOURCES_C = resources/resources.cpp
+RESOURCES_O = bin/resources/resources.o
 # All object files
 SOURCES = $(shell find . \( -path ./tests -prune -o -path ./mocs -prune \) -o -name "*.cpp" -print | sed -e 's/\.\///') $(WIDGETS_MOCS_C) $(PRESENTERS_MOCS_C)
 OBJECTS = $(patsubst %.cpp,obj/%.o,$(SOURCES))
@@ -65,6 +70,10 @@ moc: mocs
 debug: CFLAGS += -DDEBUG_GUI=1
 debug: tests
 
+# Resources
+$(RESOURCES_C): $(RESOURCES) $(wildcard resources/icons/*)
+	$(RCC) -name resources $(RESOURCES) -o $(RESOURCES_C)
+
 # MOCs
 mocfiles: moc $(WIDGETS_MOCS_C) $(PRESENTERS_MOCS_C)
 
@@ -78,6 +87,11 @@ mocs/style.moc.cpp: widgets/style.h
 	$(MOC) $< -o $@
 
 # Object rules
+obj/resources/resources.o: $(RESOURCES_C)
+	@mkdir -p $(@D)
+	$(CXX) -c $< -g $(INCLUDEDIRS) $(CFLAGS) \
+		-o $@
+
 obj/%.o: %.cpp %.h
 	@mkdir -p $(@D)
 	$(CXX) -c $< -g $(INCLUDEDIRS) $(CFLAGS) \
