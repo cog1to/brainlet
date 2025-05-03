@@ -10,7 +10,7 @@ LIBS = -lQt6Core -lQt6Widgets -lQt6Gui -lQt6DBus -lQt6Sql
 CFLAGS = ${FLAGS}
 # Utils
 MOC = ${QTDIR}/libexec/moc
-RCC = ${QTDIR}/share/qt/libexec/rcc
+RCC = ${QTDIR}/libexec/rcc
 # MacOS overrides
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
@@ -18,38 +18,21 @@ ifeq ($(UNAME_S),Darwin)
 	LIBDIRS = -F${QTDIR}/lib
 	LIBS = -framework QtWidgets -framework QtCore -framework QtGui -framework QtDBus -framework QtSql
 	MOC = ${QTDIR}/share/qt/libexec/moc
+	RCC = ${QTDIR}/share/qt/libexec/rcc
 	CFLAGS += -DDARWIN=1
 endif
 
-# Files
-HEADERS := $(shell ls **/*.h)
-# Layouts
-LAYOUTS := $(shell ls layout/*.cpp)
-LAYOUTS_O = $(patsubst %.cpp,obj/%.o,$(LAYOUTS))
-# Models
-MODELS := $(shell ls model/*.cpp)
-MODELS_O = $(patsubst %.cpp,obj/%.o,$(MODELS))
-# Entity
-REPO := $(shell ls entity/*.cpp)
-REPO_O = $(patsubst %.cpp,obj/%.o,$(REPO))
 # Widgets
-WIDGETS_C := $(shell ls widgets/*widget.cpp) widgets/style.cpp
 WIDGETS_H = $(wildcard widgets/*widget.h) widgets/style.h
-WIDGETS_O = $(patsubst %.cpp,obj/%.o$(WIDGETS_C))
 WIDGETS_MOCS_C = $(patsubst widgets/%.cpp,mocs/%.cpp,$(WIDGETS_H:.h=.moc.cpp))
-WIDGETS_MOCS_O = $(patsubst %.cpp,obj/%.o,$(WIDGETS_MOCS_C))
 # Presenters
-PRESENTERS_C := $(shell ls presenters/*.cpp)
 PRESENTERS_H = $(wildcard presenters/*.h)
-PRESENTERS_O = $(patsubst %.cpp,obj/%.o,$(PRESENTERS_C))
 PRESENTERS_MOCS_C = $(patsubst presenters/%.cpp,mocs/%.cpp,$(PRESENTERS_H:.h=.moc.cpp))
-PRESENTERS_MOCS_O = $(patsubst %.cpp,obj/%.o,$(PRESENTERS_MOCS_C))
 # Resources
 RESOURCES = resources/resources.qrc
 RESOURCES_C = resources/resources.cpp
-RESOURCES_O = bin/resources/resources.o
 # All object files
-SOURCES = $(shell find . \( -path ./tests -prune -o -path ./mocs -prune \) -o -name "*.cpp" -print | sed -e 's/\.\///') $(WIDGETS_MOCS_C) $(PRESENTERS_MOCS_C)
+SOURCES = $(shell find . \( -path ./resources -prune -o -path ./tests -prune -o -path ./mocs -prune \) -o -name "*.cpp" -print | sed -e 's/\.\///') $(WIDGETS_MOCS_C) $(PRESENTERS_MOCS_C) $(RESOURCES_C)
 OBJECTS = $(patsubst %.cpp,obj/%.o,$(SOURCES))
 
 # Main target
