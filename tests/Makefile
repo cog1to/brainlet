@@ -3,7 +3,8 @@ tests: bin test_anchor test_thought test_resize test_edit test_base \
 	test_memory test_presenter test_markdown test_text_presenter \
 	test_brain_presenter test_conn test_brain_item \
 	test_brain_list test_brain_list_presenter test_tabs \
-	test_graph_repo test_text_repo test_tabs_with_repo
+	test_graph_repo test_text_repo test_tabs_with_repo \
+	test_tabs_with_config
 
 test_anchor: $(OBJECTS) tests/test_anchor.cpp
 	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
@@ -143,5 +144,12 @@ test_tabs_with_repo: $(OBJECTS) tests/test_tabs_with_repo.cpp
 		$(OBJECTS) \
 		tests/test_tabs_with_repo.cpp \
 		-o bin/test_tabs_with_repo \
+		$(LIBDIRS) $(LIBS)
+
+test_tabs_with_config: $(OBJECTS) tests/test_tabs_with_config.cpp
+	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
+		$(OBJECTS) \
+		tests/test_tabs_with_config.cpp \
+		-o bin/test_tabs_with_config \
 		$(LIBDIRS) $(LIBS)
 

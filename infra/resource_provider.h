@@ -3,8 +3,6 @@
 
 #include <QString>
 
-#include "model/thought.h"
-
 class ResourceProvider {
 public:
 	virtual QString brainsFolderPath() = 0;
