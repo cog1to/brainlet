@@ -35,6 +35,8 @@ RESOURCES_C = resources/resources.cpp
 SOURCES = $(shell find . \( -path ./resources -prune -o -path ./tests -prune -o -path ./mocs -prune \) -o -name "*.cpp" -print | sed -e 's/\.\///') $(WIDGETS_MOCS_C) $(PRESENTERS_MOCS_C) $(RESOURCES_C)
 OBJECTS = $(patsubst %.cpp,obj/%.o,$(SOURCES))
 
+.PRECIOUS: $(OBJECTS)
+
 # Main target
 all: tests
 
