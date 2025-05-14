@@ -11,14 +11,28 @@
 
 using namespace text;
 
-MarkdownBlock::MarkdownBlock(QWidget *widget, Style *style)
-	: QFrame(widget), m_style(style)
+MarkdownCursor::MarkdownCursor(
+	MarkdownBlock *_block,
+	text::Line *_line,
+	int _pos
+) : block(_block), line(_line), position(_pos) {}
+
+MarkdownBlock::MarkdownBlock(
+	QWidget *widget,
+	Style *style,
+	MarkdownCursorProvider *provider
+)
+	: QFrame(widget), m_style(style), m_provider(provider)
 {
 	setContentsMargins(0, 0, 0, 0);
 
 	// Disable mouse and key events.
 	setAttribute(Qt::WA_TransparentForMouseEvents);
 	setFocusPolicy(Qt::NoFocus);
+}
+
+text::Paragraph *MarkdownBlock::paragraph() {
+	return m_par;
 }
 
 void MarkdownBlock::setParagraph(Paragraph *par) {
@@ -32,6 +46,16 @@ void MarkdownBlock::setParagraph(Paragraph *par) {
 	if (m_par == nullptr)
 		return;
 
+	MarkdownCursor *cursor = m_provider->currentCursor();
+	text::ParagraphType type = par->getType();
+
+	QColor color = type == text::Code 
+		? m_style->codeBackground()
+		: m_style->background();
+	setStyleSheet(
+		QString("background-color: %1").arg(color.name(QColor::HexRgb))
+	);
+
 	QList<Line> *lines = par->getLines();
 	for (qsizetype i = 0; i < lines->size(); ++i) {
 		QTextLayout *layout = new QTextLayout();
@@ -43,10 +67,15 @@ void MarkdownBlock::setParagraph(Paragraph *par) {
 			layout->setFont(m_style->textEditFont());
 
 		Line line = lines->at(i);
-		layout->setText(line.folded);
-
-		QList<QTextLayout::FormatRange> formats = convertRanges(line.foldedFormats);
-		layout->setFormats(formats);
+		if (cursor != nullptr && cursor->block == this && cursor->line == &((*lines)[i])) {
+			QList<QTextLayout::FormatRange> formats = convertRanges(line.formats);
+			layout->setText(line.text);
+			layout->setFormats(formats);
+		} else {
+			QList<QTextLayout::FormatRange> formats = convertRanges(line.foldedFormats);
+			layout->setText(line.folded);
+			layout->setFormats(formats);
+		}
 
 		m_layouts.push_back(layout);
 	}
@@ -54,7 +83,200 @@ void MarkdownBlock::setParagraph(Paragraph *par) {
 	update();
 }
 
-// Events.
+// Cursor.
+
+bool MarkdownBlock::cursorAt(QPoint point, MarkdownCursor *out) {
+	QMargins formatMargins = QMargins(0, 0, 0, 0);
+	text::ParagraphType type = m_par->getType();
+	if (type == text::Code) {
+		formatMargins = codeMargins;
+	} else if (type == text::BulletList || type == text::NumberList) {
+		formatMargins = listMargins;
+	}
+
+	for (int idx = 0; idx < m_layouts.size(); idx++) {
+		QTextLayout *layout = m_layouts[idx];
+		text::Line *parLine = &((*m_par->getLines())[idx]);
+
+		QPointF layoutPosition = layout->position();
+		QPointF pos = QPointF(
+			point.x() - layoutPosition.x(),
+			point.y() - layoutPosition.y()
+		);
+
+		if (!layout->boundingRect().contains(pos))
+			continue;
+
+		for (int lineIdx = 0; lineIdx < layout->lineCount(); lineIdx++) {
+			QTextLine line = layout->lineAt(lineIdx);
+			QRectF rect = QRectF(
+				line.position().x(),
+				line.position().y(),
+				line.rect().width(),
+				line.rect().height()
+			);
+
+			if (rect.contains(pos)) {
+				int idx = line.xToCursor(pos.x());
+				out->block = this;
+				out->line = parLine;
+				out->position = idx;
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+text::Line *MarkdownBlock::lineBefore(Line* line) {
+	if (line == nullptr)
+		return nullptr;
+
+	QList<text::Line> *lines = m_par->getLines();
+	int idx = lines->indexOf(*line);
+
+	if (idx <= 0)
+		return nullptr;
+
+	return &((*lines)[idx - 1]);
+}
+
+text::Line *MarkdownBlock::lineAfter(Line* line) {
+	if (line == nullptr)
+		return nullptr;
+
+	QList<text::Line> *lines = m_par->getLines();
+	int idx = lines->indexOf(*line);
+
+	if (idx < 0 || idx == lines->size() - 1)
+		return nullptr;
+
+	return &((*lines)[idx + 1]);
+}
+
+bool MarkdownBlock::cursorBelow(
+	MarkdownCursor cur,
+	MarkdownCursor *result
+) {
+	if (cur.block != this)
+		return false;
+
+	QList<text::Line> *lines = m_par->getLines();
+	int idx = lines->indexOf(*cur.line);
+	if (idx == -1)
+		return false;
+
+	QTextLayout *layout = m_layouts[idx];
+	QTextLine textLine = layout->lineForTextPosition(cur.position);
+	qreal x = textLine.cursorToX(cur.position);
+	if (textLine.lineNumber() < layout->lineCount() - 1) {
+		// We have next line in current layout to move to.
+		// Calculate the new cursor position for the same X offset.
+		QTextLine nextLine = layout->lineAt(textLine.lineNumber() + 1);
+		int pos = nextLine.xToCursor(x);
+		result->position = pos;
+		return true;
+	} else if (idx < m_layouts.size() - 1) {
+		// We have next layout to move to.
+		// Calculate the new cursor position in that layout for the same X.
+		QTextLayout *nextLayout = m_layouts[idx + 1];
+		QTextLine nextLine = nextLayout->lineAt(0);
+		int pos = nextLine.xToCursor(x);
+		result->line = &((*lines)[idx + 1]);
+		result->position = pos;
+		return true;
+	}
+
+	return false;
+}
+
+bool MarkdownBlock::cursorAbove(
+	MarkdownCursor cur,
+	MarkdownCursor *result
+) {
+	if (cur.block != this)
+		return false;
+
+	QList<text::Line> *lines = m_par->getLines();
+	int idx = lines->indexOf(*cur.line);
+	if (idx == -1)
+		return false;
+
+	QTextLayout *layout = m_layouts[idx];
+	QTextLine textLine = layout->lineForTextPosition(cur.position);
+	qreal x = textLine.cursorToX(cur.position);
+	if (textLine.lineNumber() > 0) {
+		// We have prev line in current layout to move to.
+		// Calculate the new cursor position for the same X offset.
+		QTextLine nextLine = layout->lineAt(textLine.lineNumber() - 1);
+		int pos = nextLine.xToCursor(x);
+		result->position = pos;
+		return true;
+	} else if (idx > 0) {
+		// We have prev layout to move to.
+		// Calculate the new cursor position in that layout for the same X.
+		QTextLayout *nextLayout = m_layouts[idx - 1];
+		QTextLine nextLine = nextLayout->lineAt(nextLayout->lineCount() - 1);
+		int pos = nextLine.xToCursor(x);
+		result->line = &((*lines)[idx - 1]);
+		result->position = pos;
+		return true;
+	}
+
+	return false;
+}
+
+qreal MarkdownBlock::xAtCursor(MarkdownCursor cur) {
+	if (cur.block != this)
+		return false;
+
+	QList<text::Line> *lines = m_par->getLines();
+	int idx = lines->indexOf(*cur.line);
+	if (idx == -1)
+		return false;
+
+	QTextLayout *layout = m_layouts[idx];
+	QTextLine textLine = layout->lineForTextPosition(cur.position);
+	qreal x = textLine.cursorToX(cur.position);
+
+	return x;
+}
+
+MarkdownCursor MarkdownBlock::firstCursorAtX(qreal x) {
+	MarkdownCursor cursor(nullptr, nullptr, 0);
+
+	if (m_layouts.size() == 0)
+		return cursor;
+
+	QTextLayout *layout = m_layouts[0];
+	QTextLine line = layout->lineAt(0);
+	int pos = line.xToCursor(x);
+
+	cursor.block = this;
+	cursor.line = &((*m_par->getLines())[0]);
+	cursor.position = pos;
+
+	return cursor;
+}
+
+MarkdownCursor MarkdownBlock::lastCursorAtX(qreal x) {
+	MarkdownCursor cursor(nullptr, nullptr, 0);
+
+	if (m_layouts.size() == 0)
+		return cursor;
+
+	int lastLineIdx = m_layouts.size() - 1;
+	QTextLayout *layout = m_layouts[lastLineIdx];
+	QTextLine line = layout->lineAt(layout->lineCount() - 1);
+	int pos = line.xToCursor(x);
+
+	cursor.block = this;
+	cursor.line = &((*m_par->getLines())[lastLineIdx]);
+	cursor.position = pos;
+
+	return cursor;
+}
 
 // Drawing and size.
 
@@ -74,11 +296,14 @@ QSize MarkdownBlock::sizeHint() const {
 	int lineWidth = size().width()
 		- margins.left() - margins.right()
 		- formatMargins.left() - formatMargins.right();
-	qreal height = 0;
+	qreal height = margins.top() + formatMargins.top();
+	qreal start = margins.left() + formatMargins.left();
 
-	for (qsizetype i = 0; i < m_layouts.size(); ++i) {
+	for (qsizetype i = 0; i < m_layouts.size(); i++) {
+		qreal lineY = 0;
 		const QTextLayout *item = m_layouts.at(i);
 		QTextLayout *layout = (QTextLayout*)item;
+		layout->setPosition(QPoint(start, height));
 		layout->beginLayout();
 
 		while (true) {
@@ -87,8 +312,9 @@ QSize MarkdownBlock::sizeHint() const {
 				break;
 
 			line.setLineWidth(lineWidth);
-			line.setPosition(QPointF(0, height));
+			line.setPosition(QPointF(0, lineY));
 			height += line.height();
+			lineY += line.height();
 		}
 
 		layout->endLayout();
@@ -97,8 +323,7 @@ QSize MarkdownBlock::sizeHint() const {
 	return QSize(
 		lineWidth + margins.left() + margins.right()
 			+ formatMargins.left() + formatMargins.right(),
-		height + margins.top() + margins.bottom()
-			+ formatMargins.top() + formatMargins.bottom()
+		height + margins.bottom() + formatMargins.bottom()
 	);
 }
 
@@ -111,8 +336,11 @@ void MarkdownBlock::paintEvent(QPaintEvent *event) {
 	QMargins margins = contentsMargins();
 	QMargins formatMargins = QMargins(0, 0, 0, 0);
 	text::ParagraphType type = m_par->getType();
+	MarkdownCursor *cursor = m_provider->currentCursor();
+	QList<text::Line> *lines = m_par->getLines();
 
 	QPainter painter(this);
+	painter.setRenderHint(QPainter::Antialiasing, true);
 	painter.setPen(m_style->textEditColor());
 	painter.setBrush(m_style->textEditColor());
 
@@ -140,7 +368,7 @@ void MarkdownBlock::paintEvent(QPaintEvent *event) {
 			painter.drawEllipse(
 				QRectF(
 					(formatMargins.left() - fontMetrics.xHeight()) / 2,
-					y + (fontMetrics.ascent() - fontMetrics.xHeight()),
+					y + (fontMetrics.ascent() - fontMetrics.xHeight()) - 1,
 					fontMetrics.xHeight(),
 					fontMetrics.xHeight()
 				)
@@ -156,25 +384,52 @@ void MarkdownBlock::paintEvent(QPaintEvent *event) {
 			);
 		}
 
-		layout->beginLayout();
-
-		while (true) {
-			QTextLine line = layout->createLine();
-			if (!line.isValid())
-				break;
-
-			line.setLineWidth(lineWidth);
-			const int nextLineY = y + lineSpacing;
-
-			line.draw(
-				&painter,
-				QPoint(margins.left() + formatMargins.left(), y)
-			);
-
-			y = nextLineY;
+		layout->draw(&painter, QPointF(0, 0));
+	
+		if (
+			cursor != nullptr &&
+			cursor->block == this &&
+			cursor->line == &((*lines)[i])
+		) {
+			layout->drawCursor(&painter, QPointF(0, 0), cursor->position, 1);
 		}
 
-		layout->endLayout();
+		y += layout->boundingRect().height();
+	}
+}
+
+// State.
+
+void MarkdownBlock::onCursorMove(
+	MarkdownCursor from,
+	MarkdownCursor to
+) {
+	// Ignore when cursor not leaves neither enters this block.
+	if (
+		(from.block == nullptr || from.block != this) && 
+		(to.block == nullptr || to.block != this)
+	) {
+		return;
+	}
+
+	QList<text::Line> *lines = m_par->getLines();
+
+	if (from.line != nullptr) {
+		for (auto it = lines->begin(); it != lines->end(); it++) {
+			if (from.line == &(*it)) {
+				setParagraph(m_par); // TODO: don't relayout everything?
+				return;
+			}
+		}
+	}
+
+	if (to.line != nullptr) {
+		for (auto it = lines->begin(); it != lines->end(); it++) {
+			if (to.line == &(*it)) {
+				setParagraph(m_par); // TODO: don't relayout everything?
+				return;
+			}
+		}
 	}
 }
 

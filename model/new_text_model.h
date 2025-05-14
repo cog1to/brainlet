@@ -66,6 +66,13 @@ namespace text {
 		QList<FormatRange> foldedFormats;
 		// Modificators.
 		void setText(QString&, bool);
+		// Comparison.
+		inline bool operator==(const Line rhs) const {
+			return text == rhs.text;
+		}
+		inline bool operator!=(const Line rhs) const {
+			return text != rhs.text;
+		}
 	private:
 		void parseLinks(QString*);
 		void parseSimpleLinks(QString*);
