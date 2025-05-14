@@ -7,6 +7,7 @@
 #include <QIODevice>
 
 #include "widgets/markdown_edit_widget.h"
+#include "widgets/markdown_scroll_widget.h"
 
 int main(int argc, char *argv[]) {
 	QApplication app(argc, argv);
@@ -36,8 +37,8 @@ int main(int argc, char *argv[]) {
 	widget->load(string);
 
 	// Show window.
-	QScrollArea window(nullptr);
-	window.setWidget(widget);
+	MarkdownScrollWidget window(nullptr);
+	window.setMarkdownWidget(widget);
 	window.setWidgetResizable(true);
 	window.show();
 

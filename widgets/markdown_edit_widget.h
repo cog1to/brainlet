@@ -7,6 +7,7 @@
 #include <QResizeEvent>
 #include <QMouseEvent>
 #include <QKeyEvent>
+#include <QLine>
 
 #include "widgets/style.h"
 #include "widgets/base_widget.h"
@@ -27,6 +28,7 @@ public:
 
 signals:
 	void onCursorMove(MarkdownCursor, MarkdownCursor);
+	void cursorMoved(QLine);
 
 protected:
 	void resizeEvent(QResizeEvent*) override;

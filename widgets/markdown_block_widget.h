@@ -9,6 +9,7 @@
 #include <QPaintEvent>
 #include <QResizeEvent>
 #include <QMargins>
+#include <QLine>
 
 #include "widgets/style.h"
 #include "model/new_text_model.h"
@@ -34,6 +35,7 @@ public:
 	qreal xAtCursor(MarkdownCursor);
 	MarkdownCursor firstCursorAtX(qreal);
 	MarkdownCursor lastCursorAtX(qreal);
+	QLine lineForCursor(MarkdownCursor);
 	// Events.
 	void paintEvent(QPaintEvent*) override;
 	void resizeEvent(QResizeEvent*) override;

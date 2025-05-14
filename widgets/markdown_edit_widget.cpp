@@ -87,7 +87,6 @@ void MarkdownEditWidget::mousePressEvent(QMouseEvent *event) {
 
 	if (found) {
 		MarkdownCursor prev = m_cursor;
-		m_cursor = cursor;
 		processCursorMove(prev, cursor);
 		setFocus();
 	} else {
@@ -108,7 +107,6 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 	if (key == Qt::Key_Left) {
 		if (m_cursor.position > 0) {
 			cursor.position = cursor.position - 1;
-			m_cursor = cursor;
 			processCursorMove(prev, cursor);
 		} else {
 			if (
@@ -117,7 +115,6 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 			) {
 				cursor.line = prevLine;
 				cursor.position = prevLine->text.length();
-				m_cursor = cursor;
 				processCursorMove(prev, cursor);
 			} else if (
 				MarkdownBlock *prevBlock = blockBefore(block);
@@ -127,14 +124,12 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 				cursor.block = prevBlock;
 				cursor.line = &((*prevLines)[prevLines->size() - 1]);
 				cursor.position = cursor.line->text.length();
-				m_cursor = cursor;
 				processCursorMove(prev, cursor);
 			}
 		}
 	} else if (key == Qt::Key_Right) {
 		if (m_cursor.position < line->text.length()) {
 			cursor.position = cursor.position + 1;
-			m_cursor = cursor;
 			processCursorMove(prev, cursor);
 		} else {
 			if (
@@ -143,7 +138,6 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 			) {
 				cursor.line = nextLine;
 				cursor.position = 0;
-				m_cursor = cursor;
 				processCursorMove(prev, cursor);
 			} else if (
 				MarkdownBlock *nextBlock = blockAfter(block);
@@ -153,7 +147,6 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 				cursor.block = nextBlock;
 				cursor.line = &((*nextLines)[0]);
 				cursor.position = 0;
-				m_cursor = cursor;
 				processCursorMove(prev, cursor);
 			}
 		}
@@ -162,13 +155,11 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 			bool exists = block->cursorAbove(prev, &cursor);
 			exists == true
 		) {
-			m_cursor = cursor;
 			processCursorMove(prev, cursor);
 		} else if (
 			bool exists = cursorAtBlockAbove(prev, &cursor);
 			exists == true
 		) {
-			m_cursor = cursor;
 			processCursorMove(prev, cursor);
 		}
 	} else if (key == Qt::Key_Down) {
@@ -176,19 +167,22 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 			bool exists = block->cursorBelow(prev, &cursor);
 			exists == true
 		) {
-			m_cursor = cursor;
 			processCursorMove(prev, cursor);
 		} else if (
 			bool exists = cursorAtBlockBelow(prev, &cursor);
 			exists == true
 		) {
-			m_cursor = cursor;
 			processCursorMove(prev, cursor);
 		}
 	}
 
-	if (cursor.block != nullptr && cursor.line != nullptr) {
-		// Ensure cursor is visible.
+	// I don't like this. Have to wait for widgets to redraw to avoid
+	// crashes on querying non-existent lines in the layout.
+	QCoreApplication::processEvents();
+	// Ensure cursor is visible.
+	if (m_cursor.block != nullptr && m_cursor.line != nullptr) {
+		QLine cursorLine = m_cursor.block->lineForCursor(m_cursor);
+		emit cursorMoved(cursorLine);
 	}
 }
 

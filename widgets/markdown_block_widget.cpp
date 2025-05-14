@@ -4,6 +4,7 @@
 #include <QList>
 #include <QMargins>
 #include <QPainter>
+#include <QLine>
 
 #include "model/new_text_model.h"
 #include "widgets/style.h"
@@ -431,6 +432,31 @@ void MarkdownBlock::onCursorMove(
 			}
 		}
 	}
+}
+
+QLine MarkdownBlock::lineForCursor(MarkdownCursor cursor) {
+	int idx = 0;
+
+	if (cursor.block != this)
+		return QLine(0, 0, 0, 0);
+
+	QList<text::Line> *lines = m_par->getLines();
+	for (idx = 0; idx < lines->size(); idx++) {
+		if (&(*lines)[idx] == cursor.line)
+			break;
+	}
+
+	QTextLayout *layout = m_layouts[idx];
+	QTextLine line = layout->lineForTextPosition(cursor.position);
+	qreal x = line.cursorToX(cursor.position);
+
+	QPointF pos = layout->position();
+	QRect geo = geometry();
+	qreal height = line.height();
+	return QLine(
+		QPoint(geo.x() + x, geo.y() + pos.y() + line.y() - height * 0.5),
+		QPoint(geo.x() + x, geo.y() + pos.y() + line.y() + height * 1.5)
+	);
 }
 
 // Helpers.
