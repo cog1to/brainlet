@@ -1,6 +1,6 @@
 # HEADER 1
 
-First ***para*g*raph***: Lorem ipsum `dolor sit amet`, consectetur adipiscing elit. Sed lobortis velit vel lorem elementum accumsan. Maecenas turpis tortor, imperdiet in turpis sed, varius cursus mi. Quisque ut semper ipsum. Nullam posuere neque ut urna tincidunt varius. Donec pellentesque vulputate sodales. Quisque dignissim bibendum velit, in pharetra neque venenatis vitae. Phasellus vitae libero sit amet magna egestas fringilla. Etiam tempus velit vel lacus vulputate ultricies. Quisque tincidunt vestibulum sapien nec viverra. Nam hendrerit maximus blandit.
+First **para*g*raph**: Lorem ipsum `dolor sit amet`, consectetur adipiscing elit. Sed lobortis velit vel lorem elementum accumsan. Maecenas turpis tortor, imperdiet in turpis sed, varius cursus mi. Quisque ut semper ipsum. Nullam posuere neque ut urna tincidunt varius. Donec pellentesque vulputate sodales. Quisque dignissim bibendum velit, in pharetra neque venenatis vitae. Phasellus vitae libero sit amet magna egestas fringilla. Etiam tempus velit vel lacus vulputate ultricies. Quisque tincidunt vestibulum sapien nec viverra. Nam hendrerit maximus blandit.
 
 
 

@@ -459,6 +459,14 @@ QLine MarkdownBlock::lineForCursor(MarkdownCursor cursor) {
 	);
 }
 
+QPoint MarkdownBlock::pointAtCursor(MarkdownCursor cursor) {
+	if (cursor.block != this)
+		return QPoint(0, 0);
+
+	QLine line = lineForCursor(cursor);
+	return line.p2();
+}
+
 // Helpers.
 
 QList<QTextLayout::FormatRange> MarkdownBlock::convertRanges(
@@ -470,11 +478,23 @@ QList<QTextLayout::FormatRange> MarkdownBlock::convertRanges(
 	defaultFormat.setFont(m_style->textEditFont());
 
 	for (auto fmt: from) {
+		QTextCharFormat combined = defaultFormat;
+
+		// Apply previous formatting. This only works for completely
+		// nested formats, like <it>my <bold>text</bold> here</it>.
+		// As far as I know Markdown doesn't really support intersecting
+		// formats.
+		for (auto prev: from) {
+			if (prev.from <= fmt.from && prev.to >= fmt.to) {
+				combined = qtFormat(prev, m_style, combined);
+			}
+		}
+
 		result.push_back(
 			QTextLayout::FormatRange{
 				.start = fmt.from,
 				.length = fmt.to - fmt.from,
-				.format = qtFormat(fmt, m_style, defaultFormat)
+				.format = qtFormat(fmt, m_style, combined)
 			}
 		);
 	}

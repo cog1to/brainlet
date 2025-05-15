@@ -65,6 +65,10 @@ void MarkdownEditWidget::load(QString data) {
 	updateGeometry();
 }
 
+void MarkdownEditWidget::setPresenter(MarkdownEditPresenter *p) {
+	m_presenter = p;
+}
+
 // Events.
 
 void MarkdownEditWidget::resizeEvent(QResizeEvent *event) {
@@ -104,7 +108,49 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 	if (line == nullptr || block == nullptr)
 		return;
 
-	if (key == Qt::Key_Left) {
+	if (
+		key == Qt::Key_PageUp ||
+		(key == Qt::Key_Up && event->modifiers() & Qt::ControlModifier)
+	) {
+		if (m_presenter == nullptr)
+			return;
+
+		int diff = m_presenter->getPageOffset(false);
+		if (diff == 0) {
+			cursor = documentStart();
+		} else {
+			cursor = moveCursor(diff, prev);
+			if (cursor.block == nullptr || cursor.line == nullptr)
+				return;
+		}
+
+		processCursorMove(prev, cursor);
+	} else if (
+		key == Qt::Key_PageDown ||
+		(key == Qt::Key_Down && event->modifiers() & Qt::ControlModifier)
+	) {
+		if (m_presenter == nullptr)
+			return;
+
+		int diff = m_presenter->getPageOffset(true);
+		cursor = moveCursor(diff, prev);
+		if (cursor.block == nullptr || cursor.line == nullptr)
+			return;
+
+		processCursorMove(prev, cursor);
+	} else if (
+		key == Qt::Key_Home ||
+		(key == Qt::Key_Left && event->modifiers() & Qt::ControlModifier)
+	) {
+		cursor = documentStart();
+		processCursorMove(prev, cursor);
+	} else if (
+		key == Qt::Key_End ||
+		(key == Qt::Key_Right && event->modifiers() & Qt::ControlModifier)
+	) {
+		cursor = documentEnd();
+		processCursorMove(prev, cursor);
+	} else if (key == Qt::Key_Left) {
 		if (m_cursor.position > 0) {
 			cursor.position = cursor.position - 1;
 			processCursorMove(prev, cursor);
@@ -179,11 +225,54 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 	// I don't like this. Have to wait for widgets to redraw to avoid
 	// crashes on querying non-existent lines in the layout.
 	QCoreApplication::processEvents();
+
+	// Return if only mod keys are pressed
+	if (
+		key == Qt::Key_Control || key == Qt::Key_Alt ||
+		key == Qt::Key_Meta || key == Qt::Key_Shift
+	) {
+		return;
+	}
+
 	// Ensure cursor is visible.
 	if (m_cursor.block != nullptr && m_cursor.line != nullptr) {
 		QLine cursorLine = m_cursor.block->lineForCursor(m_cursor);
 		emit cursorMoved(cursorLine);
 	}
+}
+
+// Cursor manipulation.
+
+MarkdownCursor MarkdownEditWidget::moveCursor(
+	int dy, MarkdownCursor prev
+) {
+	bool success = false;
+
+	if (prev.block == nullptr) {
+		return MarkdownCursor(nullptr, nullptr, 0);
+	}
+
+	MarkdownBlock *block = prev.block;
+	QPoint p = block->pointAtCursor(prev);
+
+	QPoint newP = QPoint(p.x(), p.y() + dy);
+	MarkdownCursor cursor = MarkdownCursor(nullptr, nullptr, 0);
+	success = cursorAtPoint(newP, &cursor);
+
+	if (success) {
+		return cursor;
+	} else {
+		// If valid position not found, go to start/end of the document
+		// instead, depending on the diff direction.
+		if (dy > 0) {	
+			return documentEnd();
+		} else if (dy < 0) {
+			return documentStart();
+		}
+	}
+
+	// We should not really get here.
+	return cursor;
 }
 
 // Cursor provider.
@@ -272,5 +361,47 @@ void MarkdownEditWidget::processCursorMove(
 
 	m_cursor = to;
 	emit onCursorMove(from, to);
+}
+
+bool MarkdownEditWidget::cursorAtPoint(
+	QPoint pos,
+	MarkdownCursor *cursor
+) {
+	for (auto it = m_blocks.begin(); it != m_blocks.end(); it++) {
+		QRect geometry = (*it)->geometry();
+
+		// Since there are gaps between blocks, we take the first block
+		// that has the point inside or is located below the point.
+		if (geometry.y() + geometry.height() < pos.y()) {
+			continue;
+		}
+
+		// Translate inside block.
+		QPoint adjusted = pos;
+		if (geometry.y() > pos.y())
+			adjusted = QPoint(pos.x(), geometry.y());
+
+		QPoint pointInside = (*it)->mapFromParent(adjusted);
+		if (bool found = (*it)->cursorAt(pointInside, cursor); found == true) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+MarkdownCursor MarkdownEditWidget::documentStart() {
+	MarkdownBlock *block = m_blocks[0];
+	text::Paragraph *par = block->paragraph();
+	text::Line *line = &((*par->getLines())[0]);
+	return MarkdownCursor(block, line, 0);
+}
+
+MarkdownCursor MarkdownEditWidget::documentEnd() {
+	MarkdownBlock *block = m_blocks[m_blocks.size() - 1];
+	text::Paragraph *par = block->paragraph();
+	QList<text::Line> *lines = par->getLines();
+	text::Line *line = &((*lines)[lines->size() - 1]);
+	return MarkdownCursor(block, line, line->folded.length());
 }
 

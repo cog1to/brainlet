@@ -14,6 +14,8 @@
 #include "widgets/markdown_block_widget.h"
 #include "model/new_text_model.h"
 
+class MarkdownEditPresenter;
+
 class MarkdownEditWidget
 	: public BaseWidget, public MarkdownCursorProvider
 {
@@ -25,6 +27,8 @@ public:
 	void load(QString);
 	// Provider.
 	MarkdownCursor *currentCursor() override;
+	// Presenter.
+	void setPresenter(MarkdownEditPresenter*);
 
 signals:
 	void onCursorMove(MarkdownCursor, MarkdownCursor);
@@ -36,9 +40,10 @@ protected:
 	void keyPressEvent(QKeyEvent*) override;
 
 private:
-	QVBoxLayout *m_layout;
+	QVBoxLayout *m_layout = nullptr;
 	QList<MarkdownBlock*> m_blocks;
 	MarkdownCursor m_cursor;
+	MarkdownEditPresenter *m_presenter = nullptr;
 	// State.
 	text::TextModel m_model;	
 	MarkdownBlock *m_activeBlock = nullptr;
@@ -48,6 +53,15 @@ private:
 	bool cursorAtBlockBelow(MarkdownCursor, MarkdownCursor*);
 	bool cursorAtBlockAbove(MarkdownCursor, MarkdownCursor*);
 	void processCursorMove(MarkdownCursor, MarkdownCursor);
+	bool cursorAtPoint(QPoint, MarkdownCursor*);
+	MarkdownCursor moveCursor(int, MarkdownCursor);
+	MarkdownCursor documentStart();
+	MarkdownCursor documentEnd();
+};
+
+class MarkdownEditPresenter {
+public:
+	virtual int getPageOffset(bool down) = 0;	
 };
 
 #endif

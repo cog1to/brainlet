@@ -36,6 +36,7 @@ public:
 	MarkdownCursor firstCursorAtX(qreal);
 	MarkdownCursor lastCursorAtX(qreal);
 	QLine lineForCursor(MarkdownCursor);
+	QPoint pointAtCursor(MarkdownCursor);
 	// Events.
 	void paintEvent(QPaintEvent*) override;
 	void resizeEvent(QResizeEvent*) override;

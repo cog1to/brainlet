@@ -7,15 +7,21 @@
 
 #include "widgets/markdown_edit_widget.h"
 
-class MarkdownScrollWidget: public QScrollArea {
+class MarkdownScrollWidget
+	: public QScrollArea, public MarkdownEditPresenter
+{
 	Q_OBJECT
 
 public:
 	MarkdownScrollWidget(QWidget*);
 	void setMarkdownWidget(MarkdownEditWidget*);
+	int getPageOffset(bool) override;
 
 protected slots:
 	void onCursorMoved(QLine);
+
+private:
+	MarkdownEditWidget *m_widget = nullptr;
 };
 
 #endif
