@@ -220,6 +220,25 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 		) {
 			processCursorMove(prev, cursor);
 		}
+	} else if (key == Qt::Key_Enter || key == Qt::Key_Return) {
+		// TODO: Handle new line
+	} else if (key == Qt::Key_Backspace) {
+		// TODO: Handle backspace
+	} else if (key == Qt::Key_Delete) {
+		// TODO: Handle delete
+	} else if (QString text = event->text(); !text.isEmpty()) {
+		text::Paragraph *par = cursor.block->paragraph();
+		text::Line *line = cursor.line;
+
+		// Insert text.
+		QString newText = line->text;
+		newText.insert(cursor.position, text);
+		line->setText(newText, par->getType() == text::Code);
+
+		// Update text and adjust cursor.
+		cursor.block->setParagraph(par);
+		cursor.position += text.length();
+		processCursorMove(prev, cursor);
 	}
 
 	// I don't like this. Have to wait for widgets to redraw to avoid

@@ -37,7 +37,6 @@ int MarkdownScrollWidget::getPageOffset(bool down) {
 	int newValue = down
 		? std::min(bar->maximum(), bar->value() + bar->pageStep())
 		: std::max(0, bar->value() - bar->pageStep());
-	//bar->setValue(newValue);
 
 	// Calculate new position of the viewport.
 	int yDiff = float(newValue - oldValue)
