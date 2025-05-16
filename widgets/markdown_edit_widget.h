@@ -57,6 +57,8 @@ private:
 	MarkdownCursor moveCursor(int, MarkdownCursor);
 	MarkdownCursor documentStart();
 	MarkdownCursor documentEnd();
+	inline int indexOfParagraph(text::Paragraph*);
+	inline text::Paragraph *insertParagraph(int index, text::Paragraph);
 };
 
 class MarkdownEditPresenter {

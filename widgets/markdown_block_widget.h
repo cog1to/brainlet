@@ -25,6 +25,7 @@ public:
 	MarkdownBlock(QWidget*, Style*, MarkdownCursorProvider*);
 	// Model.
 	void setParagraph(text::Paragraph*);
+	void updateParagraphWithoutReload(text::Paragraph*);
 	text::Paragraph *paragraph();
 	// Cursor positioning.
 	bool cursorAt(QPoint, MarkdownCursor*);
@@ -61,6 +62,7 @@ private:
 		Style*,
 		QTextCharFormat
 	);
+	inline int indexOfLine(text::Line*);
 	// Layout constants.
 	static constexpr QMargins codeMargins = QMargins(10, 10, 10, 10);
 	static constexpr QMargins listMargins = QMargins(40, 0, 0, 0);

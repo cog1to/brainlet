@@ -413,6 +413,15 @@ void text::Paragraph::setLines(QList<text::Line> lines) {
 	m_lines = lines;
 }
 
+int text::Paragraph::indexOfLine(text::Line* line) {
+	for (int idx = 0; idx < m_lines.size(); idx++) {
+		if (&(m_lines[idx]) == line)
+			return idx;
+	}
+
+	return -1;
+}
+
 // Text model.
 
 text::TextModel::TextModel() {}

@@ -108,6 +108,8 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 	if (line == nullptr || block == nullptr)
 		return;
 
+	text::Paragraph *par = block->paragraph();
+
 	if (
 		key == Qt::Key_PageUp ||
 		(key == Qt::Key_Up && event->modifiers() & Qt::ControlModifier)
@@ -221,7 +223,109 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 			processCursorMove(prev, cursor);
 		}
 	} else if (key == Qt::Key_Enter || key == Qt::Key_Return) {
-		// TODO: Handle new line
+		QString beforeText = line->text.left(cursor.position);
+		QString afterText = line->text.right(line->text.length() - cursor.position);
+		int parIdx = indexOfParagraph(par);
+
+		if (par->getType() == text::Text) {
+			// Insert new paragraph.
+			line->setText(beforeText, false);
+			text::Paragraph newPar = text::Paragraph(
+				text::Text,
+				text::Line(afterText, false)
+			);
+			text::Paragraph *ptr = insertParagraph(parIdx + 1, newPar);
+
+			// Reload current paragraph.
+			block->setParagraph(par);
+
+			// Update cursor.
+			cursor = MarkdownCursor(
+				m_blocks[parIdx + 1],
+				&((*ptr->getLines())[0]),
+				0
+			);
+			processCursorMove(prev, cursor);
+		} else {
+			QList<text::Line> *lines = par->getLines();
+			int lineIdx = par->indexOfLine(line);
+
+			if (
+				line->text.isEmpty() &&
+				((event->modifiers() & Qt::ShiftModifier) == 0) &&
+				(par->getType() != text::Code || lineIdx == 0 || lineIdx == lines->size() - 1)
+			) {
+				// Copy lines after current one to a new paragraph.
+				QList<text::Line> remainder;
+				for (int i = lineIdx + 1; i < lines->size(); i++) {
+					remainder.push_back((*lines)[i]);
+				}
+
+				// Remove lines after current one from old paragraph.
+				lines->remove(lineIdx, lines->size() - lineIdx);
+				// Create a new paragraph with the remainder.
+				if (remainder.size() > 0) {
+					text::Paragraph newPar = text::Paragraph(
+						par->getType(),
+						remainder
+					);
+					text::Paragraph *ptr = insertParagraph(parIdx + 1, newPar);
+				}
+
+				QString empty = "";
+				if (lines->size() > 0) {
+					// Update old paragraph.
+					block->setParagraph(par);
+
+					// Insert new empty paragraph.
+					text::Paragraph newPar = text::Paragraph(
+						text::Text, text::Line(empty, false)
+					);
+					text::Paragraph *ptr = insertParagraph(parIdx + 1, newPar);
+
+					// Update cursor to new paragraph.
+					cursor = MarkdownCursor(
+						m_blocks[parIdx + 1],
+						&((*ptr->getLines())[0]),
+						0
+					);
+				} else {
+					par->setType(text::Text);
+					lines->push_back(text::Line(empty, false));
+					block->setParagraph(par);
+
+					// Update cursor to new current empty line.
+					cursor = MarkdownCursor(
+						m_blocks[parIdx],
+						&((*par->getLines())[0]),
+						0
+					);
+				}
+
+				processCursorMove(prev, cursor);
+			} else {
+				int lineIdx = par->indexOfLine(line);
+				QList<text::Line> *lines = par->getLines();
+				line->setText(beforeText, par->getType() == text::Code);
+
+				// Insert new line.
+				lines->insert(
+					lineIdx + 1,
+					text::Line(afterText, par->getType() == text::Code)
+				);
+
+				// Reload current paragraph.
+				block->setParagraph(par);
+
+				// Update cursor to new line.
+				cursor = MarkdownCursor(
+					m_blocks[parIdx],	
+					&((*lines)[lineIdx + 1]),
+					0
+				);
+				processCursorMove(prev, cursor);
+			}
+		}
 	} else if (key == Qt::Key_Backspace) {
 		// TODO: Handle backspace
 	} else if (key == Qt::Key_Delete) {
@@ -422,5 +526,40 @@ MarkdownCursor MarkdownEditWidget::documentEnd() {
 	QList<text::Line> *lines = par->getLines();
 	text::Line *line = &((*lines)[lines->size() - 1]);
 	return MarkdownCursor(block, line, line->folded.length());
+}
+
+inline int MarkdownEditWidget::indexOfParagraph(text::Paragraph *par) {
+	QList<text::Paragraph> *pars = m_model.paragraphs();
+	for (int idx = 0; idx < pars->size(); idx++) {
+		if (&((*pars)[idx]) == par)
+			return idx;
+	}
+
+	return -1;
+}
+
+inline text::Paragraph *MarkdownEditWidget::insertParagraph(
+	int index,
+	text::Paragraph par
+) {
+	QList<text::Paragraph> *pars = m_model.paragraphs();
+	pars->insert(index, par);
+
+	MarkdownBlock *block = new MarkdownBlock(nullptr, m_style, this);
+	connect(
+		this, &MarkdownEditWidget::onCursorMove,
+		block, &MarkdownBlock::onCursorMove
+	);
+
+	block->setParagraph(&((*pars)[index]));
+	m_blocks.insert(index, block);
+	m_layout->insertWidget(index, block);
+
+	// Update paragraph pointers for all blocks after new one.
+	for (int idx = index + 1; idx < pars->size(); idx++) {
+		m_blocks[idx]->updateParagraphWithoutReload(&((*pars)[idx]));
+	}
+
+	return &((*pars)[index]);
 }
 

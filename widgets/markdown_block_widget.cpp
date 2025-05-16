@@ -84,6 +84,12 @@ void MarkdownBlock::setParagraph(Paragraph *par) {
 	update();
 }
 
+void MarkdownBlock::updateParagraphWithoutReload(
+	text::Paragraph* par
+) {
+	m_par = par;
+}
+
 // Cursor.
 
 bool MarkdownBlock::cursorAt(QPoint point, MarkdownCursor *out) {
@@ -134,12 +140,11 @@ text::Line *MarkdownBlock::lineBefore(Line* line) {
 	if (line == nullptr)
 		return nullptr;
 
-	QList<text::Line> *lines = m_par->getLines();
-	int idx = lines->indexOf(*line);
-
+	int idx = m_par->indexOfLine(line);
 	if (idx <= 0)
 		return nullptr;
 
+	QList<text::Line> *lines = m_par->getLines();
 	return &((*lines)[idx - 1]);
 }
 
@@ -148,8 +153,7 @@ text::Line *MarkdownBlock::lineAfter(Line* line) {
 		return nullptr;
 
 	QList<text::Line> *lines = m_par->getLines();
-	int idx = lines->indexOf(*line);
-
+	int idx = m_par->indexOfLine(line);
 	if (idx < 0 || idx == lines->size() - 1)
 		return nullptr;
 
@@ -164,7 +168,7 @@ bool MarkdownBlock::cursorBelow(
 		return false;
 
 	QList<text::Line> *lines = m_par->getLines();
-	int idx = lines->indexOf(*cur.line);
+	int idx = m_par->indexOfLine(cur.line);
 	if (idx == -1)
 		return false;
 
@@ -196,11 +200,11 @@ bool MarkdownBlock::cursorAbove(
 	MarkdownCursor cur,
 	MarkdownCursor *result
 ) {
-	if (cur.block != this)
+	if (cur.block != this || cur.line == nullptr)
 		return false;
 
 	QList<text::Line> *lines = m_par->getLines();
-	int idx = lines->indexOf(*cur.line);
+	int idx = m_par->indexOfLine(cur.line);
 	if (idx == -1)
 		return false;
 
@@ -229,11 +233,10 @@ bool MarkdownBlock::cursorAbove(
 }
 
 qreal MarkdownBlock::xAtCursor(MarkdownCursor cur) {
-	if (cur.block != this)
+	if (cur.block != this || cur.line == nullptr)
 		return false;
 
-	QList<text::Line> *lines = m_par->getLines();
-	int idx = lines->indexOf(*cur.line);
+	int idx = m_par->indexOfLine(cur.line);
 	if (idx == -1)
 		return false;
 

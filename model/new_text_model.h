@@ -90,6 +90,7 @@ namespace text {
 		QList<Line> *getLines();
 		void setLine(int, Line);
 		void setLines(QList<Line>);
+		int indexOfLine(Line*);
 	private:
 		ParagraphType m_type = Text;
 		QList<Line> m_lines;
