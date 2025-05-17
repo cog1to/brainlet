@@ -63,6 +63,7 @@ private:
 		QTextCharFormat
 	);
 	inline int indexOfLine(text::Line*);
+	void relayout();
 	// Layout constants.
 	static constexpr QMargins codeMargins = QMargins(10, 10, 10, 10);
 	static constexpr QMargins listMargins = QMargins(40, 0, 0, 0);

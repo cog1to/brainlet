@@ -59,6 +59,8 @@ private:
 	MarkdownCursor documentEnd();
 	inline int indexOfParagraph(text::Paragraph*);
 	inline text::Paragraph *insertParagraph(int index, text::Paragraph);
+	inline void deleteParagraph(int index);
+	void mergeBlocks(int next, text::Line *line, MarkdownCursor prev);
 };
 
 class MarkdownEditPresenter {

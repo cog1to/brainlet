@@ -142,13 +142,15 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 		processCursorMove(prev, cursor);
 	} else if (
 		key == Qt::Key_Home ||
-		(key == Qt::Key_Left && event->modifiers() & Qt::ControlModifier)
+		(key == Qt::Key_Left &&
+		 event->modifiers() & Qt::ControlModifier)
 	) {
 		cursor = documentStart();
 		processCursorMove(prev, cursor);
 	} else if (
 		key == Qt::Key_End ||
-		(key == Qt::Key_Right && event->modifiers() & Qt::ControlModifier)
+		(key == Qt::Key_Right &&
+		 event->modifiers() & Qt::ControlModifier)
 	) {
 		cursor = documentEnd();
 		processCursorMove(prev, cursor);
@@ -162,7 +164,7 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 				prevLine != nullptr
 			) {
 				cursor.line = prevLine;
-				cursor.position = prevLine->text.length();
+				cursor.position = prevLine->folded.length();
 				processCursorMove(prev, cursor);
 			} else if (
 				MarkdownBlock *prevBlock = blockBefore(block);
@@ -171,7 +173,7 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 				QList<text::Line> *prevLines = prevBlock->paragraph()->getLines();
 				cursor.block = prevBlock;
 				cursor.line = &((*prevLines)[prevLines->size() - 1]);
-				cursor.position = cursor.line->text.length();
+				cursor.position = cursor.line->folded.length();
 				processCursorMove(prev, cursor);
 			}
 		}
@@ -327,9 +329,37 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 			}
 		}
 	} else if (key == Qt::Key_Backspace) {
-		// TODO: Handle backspace
+		if (cursor.position != 0) {
+			QString newText = line->text;
+			newText.remove(cursor.position - 1, 1);
+			line->setText(newText, par->getType() == text::Code);
+
+			// Update text and adjust cursor.
+			cursor.block->setParagraph(par);
+			cursor.position -= 1;
+			processCursorMove(prev, cursor);
+		} else {
+			int parIdx = indexOfParagraph(par);
+			if (m_blocks.size() > 1 && parIdx > 0) {
+				mergeBlocks(parIdx, line, prev);
+			}
+		}
 	} else if (key == Qt::Key_Delete) {
-		// TODO: Handle delete
+		if (cursor.position != cursor.line->text.length()) {
+			QString newText = line->text;
+			newText.remove(cursor.position, 1);
+			line->setText(newText, par->getType() == text::Code);
+
+			// Update text and adjust cursor.
+			cursor.block->setParagraph(par);
+			processCursorMove(prev, cursor);
+		} else {
+			int parIdx = indexOfParagraph(par);
+			if (m_blocks.size() > 1 && parIdx < m_blocks.size() - 1) {
+				text::Line *firstLine = &((*(*m_model.paragraphs())[parIdx + 1].getLines())[0]);
+				mergeBlocks(parIdx + 1, firstLine, prev);
+			}
+		}
 	} else if (QString text = event->text(); !text.isEmpty()) {
 		text::Paragraph *par = cursor.block->paragraph();
 		text::Line *line = cursor.line;
@@ -468,7 +498,7 @@ void MarkdownEditWidget::processCursorMove(
 	if (
 		(from.block != to.block || (*from.line) != (*to.line))
 	) {
-		QList<text::FormatRange> *ranges = &to.line->formats;
+		QList<text::FormatRange> *ranges = &to.line->foldedFormats;
 
 		for (auto& range: *ranges) {
 			if (range.to < pos) {
@@ -561,5 +591,156 @@ inline text::Paragraph *MarkdownEditWidget::insertParagraph(
 	}
 
 	return &((*pars)[index]);
+}
+
+inline void MarkdownEditWidget::deleteParagraph(int index) {
+	MarkdownBlock *block = m_blocks[index];
+	QList<text::Paragraph> *pars = m_model.paragraphs();
+
+	disconnect(
+		this, &MarkdownEditWidget::onCursorMove,
+		block, &MarkdownBlock::onCursorMove
+	);
+
+	// Delete from model.
+	pars->remove(index, 1);
+
+	// Delete from list of widgets.
+	m_blocks.remove(index, 1);
+
+	// Delete from layout.
+	m_layout->removeWidget(block);
+
+	// Delete the object.
+	block->deleteLater();
+
+	// Update paragraph pointers for all blocks after new one.
+	for (int idx = index; idx < pars->size(); idx++) {
+		m_blocks[idx]->updateParagraphWithoutReload(&((*pars)[idx]));
+	}
+}
+
+void MarkdownEditWidget::mergeBlocks(
+	int next,
+	text::Line *line,
+	MarkdownCursor prev
+) {
+	MarkdownCursor cursor = prev;
+	QList<text::Paragraph> *pars = m_model.paragraphs();
+	text::Paragraph *par = &((*pars)[next]);
+	MarkdownBlock *block = m_blocks[next];
+
+	if (par->getType() == text::Text) {
+		int parIdx = indexOfParagraph(par);
+		if (parIdx > 0) {
+			// Get last line of the previous paragraph.
+			text::Paragraph *prevPar = &((*m_model.paragraphs())[parIdx - 1]);
+			MarkdownBlock *prevBlock = m_blocks[parIdx - 1];
+			QList<text::Line> *lines = prevPar->getLines();
+			text::Line *lastLine = &((*lines)[lines->size() - 1]);
+
+			// Append current text to the last line.
+			int newPosition = lastLine->folded.length();
+			QString newText = lastLine->text + line->text;
+			lastLine->setText(newText, prevPar->getType() == text::Code);
+
+			// Update previous block.
+			prevBlock->setParagraph(prevPar);
+
+			// Delete current paragraph.
+			deleteParagraph(parIdx);
+
+			// Update cursor.
+		 	cursor = MarkdownCursor(
+				prevBlock,
+				lastLine,
+				newPosition
+			);
+			processCursorMove(prev, cursor);
+		}
+	} else {
+		int parIdx = indexOfParagraph(par);
+		int lineIdx = par->indexOfLine(line);
+
+		if (lineIdx == 0) {
+			QList<text::Paragraph> *pars = m_model.paragraphs();
+			if (
+				parIdx > 0 &&
+				(*pars)[parIdx - 1].getType() == par->getType()
+			) {
+				text::Paragraph *prevPar = &((*pars)[parIdx - 1]);
+				MarkdownBlock *prevBlock = m_blocks[parIdx - 1];
+				QList<text::Line> *prevLines = prevPar->getLines();
+				QList<text::Line> *lines = par->getLines();
+
+				// Copy current paragraph lines to previous one.
+				int oldSize = prevLines->size();
+				for (int idx = 0; idx < lines->size(); idx++) {
+					prevLines->push_back((*lines)[idx]);
+				}
+
+				// Delete current paragraph.
+				deleteParagraph(parIdx);
+
+				// Update previous paragraph.
+				prevBlock->setParagraph(prevPar);
+
+				// Update cursor to last line of previous paragraph.
+				cursor = MarkdownCursor(
+					prevBlock,
+					&((*prevLines)[oldSize]),
+					0
+				);
+				processCursorMove(prev, cursor);
+			} else if (parIdx > 0) {
+				text::Paragraph *prevPar = &((*pars)[parIdx - 1]);
+				MarkdownBlock *prevBlock = m_blocks[parIdx - 1];
+				QList<text::Line> *lines = par->getLines();
+				QList<text::Line> *prevLines = prevPar->getLines();
+				text::Line *lastLine = &((*prevLines)[prevLines->size() - 1]);
+
+				// Update previous paragraph's text.
+				QString newText = lastLine->text + line->text;
+				int newPos = lastLine->folded.length();
+				lastLine->setText(newText, prevPar->getType() == text::Code);
+
+				// Delete current line.
+				lines->remove(lineIdx);
+
+				// Update blocks.
+				prevBlock->setParagraph(prevPar);
+				block->setParagraph(par);
+
+				// Update cursor to previous line.
+				cursor = MarkdownCursor(
+					prevBlock,
+					lastLine,
+					newPos
+				);
+				processCursorMove(prev, cursor);
+			}
+		} else {
+			// Merge current and previous lines.
+			QList<text::Line> *lines = par->getLines();
+			text::Line *prevLine = &((*lines)[lineIdx - 1]);
+			QString newText = prevLine->text + line->text;
+			int newPos = prevLine->folded.length();
+			prevLine->setText(newText, par->getType() == text::Code);
+
+			// Delete current line.
+			lines->remove(lineIdx);
+
+			// Update block.
+			block->setParagraph(par);
+
+			// Update cursor to previous line.
+		 	cursor = MarkdownCursor(
+				block,
+				prevLine,
+				newPos
+			);
+			processCursorMove(prev, cursor);
+		}
+	}
 }
 

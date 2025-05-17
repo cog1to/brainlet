@@ -81,6 +81,7 @@ void MarkdownBlock::setParagraph(Paragraph *par) {
 		m_layouts.push_back(layout);
 	}
 
+	//relayout();
 	update();
 }
 
@@ -173,6 +174,10 @@ bool MarkdownBlock::cursorBelow(
 		return false;
 
 	QTextLayout *layout = m_layouts[idx];
+	if (layout->isValidCursorPosition(cur.position) == false) {
+		return false;
+	}
+
 	QTextLine textLine = layout->lineForTextPosition(cur.position);
 	qreal x = textLine.cursorToX(cur.position);
 	if (textLine.lineNumber() < layout->lineCount() - 1) {
@@ -209,6 +214,10 @@ bool MarkdownBlock::cursorAbove(
 		return false;
 
 	QTextLayout *layout = m_layouts[idx];
+	if (layout->isValidCursorPosition(cur.position) == false) {
+		return false;
+	}
+
 	QTextLine textLine = layout->lineForTextPosition(cur.position);
 	qreal x = textLine.cursorToX(cur.position);
 	if (textLine.lineNumber() > 0) {
@@ -234,13 +243,16 @@ bool MarkdownBlock::cursorAbove(
 
 qreal MarkdownBlock::xAtCursor(MarkdownCursor cur) {
 	if (cur.block != this || cur.line == nullptr)
-		return false;
+		return 0;
 
 	int idx = m_par->indexOfLine(cur.line);
 	if (idx == -1)
-		return false;
+		return 0;
 
 	QTextLayout *layout = m_layouts[idx];
+	if (layout->isValidCursorPosition(cur.position) == false)
+		return 0;
+
 	QTextLine textLine = layout->lineForTextPosition(cur.position);
 	qreal x = textLine.cursorToX(cur.position);
 
@@ -439,23 +451,49 @@ void MarkdownBlock::onCursorMove(
 
 QLine MarkdownBlock::lineForCursor(MarkdownCursor cursor) {
 	int idx = 0;
+	QRect geo = geometry();
 
-	if (cursor.block != this)
+	if (parent() == nullptr) {
 		return QLine(0, 0, 0, 0);
+	}
+
+	if (cursor.block != this || cursor.line == nullptr) {
+		return QLine(0, 0, 0, 0);
+	}
 
 	QList<text::Line> *lines = m_par->getLines();
+	bool found = false;
 	for (idx = 0; idx < lines->size(); idx++) {
-		if (&(*lines)[idx] == cursor.line)
+		if (&(*lines)[idx] == cursor.line) {
+			found = true;
 			break;
+		}
+	}
+
+	if (!found) {
+		return QLine(0, 0, 0, 0);
 	}
 
 	QTextLayout *layout = m_layouts[idx];
+	if (layout->isValidCursorPosition(cursor.position) == false) {
+		// Empty line. Return coordinates of the line.
+		QTextLine line = layout->lineAt(0);
+		qreal height = line.height();
+
+		return QLine(
+			geo.x(),
+			geo.y() + line.y() - height * 0.5,
+			geo.x(), 
+			geo.y() + line.y() + height * 1.5
+		);
+	}
+
+	// Non-empty line. Calculate the position of the cursor.
 	QTextLine line = layout->lineForTextPosition(cursor.position);
 	qreal x = line.cursorToX(cursor.position);
-
 	QPointF pos = layout->position();
-	QRect geo = geometry();
 	qreal height = line.height();
+
 	return QLine(
 		QPoint(geo.x() + x, geo.y() + pos.y() + line.y() - height * 0.5),
 		QPoint(geo.x() + x, geo.y() + pos.y() + line.y() + height * 1.5)
@@ -503,6 +541,47 @@ QList<QTextLayout::FormatRange> MarkdownBlock::convertRanges(
 	}
 
 	return result;
+}
+
+void MarkdownBlock::relayout() {
+	QMargins margins = contentsMargins();
+	QMargins formatMargins = QMargins(0, 0, 0, 0);
+	text::ParagraphType type = m_par->getType();
+
+	QFontMetrics fontMetrics = QFontMetrics(m_style->textEditFont());
+	if (type == text::Code) {
+		fontMetrics = QFontMetrics(m_style->codeFont());
+		formatMargins = codeMargins;
+	} else if (type == text::BulletList || type == text::NumberList) {
+		formatMargins = listMargins;
+	}
+
+	int lineWidth = size().width()
+		- margins.left() - margins.right()
+		- formatMargins.left() - formatMargins.right();
+	qreal height = margins.top() + formatMargins.top();
+	qreal start = margins.left() + formatMargins.left();
+
+	for (qsizetype i = 0; i < m_layouts.size(); i++) {
+		qreal lineY = 0;
+		const QTextLayout *item = m_layouts.at(i);
+		QTextLayout *layout = (QTextLayout*)item;
+		layout->setPosition(QPoint(start, height));
+		layout->beginLayout();
+
+		while (true) {
+			QTextLine line = layout->createLine();
+			if (!line.isValid())
+				break;
+
+			line.setLineWidth(lineWidth);
+			line.setPosition(QPointF(0, lineY));
+			height += line.height();
+			lineY += line.height();
+		}
+
+		layout->endLayout();
+	}
 }
 
 QTextCharFormat MarkdownBlock::qtFormat(

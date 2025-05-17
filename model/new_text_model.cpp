@@ -427,7 +427,6 @@ int text::Paragraph::indexOfLine(text::Line* line) {
 text::TextModel::TextModel() {}
 
 text::TextModel::TextModel(QStringList data) {
-	static QString emptyString = "";
 	static QRegularExpression bulletExp("^([\\-\\*\\+]) ");
 	static QRegularExpression numberExp("^([0-9]+\\.) ");
 
@@ -483,8 +482,9 @@ text::TextModel::TextModel(QStringList data) {
 				content = QStringList();
 			} else if (emptyCount == 2) {
 				emptyCount = 0;
+				QString str = "";
 				m_data.push_back(
-					text::Paragraph(text::Text, text::Line(emptyString, false))
+					text::Paragraph(text::Text, text::Line(str, false))
 				);
 			}
 			emptyCount += 1;
