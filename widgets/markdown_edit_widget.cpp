@@ -4,6 +4,7 @@
 #include <QColor>
 #include <QMouseEvent>
 #include <QKeyEvent>
+#include <QRegularExpression>
 
 #include "widgets/style.h"
 #include "widgets/base_widget.h"
@@ -363,16 +364,54 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 	} else if (QString text = event->text(); !text.isEmpty()) {
 		text::Paragraph *par = cursor.block->paragraph();
 		text::Line *line = cursor.line;
+		text::ParagraphType type = par->getType();
+		QString empty = "";
+
+		static QRegularExpression listExp("^[0-9]+\\. ");
+		static QRegularExpression bulletExp("^[\\+\\*\\-] ");
 
 		// Insert text.
 		QString newText = line->text;
 		newText.insert(cursor.position, text);
-		line->setText(newText, par->getType() == text::Code);
+		if (newText == "```" && par->getType() != text::Code) {
+			// Transform to code code.
+			line->setText(empty, true);
+			par->setType(text::Code);
+			block->setParagraph(par);
 
-		// Update text and adjust cursor.
-		cursor.block->setParagraph(par);
-		cursor.position += text.length();
-		processCursorMove(prev, cursor);
+			cursor.position = 0;
+			processCursorMove(prev, cursor);
+		} else if (
+			auto m = listExp.match(newText);
+			m.hasMatch() && type == text::Text
+		) {
+			// Transform to numbered list.
+			line->setText(empty, false);
+			par->setType(text::NumberList);
+			block->setParagraph(par);
+
+			cursor.position = 0;
+			processCursorMove(prev, cursor);
+		} else if (
+			auto m = bulletExp.match(newText);
+			m.hasMatch() && type == text::Text
+		) {
+			// Transform to bullet list.
+			line->setText(empty, false);
+			par->setType(text::BulletList);
+			block->setParagraph(par);
+
+			cursor.position = 0;
+			processCursorMove(prev, cursor);
+		} else {
+			// Update text.
+			line->setText(newText, par->getType() == text::Code);
+
+			// Update text and adjust cursor.
+			cursor.block->setParagraph(par);
+			cursor.position += text.length();
+			processCursorMove(prev, cursor);
+		}
 	}
 
 	// I don't like this. Have to wait for widgets to redraw to avoid
@@ -704,8 +743,13 @@ void MarkdownEditWidget::mergeBlocks(
 				int newPos = lastLine->folded.length();
 				lastLine->setText(newText, prevPar->getType() == text::Code);
 
-				// Delete current line.
-				lines->remove(lineIdx);
+				// Delete current line, or the whole paragraph if it has a
+				// single line.
+				if (lines->size() == 1) {
+					deleteParagraph(parIdx);
+				} else {
+					lines->remove(lineIdx);
+				}
 
 				// Update blocks.
 				prevBlock->setParagraph(prevPar);

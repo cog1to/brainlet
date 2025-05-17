@@ -310,9 +310,6 @@ void text::Line::setText(QString& input, bool preformatted) {
 		return;
 	}
 
-	QRegularExpression enumeratedExp("^[0-9]+\\. ");
-	QRegularExpression listExp("^[\\+\\*\\-] ");
-
 	// Headings.
 	if (input.startsWith("# ")) {
 		folded = input.right(folded.size() - 2);
