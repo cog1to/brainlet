@@ -134,7 +134,6 @@ void MarkdownEditWidget::mouseReleaseEvent(QMouseEvent *event) {
 	MarkdownCursor cursor = cursorAtPoint(event->pos(), &found);
 
 	if (!found || (m_selection.start == cursor)) {
-		qDebug() << "deactivate";
 		m_selection.active = false;
 	}
 
@@ -715,6 +714,7 @@ MarkdownCursor MarkdownEditWidget::deleteSelection() {
 }
 
 MarkdownCursor MarkdownEditWidget::pasteFromClipboard() {
+	MarkdownCursor cursor = m_cursor;
 	QList<text::Paragraph> *pars = m_model.paragraphs();
 	QClipboard *clipboard = QApplication::clipboard();
 	QString text = clipboard->text();
@@ -738,7 +738,7 @@ MarkdownCursor MarkdownEditWidget::pasteFromClipboard() {
 		line->setText(newText, m_cursor.block->paragraph()->getType() == text::Code);
 		m_cursor.block->setParagraph(m_cursor.block->paragraph());
 
-		return MarkdownCursor(
+		cursor = MarkdownCursor(
 			m_cursor.block,
 			line,
 			pos
@@ -773,13 +773,12 @@ MarkdownCursor MarkdownEditWidget::pasteFromClipboard() {
 		}
 
 		m_cursor.block->setParagraph(m_cursor.block->paragraph());
-		return MarkdownCursor(
+		cursor = MarkdownCursor(
 			m_cursor.block,
 			&((*lines)[lineIdx]),
 			pos
 		);
 	} else {
-		MarkdownCursor cursor = m_cursor;
 		MarkdownBlock *block = cursor.block;
 		text::Paragraph *par = block->paragraph();
 		text::Line *line = cursor.line;
@@ -820,9 +819,17 @@ MarkdownCursor MarkdownEditWidget::pasteFromClipboard() {
 			lastPar = insertParagraph(parIdx + 1, (*newPars)[idx]);
 			parIdx += 1;
 		}
+
+		QList<text::Line> *lastLines = lastPar->getLines();
+		text::Line *lastLine = &((*lastLines)[lastLines->size() - 1]);
+		cursor = MarkdownCursor(
+			m_blocks[indexOfParagraph(lastPar)],
+			lastLine,
+			lastLine->text.length()
+		);
 	}
 
-	return m_cursor;
+	return cursor;
 }
 
 // Helpers
