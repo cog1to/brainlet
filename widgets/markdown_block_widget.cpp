@@ -57,9 +57,13 @@ void MarkdownBlock::setParagraph(Paragraph *par) {
 		QString("background-color: %1").arg(color.name(QColor::HexRgb))
 	);
 
+	QTextOption opt = QTextOption();
+	opt.setWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
+
 	QList<Line> *lines = par->getLines();
 	for (qsizetype i = 0; i < lines->size(); ++i) {
 		QTextLayout *layout = new QTextLayout();
+		layout->setTextOption(opt);
 		layout->setCacheEnabled(true);
 
 		if (par->getType() == Code)
@@ -380,6 +384,7 @@ void MarkdownBlock::paintEvent(QPaintEvent *event) {
 		const QTextLayout *item = m_layouts.at(i);
 		QTextLayout *layout = (QTextLayout*)item;
 
+		// Draw list thingy.
 		if (type == text::BulletList) {
 			painter.drawEllipse(
 				QRectF(
@@ -400,8 +405,19 @@ void MarkdownBlock::paintEvent(QPaintEvent *event) {
 			);
 		}
 
-		layout->draw(&painter, QPointF(0, 0));
+		// Apply current selection.
+		QList<QTextLayout::FormatRange> selections;
+		if (
+			auto sel = m_provider->selectionInLine(this, &((*lines)[i]));
+			sel.length > 0
+		) {
+			selections = { sel };
+		}
+
+		// Draw the line/paragraph.
+		layout->draw(&painter, QPointF(0, 0), selections);
 	
+		// Draw cursor.
 		if (
 			cursor != nullptr &&
 			cursor->block == this &&
@@ -410,6 +426,7 @@ void MarkdownBlock::paintEvent(QPaintEvent *event) {
 			layout->drawCursor(&painter, QPointF(0, 0), cursor->position, 1);
 		}
 
+		// Adjust Y for next layout/line.
 		y += layout->boundingRect().height();
 	}
 }

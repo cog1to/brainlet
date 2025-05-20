@@ -16,6 +16,15 @@
 
 class MarkdownEditPresenter;
 
+class MarkdownSelection {
+public:
+	MarkdownSelection() {};
+	// Properties.
+	bool active = false;
+	MarkdownCursor start = MarkdownCursor(nullptr, nullptr, 0);
+	MarkdownCursor end = MarkdownCursor(nullptr, nullptr, 0);
+};
+
 class MarkdownEditWidget
 	: public BaseWidget, public MarkdownCursorProvider
 {
@@ -27,6 +36,10 @@ public:
 	void load(QString);
 	// Provider.
 	MarkdownCursor *currentCursor() override;
+	QTextLayout::FormatRange selectionInLine(
+		MarkdownBlock*,
+		text::Line*
+	) override;
 	// Presenter.
 	void setPresenter(MarkdownEditPresenter*);
 
@@ -37,6 +50,8 @@ signals:
 protected:
 	void resizeEvent(QResizeEvent*) override;
 	void mousePressEvent(QMouseEvent*) override;
+	void mouseMoveEvent(QMouseEvent*) override;
+	void mouseReleaseEvent(QMouseEvent*) override;
 	void keyPressEvent(QKeyEvent*) override;
 
 private:
@@ -47,6 +62,11 @@ private:
 	// State.
 	text::TextModel m_model;	
 	MarkdownBlock *m_activeBlock = nullptr;
+	MarkdownSelection m_selection = MarkdownSelection();
+	// Selection and clipboard.
+	MarkdownCursor deleteSelection();
+	void copySelectionToClipboard();
+	MarkdownCursor pasteFromClipboard();
 	// Helpers.
 	MarkdownBlock *blockBefore(MarkdownBlock*);
 	MarkdownBlock *blockAfter(MarkdownBlock*);
@@ -61,6 +81,11 @@ private:
 	inline text::Paragraph *insertParagraph(int index, text::Paragraph);
 	inline void deleteParagraph(int index);
 	void mergeBlocks(int next, text::Line *line, MarkdownCursor prev);
+	MarkdownCursor splitBlocks(MarkdownCursor cursor, bool shiftUsed);
+	MarkdownCursor cursorAtPoint(QPoint, bool*);
+	bool isMovementKey(QKeyEvent*);
+	MarkdownCursor adjustForUnfolding(MarkdownCursor, MarkdownCursor);
+	bool cursorAfter(MarkdownCursor, MarkdownCursor);
 };
 
 class MarkdownEditPresenter {

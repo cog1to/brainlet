@@ -28,7 +28,9 @@ public:
 		QFont codeFont,
 		QColor codeBackground,
 		QColor linkColor,
-		QFont iconFont
+		QFont iconFont,
+		QColor selectionBackColor,
+		QColor selectionTextColor
 	);
 	// Default style.
 	static Style& defaultStyle();
@@ -88,6 +90,11 @@ public:
 	// Brain list style.
 	QString brainListButtonStyle(QString, QColor);
 	QString brainItemButtonStyle();
+	// Selection style.
+	const QColor selectionBackColor() const;
+	void setSelectionBackColor(QColor);
+	const QColor selectionTextColor() const;
+	void setSelectionTextColor(QColor);
 
 signals:
 	void styleChanged(Style*);
@@ -111,6 +118,8 @@ private:
 	QColor m_codeBackground;
 	QColor m_linkColor;
 	QFont m_iconFont;
+	QColor m_selectionBackColor;
+	QColor m_selectionTextColor;
 };
 
 #endif

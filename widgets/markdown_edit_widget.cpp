@@ -5,6 +5,9 @@
 #include <QMouseEvent>
 #include <QKeyEvent>
 #include <QRegularExpression>
+#include <QClipboard>
+#include <QApplication>
+#include <QMimeData>
 
 #include "widgets/style.h"
 #include "widgets/base_widget.h"
@@ -77,26 +80,65 @@ void MarkdownEditWidget::resizeEvent(QResizeEvent *event) {
 }
 
 void MarkdownEditWidget::mousePressEvent(QMouseEvent *event) {
-	MarkdownCursor cursor(nullptr, nullptr, 0);
 	bool found = false;
-
-	for (auto it = m_blocks.begin(); it != m_blocks.end(); it++) {
-		if ((*it)->geometry().contains(event->pos()) == false)
-			continue;
-
-		QPoint pointInside = (*it)->mapFromParent(event->pos());
-		if (found = (*it)->cursorAt(pointInside, &cursor); found == true) {
-			break;
-		}
-	}
+	MarkdownCursor cursor = cursorAtPoint(event->pos(), &found);
 
 	if (found) {
-		MarkdownCursor prev = m_cursor;
-		processCursorMove(prev, cursor);
-		setFocus();
+		if (event->modifiers() & Qt::ShiftModifier) {
+			// When shift-click, activate selection from previous to current
+			// position.
+			m_selection.active = true;
+			m_selection.end = cursor;
+		} else {
+			// Set initial cursor position.
+			MarkdownCursor prev = m_cursor;
+			processCursorMove(prev, cursor);
+			// Adjust selection.
+			m_selection.active = false;
+			m_selection.start = m_cursor;
+			m_selection.end = m_cursor;
+		}
+
+		update();
+
+		if (!hasFocus())
+			setFocus();
 	} else {
 		clearFocus();
 	}
+}
+
+void MarkdownEditWidget::mouseMoveEvent(QMouseEvent *event) {
+	if (!hasFocus())
+		return;
+
+	bool found = false;
+	MarkdownCursor cursor = cursorAtPoint(event->pos(), &found);
+
+	if (found && (cursor != m_cursor)) {
+		// Update selection.
+		m_selection.active = true;
+		m_selection.end = cursor;
+	}
+
+	update();
+
+	// TODO: ensure end of selection is visible.
+}
+
+void MarkdownEditWidget::mouseReleaseEvent(QMouseEvent *event) {
+	if (!hasFocus())
+		return;
+
+	bool found = false;
+	MarkdownCursor cursor = cursorAtPoint(event->pos(), &found);
+
+	if (!found || (m_selection.start == cursor)) {
+		qDebug() << "deactivate";
+		m_selection.active = false;
+	}
+
+	update();
 }
 
 void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
@@ -108,6 +150,7 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 
 	if (line == nullptr || block == nullptr)
 		return;
+
 
 	text::Paragraph *par = block->paragraph();
 
@@ -226,111 +269,14 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 			processCursorMove(prev, cursor);
 		}
 	} else if (key == Qt::Key_Enter || key == Qt::Key_Return) {
-		QString beforeText = line->text.left(cursor.position);
-		QString afterText = line->text.right(line->text.length() - cursor.position);
-		int parIdx = indexOfParagraph(par);
-
-		if (par->getType() == text::Text) {
-			// Insert new paragraph.
-			line->setText(beforeText, false);
-			text::Paragraph newPar = text::Paragraph(
-				text::Text,
-				text::Line(afterText, false)
-			);
-			text::Paragraph *ptr = insertParagraph(parIdx + 1, newPar);
-
-			// Reload current paragraph.
-			block->setParagraph(par);
-
-			// Update cursor.
-			cursor = MarkdownCursor(
-				m_blocks[parIdx + 1],
-				&((*ptr->getLines())[0]),
-				0
-			);
-			processCursorMove(prev, cursor);
-		} else {
-			QList<text::Line> *lines = par->getLines();
-			int lineIdx = par->indexOfLine(line);
-
-			if (
-				line->text.isEmpty() &&
-				((event->modifiers() & Qt::ShiftModifier) == 0) &&
-				(par->getType() != text::Code || lineIdx == 0 || lineIdx == lines->size() - 1)
-			) {
-				// Copy lines after current one to a new paragraph.
-				QList<text::Line> remainder;
-				for (int i = lineIdx + 1; i < lines->size(); i++) {
-					remainder.push_back((*lines)[i]);
-				}
-
-				// Remove lines after current one from old paragraph.
-				lines->remove(lineIdx, lines->size() - lineIdx);
-				// Create a new paragraph with the remainder.
-				if (remainder.size() > 0) {
-					text::Paragraph newPar = text::Paragraph(
-						par->getType(),
-						remainder
-					);
-					text::Paragraph *ptr = insertParagraph(parIdx + 1, newPar);
-				}
-
-				QString empty = "";
-				if (lines->size() > 0) {
-					// Update old paragraph.
-					block->setParagraph(par);
-
-					// Insert new empty paragraph.
-					text::Paragraph newPar = text::Paragraph(
-						text::Text, text::Line(empty, false)
-					);
-					text::Paragraph *ptr = insertParagraph(parIdx + 1, newPar);
-
-					// Update cursor to new paragraph.
-					cursor = MarkdownCursor(
-						m_blocks[parIdx + 1],
-						&((*ptr->getLines())[0]),
-						0
-					);
-				} else {
-					par->setType(text::Text);
-					lines->push_back(text::Line(empty, false));
-					block->setParagraph(par);
-
-					// Update cursor to new current empty line.
-					cursor = MarkdownCursor(
-						m_blocks[parIdx],
-						&((*par->getLines())[0]),
-						0
-					);
-				}
-
-				processCursorMove(prev, cursor);
-			} else {
-				int lineIdx = par->indexOfLine(line);
-				QList<text::Line> *lines = par->getLines();
-				line->setText(beforeText, par->getType() == text::Code);
-
-				// Insert new line.
-				lines->insert(
-					lineIdx + 1,
-					text::Line(afterText, par->getType() == text::Code)
-				);
-
-				// Reload current paragraph.
-				block->setParagraph(par);
-
-				// Update cursor to new line.
-				cursor = MarkdownCursor(
-					m_blocks[parIdx],	
-					&((*lines)[lineIdx + 1]),
-					0
-				);
-				processCursorMove(prev, cursor);
-			}
-		}
+		bool shiftUsed = (event->modifiers() & Qt::ShiftModifier);
+		cursor = splitBlocks(cursor, shiftUsed);
+		processCursorMove(prev, cursor);
 	} else if (key == Qt::Key_Backspace) {
-		if (cursor.position != 0) {
+		if (m_selection.active) {
+			cursor = deleteSelection();
+			processCursorMove(cursor, cursor);
+		} else if (cursor.position != 0) {
 			QString newText = line->text;
 			newText.remove(cursor.position - 1, 1);
 			line->setText(newText, par->getType() == text::Code);
@@ -346,7 +292,10 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 			}
 		}
 	} else if (key == Qt::Key_Delete) {
-		if (cursor.position != cursor.line->text.length()) {
+		if (m_selection.active) {
+			cursor = deleteSelection();
+			processCursorMove(cursor, cursor);
+		} else if (cursor.position != cursor.line->text.length()) {
 			QString newText = line->text;
 			newText.remove(cursor.position, 1);
 			line->setText(newText, par->getType() == text::Code);
@@ -361,7 +310,28 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 				mergeBlocks(parIdx + 1, firstLine, prev);
 			}
 		}
+	} else if (event->matches(QKeySequence::Copy)) {
+		if (m_selection.active) {
+			copySelectionToClipboard();
+		}
+	} else if (event->matches(QKeySequence::Paste)) {
+		if (m_selection.active) {
+			cursor = deleteSelection();
+		}
+		cursor = pasteFromClipboard();
+		processCursorMove(prev, cursor);
+	} else if (event->matches(QKeySequence::Cut)) {
+		if (m_selection.active) {
+			copySelectionToClipboard();
+			cursor = deleteSelection();
+			processCursorMove(prev, cursor);
+		}
 	} else if (QString text = event->text(); !text.isEmpty()) {
+		if (m_selection.active) {
+			cursor = deleteSelection();
+			prev = cursor;
+		}
+
 		text::Paragraph *par = cursor.block->paragraph();
 		text::Line *line = cursor.line;
 		text::ParagraphType type = par->getType();
@@ -412,6 +382,26 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 			cursor.position += text.length();
 			processCursorMove(prev, cursor);
 		}
+	}
+
+	if (isMovementKey(event)) {
+		if (event->modifiers() & Qt::ShiftModifier) {
+			m_selection.active = true;
+			m_selection.end = m_cursor;
+			// Redraw.
+			update();
+		} else {
+			m_selection.active = false;
+			m_selection.start = m_cursor;
+			m_selection.end = m_cursor;
+		}
+	} else if (
+		!event->matches(QKeySequence::Copy) &&
+		!event->text().isEmpty()
+	) {
+		m_selection.active = false;
+		m_selection.start = m_cursor;
+		m_selection.start = m_cursor;
 	}
 
 	// I don't like this. Have to wait for widgets to redraw to avoid
@@ -471,6 +461,368 @@ MarkdownCursor MarkdownEditWidget::moveCursor(
 
 MarkdownCursor *MarkdownEditWidget::currentCursor() {
 	return &m_cursor;
+}
+
+QTextLayout::FormatRange MarkdownEditWidget::selectionInLine(
+	MarkdownBlock *block,
+	text::Line *line
+) {
+	QTextLayout::FormatRange range = QTextLayout::FormatRange{
+		.start = 0,
+		.length = 0,
+		.format = QTextCharFormat()
+	};
+
+	if (m_selection.active == false)
+		return range;
+
+	MarkdownCursor startCursor = m_selection.start;
+	MarkdownCursor endCursor = m_selection.end;
+
+	if (cursorAfter(startCursor, endCursor))
+		std::swap(startCursor, endCursor);
+
+	int curBlockIdx = indexOfParagraph(block->paragraph());
+	int curLineIdx = block->paragraph()->indexOfLine(line);
+
+	// Get start and end of the selection.
+	int startBlockIdx = indexOfParagraph(startCursor.block->paragraph());
+	int startLineIdx = (*m_model.paragraphs())[startBlockIdx]
+		.indexOfLine(startCursor.line);
+	int startPos = startCursor.position;
+
+	int endBlockIdx = indexOfParagraph(endCursor.block->paragraph());
+	int endLineIdx = (*m_model.paragraphs())[endBlockIdx]
+		.indexOfLine(endCursor.line);
+	int endPos = endCursor.position;
+
+	// TODO: The logic below looks ugly and confusing. Maybe there's a
+	// better way to do all these checks that will come to me when I
+	// get some proper sleep for once in my life.
+	
+	// Check if current block/line is outside of selection.
+	if (
+		(curBlockIdx < startBlockIdx) || 
+		(curBlockIdx > endBlockIdx) ||
+		(curBlockIdx == startBlockIdx && curLineIdx < startLineIdx) ||
+		(curBlockIdx == endBlockIdx && curLineIdx > endLineIdx)
+	) {
+		return range;
+	}
+
+	// Check if current line is completely inside selection.
+	if (
+		(curBlockIdx > startBlockIdx && curBlockIdx < endBlockIdx) ||
+		(curBlockIdx == startBlockIdx &&
+		 endBlockIdx != startBlockIdx &&
+		 curLineIdx > startLineIdx) ||
+		(curBlockIdx == endBlockIdx &&
+		 endBlockIdx != startBlockIdx &&
+		 curLineIdx < endLineIdx)
+	) {
+		range.start = 0;
+		range.length = line->text.length();
+	} else {
+		// If selection starts at current line, save start position.
+		if (
+			curBlockIdx == startBlockIdx &&
+			curLineIdx == startLineIdx
+		) {
+			range.start = startPos;
+		}
+
+		// If selection ends outside of current line, select till the end
+		// of the line.
+		if (endBlockIdx > curBlockIdx || endLineIdx > curLineIdx) {
+			range.length = line->text.length() - range.start;
+		// Otherwise, select till the selection end. (d'uh)
+		} else if (
+			curBlockIdx == endBlockIdx &&
+			curLineIdx == endLineIdx			
+		) {
+			range.length = endPos - range.start;
+		}
+	} 
+
+	QTextCharFormat format = QTextCharFormat();
+	format.setBackground(m_style->selectionBackColor());
+	format.setForeground(m_style->selectionTextColor());
+	range.format = format;
+
+	return range;
+}
+
+// Selections and clipboard.
+
+void MarkdownEditWidget::copySelectionToClipboard() {
+	if (m_selection.active == false)
+		return;
+
+	MarkdownCursor start = m_selection.start;
+	MarkdownCursor end = m_selection.end;
+	end = adjustForUnfolding(end, start);
+
+	if (cursorAfter(start, end)) {
+		std::swap(start, end);
+	}
+
+	int startIdx = indexOfParagraph(start.block->paragraph());
+	int endIdx = indexOfParagraph(end.block->paragraph());
+	
+	QList<text::Paragraph> result;
+	QList<text::Paragraph> *pars = m_model.paragraphs();
+	for (int idx = startIdx; idx <= endIdx; idx++) {
+		// Original paragraph.
+		text::Paragraph *par = &((*pars)[idx]);
+		// New paragraph's contents.
+		QList<text::Line> newLines;
+
+		QList<text::Line> *lines = par->getLines();
+		// Get starting and ending line indexes.
+		int startLineIdx = 0, endLineIdx = lines->size() - 1;
+		if (idx == startIdx)
+			startLineIdx = par->indexOfLine(start.line);
+		if (idx == endIdx)
+			endLineIdx = par->indexOfLine(end.line);
+
+		for (int lineIdx = startLineIdx; lineIdx <= endLineIdx; lineIdx++) {
+			// Original line.
+			text::Line *line = &((*lines)[lineIdx]);
+
+			// Get starting and ending position within the line.
+			int startPos = 0, endPos = line->text.length();
+			if (idx == startIdx && lineIdx == startLineIdx)
+				startPos = start.position;
+			if (idx == endIdx && lineIdx == endLineIdx)
+				endPos = end.position;
+
+			QString newText = line->text.mid(startPos, endPos - startPos);
+			text::Line newLine = text::Line(newText, par->getType() == text::Code);
+			// Save line copy.
+			newLines.push_back(newLine);
+		}
+
+		// Save paragraph copy.
+		text::Paragraph newPar = text::Paragraph(par->getType(), newLines);
+		result.push_back(newPar);
+	}
+
+	// Convert resulting paragraphs into text.
+	text::TextModel model = text::TextModel(result);
+	QString text = model.text();
+
+	// Save resulting text to clipboard
+	QClipboard *clipboard = QApplication::clipboard();
+	QMimeData *data = new QMimeData();
+	data->setText(text);
+	clipboard->setMimeData(data);
+}
+
+MarkdownCursor MarkdownEditWidget::deleteSelection() {
+	if (m_selection.active == false)
+		return m_cursor;
+
+	QList<text::Paragraph> *pars = m_model.paragraphs();
+
+	MarkdownCursor start = m_selection.start;
+	MarkdownCursor end = m_selection.end;
+	end = adjustForUnfolding(end, start);
+
+	if (cursorAfter(start, end)) {
+		std::swap(start, end);
+	}
+	
+	int startIdx = indexOfParagraph(start.block->paragraph());
+	int endIdx = indexOfParagraph(end.block->paragraph());
+
+	// Delete all paragraphs in between selection start and end.
+	if (startIdx != endIdx) {
+		for (int i = startIdx + 1; i < endIdx; i++)
+			deleteParagraph(startIdx + 1);
+		// Readjust end index after deletion.
+		endIdx = startIdx + 1;
+	}
+
+	text::Paragraph *startPar = &((*pars)[startIdx]);
+	int startLineIdx = startPar->indexOfLine(start.line);
+	text::Line *startLine = &((*startPar->getLines())[startLineIdx]);
+
+	text::Paragraph *endPar = &((*pars)[endIdx]);
+	int endLineIdx = endPar->indexOfLine(end.line);
+	text::Line *endLine = &((*endPar->getLines())[endLineIdx]);
+
+	// Delete all lines in start paragraph after starting line.
+	if (startIdx != endIdx) {
+		QList<text::Line> *startLines = startPar->getLines();
+		if (startLines->size() > startLineIdx + 1) {
+			startLines->remove(
+				startLineIdx + 1, 
+				startLines->size() - startLineIdx
+			);
+		}
+		start.block->setParagraph(startPar);
+
+		// Delete all lines in end paragraph before ending line.
+		QList<text::Line> *endLines = endPar->getLines();
+		if (endLineIdx > 0) {
+			endLines->remove(0, endLineIdx);
+		}
+		// Readjust end line index after deletion.
+		endLineIdx = 0;
+		endLine = &((*endPar->getLines())[endLineIdx]);
+		// Reload block.
+		end.block->setParagraph(endPar);
+	} else if (startLineIdx < endLineIdx - 1) {
+		// Delete all lines between selection.
+		QList<text::Line> *startLines = startPar->getLines();
+		startLines->remove(
+			startLineIdx + 1,
+			endLineIdx - startLineIdx - 1
+		);
+		// Reajust end line index after deletion.
+		endLineIdx = startLineIdx + 1;
+		endLine = &((*endPar->getLines())[endLineIdx]);
+		// Update paragraph.
+		start.block->setParagraph(endPar);
+	}
+
+	if (startLine != endLine) {
+		// Delete text from start of selection to end of first line.
+		QString newStartText = startLine->text.left(start.position);
+		startLine->setText(newStartText, startPar->getType() == text::Code);
+		start.block->setParagraph(startPar);
+
+		// Delete text from start of last line to end of selection.
+		QString newEndText = endLine->text.right(endLine->text.length() - end.position);
+		endLine->setText(newEndText, endPar->getType() == text::Code);
+		end.block->setParagraph(endPar);
+	} else {
+		// Delete the selected text within the line.
+		text::Line *line = startLine;
+		QString newText =
+			line->text.left(start.position) 
+			+ line->text.right(line->text.length() - end.position);
+		line->setText(newText, startPar->getType() == text::Code);
+		start.block->setParagraph(startPar);
+	}
+
+	// Merge starting and ending lines/paragraphs.
+	if (startIdx != endIdx || start.line != end.line) {
+		mergeBlocks(endIdx, endLine, start);
+	}
+
+	return start;
+}
+
+MarkdownCursor MarkdownEditWidget::pasteFromClipboard() {
+	QList<text::Paragraph> *pars = m_model.paragraphs();
+	QClipboard *clipboard = QApplication::clipboard();
+	QString text = clipboard->text();
+	QStringList list = text.split("\n");
+	text::TextModel model = text::TextModel(list);
+	QList<text::Paragraph> *newPars = model.paragraphs();
+
+	if (list.size() == 1) {
+		// If we're inserting a single line, just inject it into the 
+		// current line.
+		QString textBefore = m_cursor.line->text.left(m_cursor.position);
+		QString textAfter = m_cursor.line->text.right(
+			m_cursor.line->text.length() - m_cursor.position
+		);
+		int pos = m_cursor.position + text.length();
+
+		text::Line *line = m_cursor.line;
+		QString newText = textBefore
+			+ (*(*model.paragraphs())[0].getLines())[0].text
+			+ textAfter;
+		line->setText(newText, m_cursor.block->paragraph()->getType() == text::Code);
+		m_cursor.block->setParagraph(m_cursor.block->paragraph());
+
+		return MarkdownCursor(
+			m_cursor.block,
+			line,
+			pos
+		);
+	} if (m_cursor.block->paragraph()->getType() == text::Code) {
+		// If we're inserting into code, ignore text layout and just put
+		// data as is.
+		int pos = 0;
+
+		text::Paragraph *par = m_cursor.block->paragraph();
+		QList<text::Line> *lines = m_cursor.block->paragraph()->getLines();
+		int lineIdx = par->indexOfLine(m_cursor.line);
+
+		QString textBefore = m_cursor.line->text.left(m_cursor.position);
+		QString textAfter = m_cursor.line->text.right(
+			m_cursor.line->text.length() - m_cursor.position
+		);
+
+		for (auto line = list.begin(); line != list.end(); line++) {
+			if (line == list.begin()) {
+				QString newText = textBefore + (*line);
+				m_cursor.line->setText(newText, true);
+			} else if (line + 1 == list.end()) {
+				pos = (*line).length();
+				QString lastText = *line + textAfter;
+				lines->insert(lineIdx + 1, text::Line(lastText, true));
+				lineIdx += 1;
+			} else {
+				lines->insert(lineIdx + 1, text::Line(*line, true));
+				lineIdx += 1;
+			}
+		}
+
+		m_cursor.block->setParagraph(m_cursor.block->paragraph());
+		return MarkdownCursor(
+			m_cursor.block,
+			&((*lines)[lineIdx]),
+			pos
+		);
+	} else {
+		MarkdownCursor cursor = m_cursor;
+		MarkdownBlock *block = cursor.block;
+		text::Paragraph *par = block->paragraph();
+		text::Line *line = cursor.line;
+		int parIdx = indexOfParagraph(par);
+		int lineIdx = par->indexOfLine(line);
+
+		// Split current position as if we've pressed Return key.
+		if (!line->text.isEmpty())
+			splitBlocks(cursor, false);
+
+		if (par->getType() != text::Text) {
+			QList<text::Line> *lines = par->getLines();
+			// Copy lines after current one to a new paragraph.
+			QList<text::Line> remainder;
+			for (int i = lineIdx + 1; i < lines->size(); i++) {
+				remainder.push_back((*lines)[i]);
+			}
+
+			// Remove lines after current one from old paragraph.
+			lines->remove(lineIdx + 1, lines->size() - lineIdx - 1);
+
+			// Create a new paragraph with the remainder.
+			if (remainder.size() > 0) {
+				text::Paragraph newPar = text::Paragraph(
+					par->getType(),
+					remainder
+				);
+				text::Paragraph *ptr = insertParagraph(parIdx + 1, newPar);
+			}
+
+			// Update old paragraph.
+			block->setParagraph(par);
+		}
+
+		// Insert new paragraphs below current one.
+		text::Paragraph *lastPar = nullptr;
+		for (int idx = 0; idx < newPars->size(); idx++) {
+			lastPar = insertParagraph(parIdx + 1, (*newPars)[idx]);
+			parIdx += 1;
+		}
+	}
+
+	return m_cursor;
 }
 
 // Helpers
@@ -553,6 +905,32 @@ void MarkdownEditWidget::processCursorMove(
 
 	m_cursor = to;
 	emit onCursorMove(from, to);
+}
+
+MarkdownCursor MarkdownEditWidget::adjustForUnfolding(
+	MarkdownCursor cursor,
+	MarkdownCursor from
+) {
+	MarkdownCursor to = cursor;
+	int offset = 0, pos = to.position;
+	QList<text::FormatRange> *ranges = &to.line->foldedFormats;
+
+	if (
+		(from.block != to.block || (*from.line) != (*to.line))
+	) {
+		for (auto& range: *ranges) {
+			if (range.to <= pos) {
+				offset += range.endOffset();
+			}
+			if (range.from < pos) {
+				offset += range.startOffset();
+			}
+		}
+
+		to.position = pos + offset;
+	}
+
+	return to;
 }
 
 bool MarkdownEditWidget::cursorAtPoint(
@@ -786,5 +1164,185 @@ void MarkdownEditWidget::mergeBlocks(
 			processCursorMove(prev, cursor);
 		}
 	}
+}
+
+MarkdownCursor MarkdownEditWidget::splitBlocks(
+	MarkdownCursor cursor,
+	bool shiftUsed
+) {
+	MarkdownBlock *block = cursor.block;
+	text::Paragraph *par = block->paragraph();
+	text::Line *line = cursor.line;
+	int parIdx = indexOfParagraph(par);
+
+	QString beforeText = line->text.left(cursor.position);
+	QString afterText = line->text.right(line->text.length() - cursor.position);
+
+	if (par->getType() == text::Text) {
+		// Insert new paragraph.
+		line->setText(beforeText, false);
+		text::Paragraph newPar = text::Paragraph(
+			text::Text,
+			text::Line(afterText, false)
+		);
+		text::Paragraph *ptr = insertParagraph(parIdx + 1, newPar);
+
+		// Reload current paragraph.
+		block->setParagraph(par);
+
+		// Update cursor.
+		return MarkdownCursor(
+			m_blocks[parIdx + 1],
+			&((*ptr->getLines())[0]),
+			0
+		);
+	} else {
+		QList<text::Line> *lines = par->getLines();
+		int lineIdx = par->indexOfLine(line);
+
+		if (
+			line->text.isEmpty() &&
+			!shiftUsed &&
+			(par->getType() != text::Code || lineIdx == 0 || lineIdx == lines->size() - 1)
+		) {
+			// Copy lines after current one to a new paragraph.
+			QList<text::Line> remainder;
+			for (int i = lineIdx + 1; i < lines->size(); i++) {
+				remainder.push_back((*lines)[i]);
+			}
+
+			// Remove lines after current one from old paragraph.
+			lines->remove(lineIdx, lines->size() - lineIdx);
+			// Create a new paragraph with the remainder.
+			if (remainder.size() > 0) {
+				text::Paragraph newPar = text::Paragraph(
+					par->getType(),
+					remainder
+				);
+				text::Paragraph *ptr = insertParagraph(parIdx + 1, newPar);
+			}
+
+			QString empty = "";
+			if (lines->size() > 0) {
+				// Update old paragraph.
+				block->setParagraph(par);
+
+				// Insert new empty paragraph.
+				text::Paragraph newPar = text::Paragraph(
+					text::Text, text::Line(empty, false)
+				);
+				text::Paragraph *ptr = insertParagraph(parIdx + 1, newPar);
+
+				// Update cursor to new paragraph.
+				cursor = MarkdownCursor(
+					m_blocks[parIdx + 1],
+					&((*ptr->getLines())[0]),
+					0
+				);
+			} else {
+				par->setType(text::Text);
+				lines->push_back(text::Line(empty, false));
+				block->setParagraph(par);
+
+				// Update cursor to new current empty line.
+				cursor = MarkdownCursor(
+					m_blocks[parIdx],
+					&((*par->getLines())[0]),
+					0
+				);
+			}
+
+			return cursor;
+		} else {
+			int lineIdx = par->indexOfLine(line);
+			QList<text::Line> *lines = par->getLines();
+			line->setText(beforeText, par->getType() == text::Code);
+
+			// Insert new line.
+			lines->insert(
+				lineIdx + 1,
+				text::Line(afterText, par->getType() == text::Code)
+			);
+
+			// Reload current paragraph.
+			block->setParagraph(par);
+
+			// Update cursor to new line.
+			return MarkdownCursor(
+				m_blocks[parIdx],	
+				&((*lines)[lineIdx + 1]),
+				0
+			);
+		}
+	}
+}
+
+MarkdownCursor MarkdownEditWidget::cursorAtPoint(
+	QPoint pos,
+	bool *success
+) {
+	MarkdownCursor cursor(nullptr, nullptr, 0);
+	bool found = false;
+
+	for (auto it = m_blocks.begin(); it != m_blocks.end(); it++) {
+		if ((*it)->geometry().contains(pos) == false)
+			continue;
+
+		QPoint pointInside = (*it)->mapFromParent(pos);
+		if (found = (*it)->cursorAt(pointInside, &cursor); found == true) {
+			break;
+		}
+	}
+
+	*success = found;
+	return cursor;
+}
+
+bool MarkdownEditWidget::isMovementKey(QKeyEvent *event) {
+	int key = event->key();
+	switch (key) {
+		case Qt::Key_PageUp:
+			return true;
+		case Qt::Key_PageDown:
+			return true;
+		case Qt::Key_Home:
+			return true;
+		case Qt::Key_End:
+			return true;
+		case Qt::Key_Down:
+			return true;
+		case Qt::Key_Left:
+			return true;
+		case Qt::Key_Up:
+			return true;
+		case Qt::Key_Right:
+			return true;
+		default:
+			return false;
+	}
+}
+
+bool MarkdownEditWidget::cursorAfter(
+	MarkdownCursor first, MarkdownCursor second
+) {
+	text::Paragraph *firstPar = first.block->paragraph();
+	int firstParIdx = indexOfParagraph(firstPar);
+	text::Paragraph *secondPar = second.block->paragraph();
+	int secondParIdx = indexOfParagraph(secondPar);
+
+	if (firstParIdx < secondParIdx)
+		return false;
+	if (firstParIdx > secondParIdx)
+		return true;
+
+	int firstLineIdx = firstPar->indexOfLine(first.line);
+	int secondLineIdx = secondPar->indexOfLine(second.line);
+
+	if (firstLineIdx < secondLineIdx)
+		return false;
+	if (firstLineIdx > secondLineIdx)
+		return true;
+
+	return (first.position > second.position);
 }
 

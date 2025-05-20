@@ -76,6 +76,12 @@ public:
 		text::Line*,
 		int
 	);
+	inline bool operator==(const MarkdownCursor rhs) const {
+		return block == rhs.block && line == rhs.line && position == rhs.position;
+	}
+	inline bool operator!=(const MarkdownCursor rhs) const {
+		return block != rhs.block || line != rhs.line || position != rhs.position;
+	}
 	// Properties
 	MarkdownBlock *block;
 	text::Line *line;
@@ -85,6 +91,10 @@ public:
 class MarkdownCursorProvider {
 public:
 	virtual MarkdownCursor *currentCursor() = 0;
+	virtual QTextLayout::FormatRange selectionInLine(
+		MarkdownBlock*,
+		text::Line*
+	) = 0;
 };
 
 #endif

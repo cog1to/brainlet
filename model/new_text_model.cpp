@@ -423,6 +423,10 @@ int text::Paragraph::indexOfLine(text::Line* line) {
 
 text::TextModel::TextModel() {}
 
+text::TextModel::TextModel(QList<Paragraph> pars) {
+	m_data = pars;
+}
+
 text::TextModel::TextModel(QStringList data) {
 	static QRegularExpression bulletExp("^([\\-\\*\\+]) ");
 	static QRegularExpression numberExp("^([0-9]+\\.) ");
@@ -547,3 +551,40 @@ const QList<text::Paragraph> *text::TextModel::const_paragraphs() const {
 void text::TextModel::setParagraphs(QList<text::Paragraph> data) {
 	m_data = data;
 }
+
+QString text::TextModel::text() {
+	QStringList result;
+
+	for (auto par = m_data.begin(); par != m_data.end(); par++) {
+		QList<text::Line> *lines = (*par).getLines();
+		QStringList parLines;
+		text::ParagraphType type = (*par).getType();
+		
+		// Wrap code in ```
+		if (type == text::Code)
+			parLines.push_back("```");
+
+		// Copy each line.
+		for (auto line = lines->begin(); line != lines->end(); line++) {
+			// Add prefix for lists.
+			QString prefix = "";
+			if (type == text::NumberList)
+				prefix = "1. ";
+			else if (type == text::BulletList)
+				prefix = "- ";
+
+			parLines.push_back(prefix + (*line).text);
+		}
+
+		// Wrap code in ```
+		if (type == text::Code)
+			parLines.push_back("```");
+
+		// Join lines.
+		result.push_back(parLines.join("\n"));
+	}
+
+	// Join paragraphs.
+	return result.join("\n\n");
+}
+

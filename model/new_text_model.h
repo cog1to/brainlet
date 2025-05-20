@@ -101,10 +101,13 @@ namespace text {
 	public:
 		TextModel();
 		TextModel(QStringList);
+		TextModel(QList<Paragraph>);
 		// Data.
 		QList<Paragraph> *paragraphs();
 		const QList<Paragraph> *const_paragraphs() const;
 		void setParagraphs(QList<Paragraph>);
+		// Text conversion.
+		QString text();
 
 	private:
 		QList<Paragraph> m_data;
