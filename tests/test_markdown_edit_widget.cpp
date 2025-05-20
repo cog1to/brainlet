@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
 	widget->load(string);
 
 	// Show window.
-	MarkdownScrollWidget window(nullptr);
+	MarkdownScrollWidget window(nullptr, &style);
 	window.setMarkdownWidget(widget);
 	window.setWidgetResizable(true);
 	window.show();

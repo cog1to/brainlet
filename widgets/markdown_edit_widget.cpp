@@ -8,7 +8,10 @@
 #include <QClipboard>
 #include <QApplication>
 #include <QMimeData>
+#include <QTimer>
+#include <QMenu>
 
+#include "model/thought.h"
 #include "widgets/style.h"
 #include "widgets/base_widget.h"
 #include "widgets/markdown_block_widget.h"
@@ -73,6 +76,10 @@ void MarkdownEditWidget::setPresenter(MarkdownEditPresenter *p) {
 	m_presenter = p;
 }
 
+bool MarkdownEditWidget::isDirty() const {
+	return m_isDirty;
+}
+
 // Events.
 
 void MarkdownEditWidget::resizeEvent(QResizeEvent *event) {
@@ -84,7 +91,10 @@ void MarkdownEditWidget::mousePressEvent(QMouseEvent *event) {
 	MarkdownCursor cursor = cursorAtPoint(event->pos(), &found);
 
 	if (found) {
-		if (event->modifiers() & Qt::ShiftModifier) {
+		if (event->button() == Qt::RightButton) {
+			// Show menu.
+			showContextMenu(event);
+		} else if (event->modifiers() & Qt::ShiftModifier) {
 			// When shift-click, activate selection from previous to current
 			// position.
 			m_selection.active = true;
@@ -714,10 +724,14 @@ MarkdownCursor MarkdownEditWidget::deleteSelection() {
 }
 
 MarkdownCursor MarkdownEditWidget::pasteFromClipboard() {
-	MarkdownCursor cursor = m_cursor;
-	QList<text::Paragraph> *pars = m_model.paragraphs();
 	QClipboard *clipboard = QApplication::clipboard();
 	QString text = clipboard->text();
+	return pasteString(text);
+}
+
+MarkdownCursor MarkdownEditWidget::pasteString(QString text) {
+	MarkdownCursor cursor = m_cursor;
+	QList<text::Paragraph> *pars = m_model.paragraphs();
 	QStringList list = text.split("\n");
 	text::TextModel model = text::TextModel(list);
 	QList<text::Paragraph> *newPars = model.paragraphs();
@@ -830,6 +844,127 @@ MarkdownCursor MarkdownEditWidget::pasteFromClipboard() {
 	}
 
 	return cursor;
+}
+
+// Search.
+
+void MarkdownEditWidget::showSearchWidget(
+	QWidget *widget,
+	QPoint belowPoint
+) {
+	assert(widget != nullptr);
+	m_search = widget;
+
+	// Calculate position.
+	QSize hint = widget->sizeHint();
+	QSize cur = size();
+	int width = std::min(cur.width(), 400);
+	int x = std::max(belowPoint.x() - width / 2, 0);
+
+	widget->setMinimumWidth(width);
+	widget->setGeometry(
+		x, belowPoint.y() + 5,
+		width, hint.height()
+	);
+
+	widget->setParent(this);
+	widget->show();
+	widget->setFocus();
+}
+
+void MarkdownEditWidget::hideSearchWidget() {
+	if (m_search == nullptr)
+		return;
+
+	m_search->deleteLater();
+	m_search = nullptr;
+}
+
+void MarkdownEditWidget::insertNodeLink(ThoughtId id, QString title) {
+	QString linkName = title;
+
+	// If we have a selection, put it as a link title.
+	if (m_selection.active) {
+		// But only if the selection is within single block.
+		text::Line *startLine = m_selection.start.line;
+		text::Line *endLine = m_selection.end.line;
+
+		if (startLine == endLine) {
+			linkName = startLine->text.mid(
+				m_selection.start.position,
+				m_selection.end.position - m_selection.start.position
+			);
+		}
+	}
+
+	QString data = QString("[%1](node://%2)")
+		.arg(linkName)
+		.arg(id);
+	pasteString(data);
+
+	// Schedule save.
+	m_isDirty = true;
+	throttleSave();
+}
+
+// Context menu.
+
+void MarkdownEditWidget::showContextMenu(QMouseEvent *event) {
+	QMenu *menu = new QMenu();
+
+	// Custom node link action.
+	QString connectMenu = tr("Connect thought...");
+	QAction *action = new QAction(connectMenu, this);
+	connect(
+		action, SIGNAL(triggered()),
+		this, SLOT(onInsertNodeLink())
+	);
+	menu->insertAction(nullptr, action);
+
+	// Show the menu.
+	menu->exec(mapToGlobal(event->pos()));
+}
+
+// Linking nodes.
+
+void MarkdownEditWidget::onInsertNodeLink() {
+	QLine cursorLine = m_cursor.block->lineForCursor(m_cursor);
+	emit nodeInsertionActivated(cursorLine.p2());
+}
+
+// Saving.
+
+void MarkdownEditWidget::throttleSave() {
+	if (!m_isDirty)
+		return;
+
+	if (m_saveTimer != nullptr)
+		return;
+
+	m_saveTimer = new QTimer(this);
+	QObject::connect(
+		m_saveTimer, SIGNAL(timeout()),
+		this, SLOT(saveText())
+	);
+	m_saveTimer->setSingleShot(true);
+	m_saveTimer->start(10000);
+}
+
+void MarkdownEditWidget::saveText() {
+	if (!m_isDirty)
+		return;
+
+	// Select all text.
+	QString txt = m_model.text();
+
+	// Emit text change event.
+	emit textChanged(txt);
+
+	// Reset dirty flag.
+	m_isDirty = false;
+	// Delete timer.
+	delete m_saveTimer;
+	m_saveTimer = nullptr;
 }
 
 // Helpers

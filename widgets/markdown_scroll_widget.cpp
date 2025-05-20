@@ -8,8 +8,10 @@
 
 #include <QDebug>
 
-MarkdownScrollWidget::MarkdownScrollWidget(QWidget *parent)
-	: QScrollArea(parent) {}
+MarkdownScrollWidget::MarkdownScrollWidget(
+	QWidget *parent,
+	Style *style
+) : QScrollArea(parent), m_style(style) {}
 
 void MarkdownScrollWidget::setMarkdownWidget(MarkdownEditWidget *w) {
 	assert(w != nullptr);
@@ -44,5 +46,17 @@ int MarkdownScrollWidget::getPageOffset(bool down) {
 		* m_widget->rect().height();
 
 	return yDiff;
+}
+
+// Slots.
+
+void MarkdownScrollWidget::onError(MarkdownScrollError error) {
+	if (m_error != nullptr)
+		delete m_error;
+
+	if (error == MarkdownScrollIOError) {
+		m_error = new ToastWidget(m_style, tr("Failed to access file system"));
+		m_error->show(this);
+	}
 }
 

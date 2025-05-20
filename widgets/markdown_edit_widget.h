@@ -8,7 +8,9 @@
 #include <QMouseEvent>
 #include <QKeyEvent>
 #include <QLine>
+#include <QTimer>
 
+#include "model/thought.h"
 #include "widgets/style.h"
 #include "widgets/base_widget.h"
 #include "widgets/markdown_block_widget.h"
@@ -42,10 +44,18 @@ public:
 	) override;
 	// Presenter.
 	void setPresenter(MarkdownEditPresenter*);
+	// Node search.
+	void showSearchWidget(QWidget*, QPoint);
+	void hideSearchWidget();
+	void insertNodeLink(ThoughtId, QString);
+	// State.
+	bool isDirty() const;
 
 signals:
 	void onCursorMove(MarkdownCursor, MarkdownCursor);
 	void cursorMoved(QLine);
+	void textChanged(QString);
+	void nodeInsertionActivated(QPoint);
 
 protected:
 	void resizeEvent(QResizeEvent*) override;
@@ -53,6 +63,10 @@ protected:
 	void mouseMoveEvent(QMouseEvent*) override;
 	void mouseReleaseEvent(QMouseEvent*) override;
 	void keyPressEvent(QKeyEvent*) override;
+
+protected slots:
+	void saveText();
+	void onInsertNodeLink();
 
 private:
 	QVBoxLayout *m_layout = nullptr;
@@ -63,10 +77,18 @@ private:
 	text::TextModel m_model;	
 	MarkdownBlock *m_activeBlock = nullptr;
 	MarkdownSelection m_selection = MarkdownSelection();
+	// Saving text.
+	bool m_isDirty = false;
+	QTimer *m_saveTimer = nullptr;
 	// Selection and clipboard.
 	MarkdownCursor deleteSelection();
 	void copySelectionToClipboard();
 	MarkdownCursor pasteFromClipboard();
+	MarkdownCursor pasteString(QString);
+	// Search.
+	QWidget *m_search = nullptr;
+	// Saving.
+	void throttleSave();
 	// Helpers.
 	MarkdownBlock *blockBefore(MarkdownBlock*);
 	MarkdownBlock *blockAfter(MarkdownBlock*);
@@ -86,6 +108,7 @@ private:
 	bool isMovementKey(QKeyEvent*);
 	MarkdownCursor adjustForUnfolding(MarkdownCursor, MarkdownCursor);
 	bool cursorAfter(MarkdownCursor, MarkdownCursor);
+	void showContextMenu(QMouseEvent*);
 };
 
 class MarkdownEditPresenter {

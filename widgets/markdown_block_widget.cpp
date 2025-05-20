@@ -47,7 +47,10 @@ void MarkdownBlock::setParagraph(Paragraph *par) {
 	if (m_par == nullptr)
 		return;
 
-	MarkdownCursor *cursor = m_provider->currentCursor();
+	MarkdownCursor *cursor = nullptr;
+	if (m_provider != nullptr)
+		cursor = m_provider->currentCursor();
+
 	text::ParagraphType type = par->getType();
 
 	QColor color = type == text::Code 
@@ -356,8 +359,11 @@ void MarkdownBlock::paintEvent(QPaintEvent *event) {
 	QMargins margins = contentsMargins();
 	QMargins formatMargins = QMargins(0, 0, 0, 0);
 	text::ParagraphType type = m_par->getType();
-	MarkdownCursor *cursor = m_provider->currentCursor();
 	QList<text::Line> *lines = m_par->getLines();
+
+	MarkdownCursor *cursor = nullptr;
+	if (m_provider != nullptr)
+		cursor = m_provider->currentCursor();
 
 	QPainter painter(this);
 	painter.setRenderHint(QPainter::Antialiasing, true);
@@ -407,11 +413,13 @@ void MarkdownBlock::paintEvent(QPaintEvent *event) {
 
 		// Apply current selection.
 		QList<QTextLayout::FormatRange> selections;
-		if (
-			auto sel = m_provider->selectionInLine(this, &((*lines)[i]));
-			sel.length > 0
-		) {
-			selections = { sel };
+		if (m_provider != nullptr) {
+			if (
+				auto sel = m_provider->selectionInLine(this, &((*lines)[i]));
+				sel.length > 0
+			) {
+				selections = { sel };
+			}
 		}
 
 		// Draw the line/paragraph.

@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
 			qDebug() << "line:" << lines->at(j).text;
 		}
 
-		MarkdownBlock *block = new MarkdownBlock(nullptr, &style);
+		MarkdownBlock *block = new MarkdownBlock(nullptr, &style, nullptr);
 		block->setStyleSheet("background-color: #0b0b0b");
 		block->setParagraph(p);
 
