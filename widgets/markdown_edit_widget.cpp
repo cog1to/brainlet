@@ -29,6 +29,7 @@ MarkdownEditWidget::MarkdownEditWidget(QWidget *widget, Style *style)
 	);
 
 	m_layout = new QVBoxLayout(nullptr);
+	m_layout->setSpacing(16);
 	m_layout->setContentsMargins(QMargins(0, 0, 0, 0));
 	setLayout(m_layout);
 }
@@ -969,6 +970,30 @@ void MarkdownEditWidget::insertNodeLink(ThoughtId id, QString title) {
 
 void MarkdownEditWidget::showContextMenu(QMouseEvent *event) {
 	QMenu *menu = new QMenu();
+	menu->setStyleSheet(
+		QString("QMenu{\
+			background-color: %1;\
+		}\
+		QMenu::item{\
+			padding: 2px 25px 2px 20px;\
+			color: %2;\
+			font: normal %3px \"%4\";\
+			background-color: %5;\
+		}\
+		QMenu::item:hover{\
+			background-color: %6;\
+		}\
+		QMenu::item:selected{\
+			background-color: %7;\
+		}")
+		.arg(m_style->background().name(QColor::HexRgb))
+		.arg(m_style->textColor().name(QColor::HexRgb))
+		.arg(m_style->font().pixelSize())
+		.arg(m_style->font().family())
+		.arg(m_style->background().name(QColor::HexRgb))
+		.arg(m_style->background().lighter(150).name(QColor::HexRgb))
+		.arg(m_style->background().lighter(200).name(QColor::HexRgb))
+	);
 
 	// Custom node link action.
 	QString connectMenu = tr("Connect thought...");
