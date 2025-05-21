@@ -681,8 +681,6 @@ MarkdownCursor MarkdownEditWidget::deleteSelection() {
 	if (m_selection.active == false)
 		return m_cursor;
 
-	QList<text::Paragraph> *pars = m_model.paragraphs();
-
 	MarkdownCursor start = m_selection.start;
 	MarkdownCursor end = m_selection.end;
 	end = adjustForUnfolding(end, start);
@@ -702,6 +700,8 @@ MarkdownCursor MarkdownEditWidget::deleteSelection() {
 		endIdx = startIdx + 1;
 	}
 
+	QList<text::Paragraph> *pars = m_model.paragraphs();
+
 	text::Paragraph *startPar = &((*pars)[startIdx]);
 	int startLineIdx = startPar->indexOfLine(start.line);
 	text::Line *startLine = &((*startPar->getLines())[startLineIdx]);
@@ -716,7 +716,7 @@ MarkdownCursor MarkdownEditWidget::deleteSelection() {
 		if (startLines->size() > startLineIdx + 1) {
 			startLines->remove(
 				startLineIdx + 1, 
-				startLines->size() - startLineIdx
+				startLines->size() - startLineIdx - 1
 			);
 		}
 		start.block->setParagraph(startPar);
@@ -745,6 +745,9 @@ MarkdownCursor MarkdownEditWidget::deleteSelection() {
 		start.block->setParagraph(endPar);
 	}
 
+	startLine = &((*startPar->getLines())[startLineIdx]);
+	endLine = &((*endPar->getLines())[endLineIdx]);
+
 	if (startLine != endLine) {
 		// Delete text from start of selection to end of first line.
 		QString newStartText = startLine->text.left(start.position);
@@ -770,6 +773,7 @@ MarkdownCursor MarkdownEditWidget::deleteSelection() {
 		mergeBlocks(endIdx, endLine, start);
 	}
 
+	start.line = startLine;
 	return start;
 }
 
@@ -1266,7 +1270,6 @@ inline text::Paragraph *MarkdownEditWidget::insertParagraph(
 
 	// Update paragraph pointers for all blocks after new one.
 	for (int idx = 0; idx < m_model.paragraphs()->size(); idx++) {
-		//m_blocks[idx]->updateParagraphWithoutReload(&((*m_model.paragraphs())[idx]));
 		m_blocks[idx]->updateParagraphWithoutReload(m_model.paragraphs()->data() + idx);
 	}
 
@@ -1275,7 +1278,7 @@ inline text::Paragraph *MarkdownEditWidget::insertParagraph(
 
 inline void MarkdownEditWidget::deleteParagraph(int index) {
 	MarkdownBlock *block = m_blocks[index];
-	QList<text::Paragraph> *pars = m_model.paragraphs();
+	block->updateParagraphWithoutReload(nullptr);
 
 	disconnect(
 		this, &MarkdownEditWidget::onCursorMove,
@@ -1283,7 +1286,7 @@ inline void MarkdownEditWidget::deleteParagraph(int index) {
 	);
 
 	// Delete from model.
-	pars->remove(index, 1);
+	m_model.paragraphs()->remove(index, 1);
 
 	// Delete from list of widgets.
 	m_blocks.remove(index, 1);
@@ -1295,7 +1298,8 @@ inline void MarkdownEditWidget::deleteParagraph(int index) {
 	block->deleteLater();
 
 	// Update paragraph pointers for all blocks after new one.
-	for (int idx = index; idx < pars->size(); idx++) {
+	QList<text::Paragraph> *pars = m_model.paragraphs();
+	for (int idx = 0; idx < pars->size(); idx++) {
 		m_blocks[idx]->updateParagraphWithoutReload(&((*pars)[idx]));
 	}
 }
@@ -1534,7 +1538,7 @@ MarkdownCursor MarkdownEditWidget::splitBlocks(
 			// Update cursor to new line.
 			return MarkdownCursor(
 				m_blocks[parIdx],	
-				&((*lines)[lineIdx + 1]),
+				&((*par->getLines())[lineIdx + 1]),
 				0
 			);
 		}

@@ -193,6 +193,9 @@ bool MarkdownBlock::cursorBelow(
 	}
 
 	QTextLine textLine = layout->lineForTextPosition(cur.position);
+	if (textLine.isValid() == false)
+		return false;
+
 	qreal x = textLine.cursorToX(cur.position);
 	if (textLine.lineNumber() < layout->lineCount() - 1) {
 		// We have next line in current layout to move to.
@@ -233,6 +236,9 @@ bool MarkdownBlock::cursorAbove(
 	}
 
 	QTextLine textLine = layout->lineForTextPosition(cur.position);
+	if (textLine.isValid() == false)
+		return false;
+
 	qreal x = textLine.cursorToX(cur.position);
 	if (textLine.lineNumber() > 0) {
 		// We have prev line in current layout to move to.
@@ -268,6 +274,9 @@ qreal MarkdownBlock::xAtCursor(MarkdownCursor cur) {
 		return 0;
 
 	QTextLine textLine = layout->lineForTextPosition(cur.position);
+	if (textLine.isValid() == false)
+		return false;
+
 	qreal x = textLine.cursorToX(cur.position);
 
 	return x;
@@ -363,6 +372,9 @@ void MarkdownBlock::resizeEvent(QResizeEvent *event) {
 }
 
 void MarkdownBlock::paintEvent(QPaintEvent *event) {
+	if (m_par == nullptr)
+		return;
+
 	QMargins margins = contentsMargins();
 	QMargins formatMargins = QMargins(0, 0, 0, 0);
 	text::ParagraphType type = m_par->getType();
