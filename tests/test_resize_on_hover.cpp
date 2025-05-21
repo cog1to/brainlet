@@ -1,7 +1,8 @@
 #include <QApplication>
 #include <QObject>
 
-#include "widgets/widgets.h"
+#include "widgets/style.h"
+#include "widgets/thought_widget.h"
 
 int main(int argc, char *argv[]) {
 	int normalSize = 300;

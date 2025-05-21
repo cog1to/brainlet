@@ -2,7 +2,8 @@
 #include <QObject>
 #include <QColor>
 
-#include "widgets/widgets.h"
+#include "widgets/style.h"
+#include "widgets/thought_widget.h"
 
 void resizeMax(ThoughtWidget *thought, int maxSize) {
 	QSize fullSize = thought->sizeForWidth(maxSize);

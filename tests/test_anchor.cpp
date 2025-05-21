@@ -1,7 +1,7 @@
 #include <QApplication>
 #include <QObject>
 
-#include "widgets/widgets.h"
+#include "widgets/anchor_widget.h"
 
 int main(int argc, char *argv[]) {
 	QApplication app(argc, argv);

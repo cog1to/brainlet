@@ -3,7 +3,6 @@
 #include "model/model.h"
 #include "presenters/text_editor_presenter.h"
 #include "presenters/search_presenter.h"
-#include "widgets/markdown_widget.h"
 #include "widgets/search_widget.h"
 
 TextEditorPresenter::TextEditorPresenter(

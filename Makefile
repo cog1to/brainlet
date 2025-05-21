@@ -23,7 +23,7 @@ ifeq ($(UNAME_S),Darwin)
 endif
 
 # Widgets
-WIDGETS_H = $(wildcard widgets/*widget.h) widgets/style.h
+WIDGETS_H = $(wildcard widgets/*.h)
 WIDGETS_MOCS_C = $(patsubst widgets/%.cpp,mocs/%.cpp,$(WIDGETS_H:.h=.moc.cpp))
 # Presenters
 PRESENTERS_H = $(wildcard presenters/*.h)

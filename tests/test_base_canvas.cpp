@@ -3,7 +3,7 @@
 #include <QColor>
 #include <QDebug>
 
-#include "widgets/widgets.h"
+#include "widgets/canvas_widget.h"
 #include "layout/default_layout.h"
 
 Thought *makeThought(
