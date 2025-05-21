@@ -42,6 +42,7 @@ public:
 		MarkdownBlock*,
 		text::Line*
 	) override;
+	bool isDocumentEmpty() override;
 	// Presenter.
 	void setPresenter(MarkdownEditPresenter*);
 	// Node search.
@@ -50,12 +51,16 @@ public:
 	void insertNodeLink(ThoughtId, QString);
 	// State.
 	bool isDirty() const;
+	QString text();
+	// Style.
+	Style *style();
 
 signals:
 	void onCursorMove(MarkdownCursor, MarkdownCursor);
 	void cursorMoved(QLine);
-	void textChanged(QString);
 	void nodeInsertionActivated(QPoint);
+	void textChanged(QString&);
+	void nodeLinkSelected(ThoughtId);
 
 protected:
 	void resizeEvent(QResizeEvent*) override;
@@ -96,6 +101,7 @@ private:
 	bool cursorAtBlockAbove(MarkdownCursor, MarkdownCursor*);
 	void processCursorMove(MarkdownCursor, MarkdownCursor);
 	bool cursorAtPoint(QPoint, MarkdownCursor*);
+	bool cursorAbovePoint(QPoint, MarkdownCursor*);
 	MarkdownCursor moveCursor(int, MarkdownCursor);
 	MarkdownCursor documentStart();
 	MarkdownCursor documentEnd();

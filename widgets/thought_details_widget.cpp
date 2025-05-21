@@ -3,12 +3,12 @@
 #include <QLabel>
 
 #include "widgets/thought_details_widget.h"
-#include "widgets/markdown_widget.h"
+#include "widgets/markdown_scroll_widget.h"
 
 ThoughtDetailsWidget::ThoughtDetailsWidget(
 	QWidget *parent,
 	Style *style,
-	MarkdownWidget *markdown
+	MarkdownScrollWidget *markdown
 ) : BaseWidget(parent, style),
 	m_layout(this), m_markdown(markdown), m_title(nullptr), m_separator(nullptr)
 {

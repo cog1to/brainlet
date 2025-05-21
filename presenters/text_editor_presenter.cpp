@@ -9,29 +9,31 @@
 TextEditorPresenter::TextEditorPresenter(
 	TextRepository *repo,
 	SearchRepository *search,
-	MarkdownWidget *view
+	MarkdownScrollWidget *view
 )
 	: m_repository(repo),
 	m_searchRepository(search),
 	m_view(view)
 {
+	m_editView = view->markdownWidget();
+
 	connect(
-		view, SIGNAL(textChanged(QString&)),
+		m_editView, SIGNAL(textChanged(QString&)),
 		this, SLOT(onTextChanged(QString&))
 	);
 
 	connect(
-		this, SIGNAL(textError(MarkdownError)),
-		view, SLOT(onError(MarkdownError))
+		this, SIGNAL(textError(MarkdownScrollError)),
+		view, SLOT(onError(MarkdownScrollError))
 	);
 
 	connect(
-		view, SIGNAL(nodeLinkSelected(ThoughtId)),
+		m_editView, SIGNAL(nodeLinkSelected(ThoughtId)),
 		this, SIGNAL(nodeLinkSelected(ThoughtId))
 	);
 
 	connect(
-		view, SIGNAL(nodeInsertionActivated(QPoint)),
+		m_editView, SIGNAL(nodeInsertionActivated(QPoint)),
 		this, SLOT(onNodeInsertion(QPoint))
 	);
 }
@@ -43,8 +45,8 @@ void TextEditorPresenter::setThought(ThoughtId id) {
 		return;
 
 	// Force save.
-	if (m_view->isDirty()) {
-		QString text = m_view->text();
+	if (m_editView->isDirty()) {
+		QString text = m_editView->text();
 		onTextChanged(text);
 	}
 
@@ -54,7 +56,7 @@ void TextEditorPresenter::setThought(ThoughtId id) {
 	// Empty state.
 	if (m_id == InvalidThoughtId) {
 		QString empty = QString();
-		m_view->load(empty);
+		m_editView->load(empty);
 		return;
 	}
 
@@ -65,12 +67,13 @@ void TextEditorPresenter::setThought(ThoughtId id) {
 	GetResult result = m_repository->getText(m_id);
 	if (result.error != TextRepositoryError::TextRepositoryErrorNone) {
 		m_id = InvalidThoughtId;
-		emit textError(MarkdownError::MarkdownIOError);
+		emit textError(MarkdownScrollError::MarkdownScrollIOError);
 		return;
 	}
 
 	QString text = result.result;
-	m_view->load(text);
+	qDebug() << "loaded" << text;
+	m_editView->load(text);
 }
 
 // Events.
@@ -84,19 +87,19 @@ void TextEditorPresenter::onTextChanged(QString& text) {
 	SaveResult result = m_repository->saveText(m_id, text);
 
 	if (result.error != TextRepositoryError::TextRepositoryErrorNone) {
-		emit textError(MarkdownError::MarkdownIOError);
+		emit textError(MarkdownScrollError::MarkdownScrollIOError);
 	}
 }
 
 void TextEditorPresenter::onNodeInsertion(QPoint point) {
 	if (m_searchRepository == nullptr)
 		return;
-	if (m_view == nullptr)
+	if (m_editView == nullptr)
 		return;
 
 	SearchWidget *widget = new SearchWidget(
 		nullptr,
-		m_view->style(),
+		m_editView->style(),
 		true,
 		tr("Connect to..."),
 		true
@@ -120,7 +123,7 @@ void TextEditorPresenter::onNodeInsertion(QPoint point) {
 		this, SLOT(onThoughtSelected(ThoughtId, QString))
 	);
 
-	m_view->showSearchWidget(widget, point);
+	m_editView->showSearchWidget(widget, point);
 }
 
 void TextEditorPresenter::onSearchCanceled() {
@@ -129,8 +132,8 @@ void TextEditorPresenter::onSearchCanceled() {
 		m_search = nullptr;
 	}
 
-	if (m_view != nullptr) {
-		m_view->hideSearchWidget();
+	if (m_editView != nullptr) {
+		m_editView->hideSearchWidget();
 	}
 }
 
@@ -152,12 +155,12 @@ void TextEditorPresenter::onConnectionSelected(
 	}
 
 	if (result) {
-		m_view->hideSearchWidget();
-		m_view->insertNodeLink(id, name);
-		m_view->setFocus();
+		m_editView->hideSearchWidget();
+		m_editView->insertNodeLink(id, name);
+		m_editView->setFocus();
 		emit connectionCreated();
 	} else {
-		m_view->onError(MarkdownIOError);
+		m_view->onError(MarkdownScrollIOError);
 	}
 }
 
@@ -165,14 +168,20 @@ void TextEditorPresenter::onThoughtSelected(
 	ThoughtId id,
 	QString name
 ) {
-	m_view->hideSearchWidget();
-	m_view->insertNodeLink(id, name);
-	m_view->setFocus();
+	if (m_editView == nullptr)
+		return;
+
+	m_editView->hideSearchWidget();
+	m_editView->insertNodeLink(id, name);
+	m_editView->setFocus();
 }
 
 void TextEditorPresenter::onDismiss() {
-	if (m_view->isDirty()) {
-		QString text = m_view->text();
+	if (m_editView == nullptr)
+		return;
+
+	if (m_editView->isDirty()) {
+		QString text = m_editView->text();
 		onTextChanged(text);
 	}
 }

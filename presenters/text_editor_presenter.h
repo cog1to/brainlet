@@ -8,7 +8,8 @@
 #include "entity/text_repository.h"
 #include "entity/search_repository.h"
 #include "entity/graph_repository.h"
-#include "widgets/markdown_widget.h"
+#include "widgets/markdown_edit_widget.h"
+#include "widgets/markdown_scroll_widget.h"
 #include "presenters/search_presenter.h"
 #include "presenters/dismissable_presenter.h"
 
@@ -19,12 +20,12 @@ public:
 	TextEditorPresenter(
 		TextRepository*,
 		SearchRepository*,
-		MarkdownWidget*
+		MarkdownScrollWidget*
 	);
 	void setThought(ThoughtId);
 
 signals:
-	void textError(MarkdownError);
+	void textError(MarkdownScrollError);
 	void nodeLinkSelected(ThoughtId);
 	void connectionCreated();
 
@@ -42,7 +43,8 @@ private:
 	ThoughtId m_id = InvalidThoughtId;
 	// Dependencies.
 	TextRepository *m_repository = nullptr;
-	MarkdownWidget *m_view = nullptr;
+	MarkdownScrollWidget *m_view = nullptr;
+	MarkdownEditWidget *m_editView = nullptr;
 	// Search.
 	SearchRepository *m_searchRepository = nullptr;
 	SearchPresenter *m_search = nullptr;

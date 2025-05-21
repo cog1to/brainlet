@@ -106,6 +106,7 @@ namespace text {
 		QList<Paragraph> *paragraphs();
 		const QList<Paragraph> *const_paragraphs() const;
 		void setParagraphs(QList<Paragraph>);
+		void insert(int, Paragraph);
 		// Text conversion.
 		QString text();
 

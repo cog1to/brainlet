@@ -10,7 +10,8 @@
 #include "entity/connection_entity.h"
 #include "entity/memory_repository.h"
 #include "widgets/brain_list_widget.h"
-#include "widgets/markdown_widget.h"
+#include "widgets/markdown_scroll_widget.h"
+#include "widgets/markdown_edit_widget.h"
 #include "widgets/canvas_widget.h"
 #include "widgets/brain_widget.h"
 #include "widgets/thought_details_widget.h"
@@ -55,18 +56,23 @@ DismissableModule DatabaseModuleFactory::makeBrainModule(QString id) {
 	DatabaseBrainRepository *repo = DatabaseBrainRepository::fromDir(dir);
 
 	// Text editor widget and presenter.
-	MarkdownWidget *markdownWidget = new MarkdownWidget(nullptr, m_style);
+	MarkdownEditWidget *markdownWidget = new MarkdownEditWidget(nullptr, m_style);
+
+	MarkdownScrollWidget *scroll = new MarkdownScrollWidget(nullptr, m_style);
+	scroll->setMarkdownWidget(markdownWidget);
+	scroll->setWidgetResizable(true);
+
 	TextEditorPresenter *markdownPresenter = new TextEditorPresenter(
 		repo,
 		repo,
-		markdownWidget
+		scroll
 	);
 
 	// Thought details widget for editing individual thoughts.
 	ThoughtDetailsWidget *detailsWidget = new ThoughtDetailsWidget(
 		nullptr,
 		m_style,
-		markdownWidget
+		scroll
 	);
 
 	// Canvas widget to draw connection graph.

@@ -27,6 +27,7 @@ public:
 	void setParagraph(text::Paragraph*);
 	void updateParagraphWithoutReload(text::Paragraph*);
 	text::Paragraph *paragraph();
+	void setPlaceholder(QString);
 	// Cursor positioning.
 	bool cursorAt(QPoint, MarkdownCursor*);
 	text::Line *lineBefore(text::Line*);
@@ -53,6 +54,7 @@ private:
 	text::Paragraph *m_par = nullptr;
 	Style *m_style = nullptr;
 	MarkdownCursorProvider *m_provider = nullptr;
+	QString m_placeholder = "";
 	// Helpers.
 	QList<QTextLayout::FormatRange> convertRanges(
 		QList<text::FormatRange> 
@@ -95,6 +97,7 @@ public:
 		MarkdownBlock*,
 		text::Line*
 	) = 0;
+	virtual bool isDocumentEmpty() = 0;
 };
 
 #endif

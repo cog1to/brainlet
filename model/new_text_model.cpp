@@ -552,6 +552,10 @@ void text::TextModel::setParagraphs(QList<text::Paragraph> data) {
 	m_data = data;
 }
 
+void text::TextModel::insert(int index, text::Paragraph par) {
+	m_data.insert(index, par);
+}
+
 QString text::TextModel::text() {
 	QStringList result;
 

@@ -20,7 +20,9 @@ class MarkdownScrollWidget
 
 public:
 	MarkdownScrollWidget(QWidget*, Style*);
+	~MarkdownScrollWidget();
 	void setMarkdownWidget(MarkdownEditWidget*);
+	MarkdownEditWidget *markdownWidget();
 	int getPageOffset(bool) override;
 
 public slots:

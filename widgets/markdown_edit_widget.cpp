@@ -22,19 +22,20 @@ MarkdownEditWidget::MarkdownEditWidget(QWidget *widget, Style *style)
 	: BaseWidget(widget, style),
 	m_cursor(nullptr, nullptr, 0)
 {
-	setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+	setSizePolicy(QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
 	setStyleSheet(
-		QString("background-color: %1")
+		QString("background-color: %1;")
 			.arg(style->background().name(QColor::HexRgb))
 	);
 
 	m_layout = new QVBoxLayout(nullptr);
+	m_layout->setContentsMargins(QMargins(0, 0, 0, 0));
 	setLayout(m_layout);
 }
 
 MarkdownEditWidget::~MarkdownEditWidget() {
 	for (auto widget: m_blocks)
-		delete widget;
+		widget->deleteLater();
 }
 
 void MarkdownEditWidget::load(QString data) {
@@ -44,17 +45,27 @@ void MarkdownEditWidget::load(QString data) {
 	QStringList lines = data.split(splitExp);
 	m_model = text::TextModel(lines);
 
+	// Clear old blocks.
+	for (auto widget: m_blocks) {
+		m_layout->removeWidget(widget);
+		widget->deleteLater();
+	}
+	m_blocks.clear();
+	m_layout->removeItem(m_layout->itemAt(0));
+
 	// Create blocks.
 	QList<text::Paragraph> *list = m_model.paragraphs();
 
+	if (list->size() == 0) {
+		QString empty = "";
+		text::Line line = text::Line(empty, true);
+		text::Paragraph emptyParagraph = text::Paragraph(text::Text, line);
+		list->push_back(emptyParagraph);
+	}
+
 	for (qsizetype i = 0; i < list->size(); ++i) {
 		text::Paragraph *p = &((*list)[i]);
-		qDebug() << "item type:" << p->getType();
-
 		QList<text::Line> *lines = p->getLines();
-		for (qsizetype j = 0; j < lines->size(); j++) {
-			qDebug() << "line:" << lines->at(j).text;
-		}
 
 		MarkdownBlock *block = new MarkdownBlock(nullptr, m_style, this);
 		connect(
@@ -62,6 +73,8 @@ void MarkdownEditWidget::load(QString data) {
 			block, &MarkdownBlock::onCursorMove
 		);
 
+		if (i == 0)
+			block->setPlaceholder(tr("Start typing here..."));
 		block->setParagraph(p);
 
 		m_blocks.push_back(block);
@@ -80,6 +93,14 @@ bool MarkdownEditWidget::isDirty() const {
 	return m_isDirty;
 }
 
+QString MarkdownEditWidget::text() {
+	return m_model.text();
+}
+
+Style *MarkdownEditWidget::style() {
+	return m_style;
+}
+
 // Events.
 
 void MarkdownEditWidget::resizeEvent(QResizeEvent *event) {
@@ -94,6 +115,7 @@ void MarkdownEditWidget::mousePressEvent(QMouseEvent *event) {
 		if (event->button() == Qt::RightButton) {
 			// Show menu.
 			showContextMenu(event);
+			return;
 		} else if (event->modifiers() & Qt::ShiftModifier) {
 			// When shift-click, activate selection from previous to current
 			// position.
@@ -113,6 +135,17 @@ void MarkdownEditWidget::mousePressEvent(QMouseEvent *event) {
 
 		if (!hasFocus())
 			setFocus();
+	} else if (found = cursorAbovePoint(event->pos(), &cursor); found) {
+			// Set initial cursor position.
+			MarkdownCursor prev = m_cursor;
+			processCursorMove(prev, cursor);
+			// Adjust selection.
+			m_selection.active = false;
+			m_selection.start = m_cursor;
+			m_selection.end = m_cursor;
+
+			if (!hasFocus())
+				setFocus();
 	} else {
 		clearFocus();
 	}
@@ -159,7 +192,6 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 
 	if (line == nullptr || block == nullptr)
 		return;
-
 
 	text::Paragraph *par = block->paragraph();
 
@@ -413,6 +445,11 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 		m_selection.start = m_cursor;
 	}
 
+	if (!isMovementKey(event)) {
+		m_isDirty = true;
+		throttleSave();
+	}
+
 	// I don't like this. Have to wait for widgets to redraw to avoid
 	// crashes on querying non-existent lines in the layout.
 	QCoreApplication::processEvents();
@@ -559,6 +596,18 @@ QTextLayout::FormatRange MarkdownEditWidget::selectionInLine(
 	range.format = format;
 
 	return range;
+}
+
+bool MarkdownEditWidget::isDocumentEmpty() {
+	QList<text::Paragraph> *pars = m_model.paragraphs();
+	if (pars->size() > 1 || (*pars)[0].getType() != text::Text)
+		return false;
+
+	QList<text::Line> *lines = (*pars)[0].getLines();
+	if (lines->size() > 1 || lines->at(0).text.length() > 0)
+		return false;
+
+	return true;
 }
 
 // Selections and clipboard.
@@ -736,7 +785,10 @@ MarkdownCursor MarkdownEditWidget::pasteString(QString text) {
 	text::TextModel model = text::TextModel(list);
 	QList<text::Paragraph> *newPars = model.paragraphs();
 
+	qDebug() << "pasting" << text;
+
 	if (list.size() == 1) {
+		qDebug() << "single line";
 		// If we're inserting a single line, just inject it into the 
 		// current line.
 		QString textBefore = m_cursor.line->text.left(m_cursor.position);
@@ -747,7 +799,7 @@ MarkdownCursor MarkdownEditWidget::pasteString(QString text) {
 
 		text::Line *line = m_cursor.line;
 		QString newText = textBefore
-			+ (*(*model.paragraphs())[0].getLines())[0].text
+			+ text
 			+ textAfter;
 		line->setText(newText, m_cursor.block->paragraph()->getType() == text::Code);
 		m_cursor.block->setParagraph(m_cursor.block->paragraph());
@@ -757,7 +809,7 @@ MarkdownCursor MarkdownEditWidget::pasteString(QString text) {
 			line,
 			pos
 		);
-	} if (m_cursor.block->paragraph()->getType() == text::Code) {
+	} else if (m_cursor.block->paragraph()->getType() == text::Code) {
 		// If we're inserting into code, ignore text layout and just put
 		// data as is.
 		int pos = 0;
@@ -868,6 +920,7 @@ void MarkdownEditWidget::showSearchWidget(
 	);
 
 	widget->setParent(this);
+	widget->raise();
 	widget->show();
 	widget->setFocus();
 }
@@ -900,7 +953,12 @@ void MarkdownEditWidget::insertNodeLink(ThoughtId id, QString title) {
 	QString data = QString("[%1](node://%2)")
 		.arg(linkName)
 		.arg(id);
-	pasteString(data);
+	MarkdownCursor cursor = pasteString(data);
+
+	// Reset selection.
+	m_selection.active = false;
+
+	processCursorMove(m_cursor, cursor);
 
 	// Schedule save.
 	m_isDirty = true;
@@ -1021,6 +1079,32 @@ bool MarkdownEditWidget::cursorAtBlockAbove(
 	return true;
 }
 
+bool MarkdownEditWidget::cursorAbovePoint(
+	QPoint pos,
+	MarkdownCursor *result
+) {
+	for (auto it = m_blocks.rbegin(); it != m_blocks.rend(); it++) {
+		QRect geometry = (*it)->geometry();
+
+		// Since there are gaps between blocks, we take the first block
+		// that has the point inside or is located below the point.
+		if (geometry.y() + geometry.height() > pos.y()) {
+			continue;
+		}
+
+		QList<text::Line> *lines = (*it)->paragraph()->getLines();
+		text::Line *lastLine = &((*lines)[lines->size() - 1]);
+		*result = MarkdownCursor(
+			(*it),
+			lastLine,
+			lastLine->text.length()
+		);
+		return true;
+	}
+
+	return false;
+}
+
 void MarkdownEditWidget::processCursorMove(
 	MarkdownCursor from,
 	MarkdownCursor to
@@ -1131,8 +1215,19 @@ inline text::Paragraph *MarkdownEditWidget::insertParagraph(
 	int index,
 	text::Paragraph par
 ) {
-	QList<text::Paragraph> *pars = m_model.paragraphs();
-	pars->insert(index, par);
+	//QList<text::Paragraph> *pars = m_model.paragraphs();
+
+	// Copy list.
+	//QList<text::Paragraph> newList;
+	//for (int i = 0; i < index; i++)
+	//	newList.push_back((*pars)[i]);
+	//newList.push_back(par);
+	//for (int i = index; i < pars->size(); i++)
+	//	newList.push_back((*pars)[i]);
+	//m_model.setParagraphs(newList);
+
+	//pars->insert(index, par);
+	m_model.insert(index, par);
 
 	MarkdownBlock *block = new MarkdownBlock(nullptr, m_style, this);
 	connect(
@@ -1140,16 +1235,17 @@ inline text::Paragraph *MarkdownEditWidget::insertParagraph(
 		block, &MarkdownBlock::onCursorMove
 	);
 
-	block->setParagraph(&((*pars)[index]));
+	block->setParagraph(&((*m_model.paragraphs())[index]));
 	m_blocks.insert(index, block);
 	m_layout->insertWidget(index, block);
 
 	// Update paragraph pointers for all blocks after new one.
-	for (int idx = index + 1; idx < pars->size(); idx++) {
-		m_blocks[idx]->updateParagraphWithoutReload(&((*pars)[idx]));
+	for (int idx = 0; idx < m_model.paragraphs()->size(); idx++) {
+		//m_blocks[idx]->updateParagraphWithoutReload(&((*m_model.paragraphs())[idx]));
+		m_blocks[idx]->updateParagraphWithoutReload(m_model.paragraphs()->data() + idx);
 	}
 
-	return &((*pars)[index]);
+	return &((*m_model.paragraphs())[index]);
 }
 
 inline void MarkdownEditWidget::deleteParagraph(int index) {
@@ -1330,7 +1426,7 @@ MarkdownCursor MarkdownEditWidget::splitBlocks(
 		text::Paragraph *ptr = insertParagraph(parIdx + 1, newPar);
 
 		// Reload current paragraph.
-		block->setParagraph(par);
+		block->setParagraph(&((*m_model.paragraphs())[parIdx]));
 
 		// Update cursor.
 		return MarkdownCursor(
@@ -1362,6 +1458,7 @@ MarkdownCursor MarkdownEditWidget::splitBlocks(
 					remainder
 				);
 				text::Paragraph *ptr = insertParagraph(parIdx + 1, newPar);
+				par = m_model.paragraphs()->data() + parIdx;
 			}
 
 			QString empty = "";

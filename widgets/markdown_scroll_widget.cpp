@@ -11,7 +11,11 @@
 MarkdownScrollWidget::MarkdownScrollWidget(
 	QWidget *parent,
 	Style *style
-) : QScrollArea(parent), m_style(style) {}
+) : QScrollArea(parent), m_style(style) {
+	setStyleSheet("QScrollArea{border:none;}");
+}
+
+MarkdownScrollWidget::~MarkdownScrollWidget() {};
 
 void MarkdownScrollWidget::setMarkdownWidget(MarkdownEditWidget *w) {
 	assert(w != nullptr);
@@ -24,6 +28,10 @@ void MarkdownScrollWidget::setMarkdownWidget(MarkdownEditWidget *w) {
 	m_widget = w;
 	setWidget(w);
 	m_widget->setPresenter(this);
+}
+
+MarkdownEditWidget *MarkdownScrollWidget::markdownWidget() {
+	return m_widget;
 }
 
 void MarkdownScrollWidget::onCursorMoved(QLine line) {

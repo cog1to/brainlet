@@ -64,6 +64,8 @@ void MarkdownBlock::setParagraph(Paragraph *par) {
 	opt.setWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
 
 	QList<Line> *lines = par->getLines();
+	assert(lines->size() > 0);
+
 	for (qsizetype i = 0; i < lines->size(); ++i) {
 		QTextLayout *layout = new QTextLayout();
 		layout->setTextOption(opt);
@@ -96,6 +98,11 @@ void MarkdownBlock::updateParagraphWithoutReload(
 	text::Paragraph* par
 ) {
 	m_par = par;
+}
+
+void MarkdownBlock::setPlaceholder(QString placeholder) {
+	m_placeholder = placeholder;
+	update();
 }
 
 // Cursor.
@@ -366,9 +373,6 @@ void MarkdownBlock::paintEvent(QPaintEvent *event) {
 		cursor = m_provider->currentCursor();
 
 	QPainter painter(this);
-	painter.setRenderHint(QPainter::Antialiasing, true);
-	painter.setPen(m_style->textEditColor());
-	painter.setBrush(m_style->textEditColor());
 
 	QFontMetrics fontMetrics = QFontMetrics(m_style->textEditFont());
 	if (type == text::Code) {
@@ -378,7 +382,29 @@ void MarkdownBlock::paintEvent(QPaintEvent *event) {
 	} else if (type == text::BulletList || type == text::NumberList) {
 		painter.setFont(m_style->textEditFont());
 		formatMargins = listMargins;
+	} else {
+		painter.setFont(m_style->textEditFont());
 	}
+
+	if (
+		!m_placeholder.isEmpty() &&
+		m_provider != nullptr &&
+		m_provider->isDocumentEmpty()
+	) {
+		// Draw placeholder.
+		QColor placeholderColor = m_style->textEditColor();
+		placeholderColor.setAlpha(128);
+
+		painter.setPen(placeholderColor);
+		painter.drawText(
+			QPointF(margins.left(), margins.top() + fontMetrics.ascent()),
+			m_placeholder
+		);
+	}
+	
+	painter.setRenderHint(QPainter::Antialiasing, true);
+	painter.setPen(m_style->textEditColor());
+	painter.setBrush(m_style->textEditColor());
 
 	int lineSpacing = fontMetrics.lineSpacing();
 	int lineWidth = size().width()

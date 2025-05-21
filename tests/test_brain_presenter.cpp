@@ -6,7 +6,8 @@
 
 #include "model/text_model.h"
 #include "layout/default_layout.h"
-#include "widgets/markdown_widget.h"
+#include "widgets/markdown_scroll_widget.h"
+#include "widgets/markdown_edit_widget.h"
 #include "widgets/canvas_widget.h"
 #include "widgets/brain_widget.h"
 #include "widgets/thought_details_widget.h"
@@ -46,18 +47,23 @@ int main(int argc, char *argv[]) {
 	MemoryRepository repo = MemoryRepository(thoughts, conns, 0);
 
 	// Make text widget.
-	MarkdownWidget *markdownWidget = new MarkdownWidget(nullptr, &style);
+	MarkdownEditWidget *markdownWidget = new MarkdownEditWidget(nullptr, &style);
+
+	MarkdownScrollWidget *scroll = new MarkdownScrollWidget(nullptr, &style);
+	scroll->setMarkdownWidget(markdownWidget);
+	scroll->setWidgetResizable(true);
+
 	TextEditorPresenter *markdownPresenter = new TextEditorPresenter(
 		&repo,
 		&repo,
-		markdownWidget
+		scroll
 	);
 
 	// Make thought details widget.
 	ThoughtDetailsWidget *detailsWidget = new ThoughtDetailsWidget(
 		nullptr,
 		&style,
-		markdownWidget
+		scroll
 	);
 
 	// Make canvas widget.

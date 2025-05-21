@@ -8,20 +8,20 @@
 
 #include "widgets/style.h"
 #include "widgets/base_widget.h"
-#include "widgets/markdown_widget.h"
+#include "widgets/markdown_scroll_widget.h"
 
 class ThoughtDetailsWidget: public BaseWidget {
 	Q_OBJECT
 
 public:
-	ThoughtDetailsWidget(QWidget*, Style*, MarkdownWidget*);
+	ThoughtDetailsWidget(QWidget*, Style*, MarkdownScrollWidget*);
 	void setTitle(QString title);
 
 private:
 	QLabel m_title;
 	QWidget m_separator;
 	QVBoxLayout m_layout;
-	MarkdownWidget *m_markdown;
+	MarkdownScrollWidget *m_markdown;
 };
 
 #endif
