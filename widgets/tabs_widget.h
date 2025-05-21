@@ -9,6 +9,7 @@
 #include <QTabWidget>
 #include <QShowEvent>
 #include <QVBoxLayout>
+#include <QCloseEvent>
 
 #include "widgets/style.h"
 #include "widgets/base_widget.h"
@@ -27,9 +28,11 @@ public:
 signals:
 	void shown();
 	void tabCloseRequested(int);
+	void closeRequested();
 
 protected:
 	void showEvent(QShowEvent*) override;
+	void closeEvent(QCloseEvent*) override;
 
 private slots:
 	void onTabClose(int);

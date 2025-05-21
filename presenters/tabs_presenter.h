@@ -32,6 +32,7 @@ private slots:
 	void onBrainDeleted(QString);
 	void onBrainRenamed(QString, QString);
 	void onTabClose(int);
+	void onWindowClose();
 
 private:
 	ModuleFactory *m_factory;

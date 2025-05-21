@@ -23,6 +23,10 @@ TabsPresenter::TabsPresenter(
 		view, SIGNAL(tabCloseRequested(int)),
 		this, SLOT(onTabClose(int))
 	);
+	connect(
+		view, SIGNAL(closeRequested()),
+		this, SLOT(onWindowClose())
+	);
 }
 
 void TabsPresenter::onShown() {
@@ -109,3 +113,9 @@ void TabsPresenter::onTabClose(int idx) {
 	m_tabs.erase(m_tabs.begin() + idx);
 }
 
+void TabsPresenter::onWindowClose() {
+	for (int idx = 0; idx < m_tabs.size(); idx++) {
+		DismissableModule mod = m_tabs[idx].mod;
+		mod.presenter->onDismiss();
+	}
+}

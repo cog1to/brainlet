@@ -105,14 +105,6 @@ void TabsWidget::addTab(
 		m_tabWidget->tabBar()->setTabButton(idx, QTabBar::LeftSide, 0);
 	} else {
 		m_tabWidget->tabBar()->setTabButton(idx, QTabBar::LeftSide, 0);
-
-		//QIcon icon = QIcon(":/icons/close.png");
-		//QString empty = "";
-		//m_tabWidget->tabBar()->setTabButton(
-		//	idx,
-		//	QTabBar::RightSide,
-		//	new QPushButton(icon, empty)
-		//);
 	}
 
 	m_tabWidget->setCurrentIndex(idx);
@@ -141,6 +133,10 @@ void TabsWidget::deleteWidget(QWidget* widget) {
 
 void TabsWidget::showEvent(QShowEvent*) {
 	emit shown();
+}
+
+void TabsWidget::closeEvent(QCloseEvent *event) {
+	emit closeRequested();
 }
 
 // Slots
