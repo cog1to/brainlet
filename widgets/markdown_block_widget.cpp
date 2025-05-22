@@ -299,6 +299,9 @@ MarkdownCursor MarkdownBlock::firstCursorAtX(qreal x) {
 
 	QTextLayout *layout = m_layouts[0];
 	QTextLine line = layout->lineAt(0);
+	if (!line.isValid())
+		return cursor;
+
 	int pos = line.xToCursor(x);
 
 	cursor.block = this;
@@ -317,6 +320,9 @@ MarkdownCursor MarkdownBlock::lastCursorAtX(qreal x) {
 	int lastLineIdx = m_layouts.size() - 1;
 	QTextLayout *layout = m_layouts[lastLineIdx];
 	QTextLine line = layout->lineAt(layout->lineCount() - 1);
+	if (!line.isValid())
+		return cursor;
+
 	int pos = line.xToCursor(x);
 
 	cursor.block = this;

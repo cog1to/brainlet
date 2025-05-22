@@ -75,25 +75,30 @@ protected slots:
 
 private:
 	QVBoxLayout *m_layout = nullptr;
-	QList<MarkdownBlock*> m_blocks;
-	MarkdownCursor m_cursor;
+	QList<MarkdownBlock*> m_blocks = {};
+	MarkdownCursor m_cursor = MarkdownCursor(nullptr, nullptr, 0);
 	MarkdownEditPresenter *m_presenter = nullptr;
 	// State.
-	text::TextModel m_model;	
+	text::TextModel m_model = text::TextModel();
 	MarkdownBlock *m_activeBlock = nullptr;
 	MarkdownSelection m_selection = MarkdownSelection();
+	QString m_anchor = "";
+	QPoint m_pressPoint = QPoint(0, 0);
 	// Saving text.
 	bool m_isDirty = false;
 	QTimer *m_saveTimer = nullptr;
+	// Search.
+	QWidget *m_search = nullptr;
 	// Selection and clipboard.
 	MarkdownCursor deleteSelection();
 	void copySelectionToClipboard();
 	MarkdownCursor pasteFromClipboard();
 	MarkdownCursor pasteString(QString);
-	// Search.
-	QWidget *m_search = nullptr;
 	// Saving.
 	void throttleSave();
+	// Links handling.
+	void checkForLinksUnderCursor(MarkdownCursor);
+	void onAnchorClicked(QString);
 	// Helpers.
 	MarkdownBlock *blockBefore(MarkdownBlock*);
 	MarkdownBlock *blockAfter(MarkdownBlock*);
@@ -119,7 +124,7 @@ private:
 
 class MarkdownEditPresenter {
 public:
-	virtual int getPageOffset(bool down) = 0;	
+	virtual int getPageOffset(bool down) = 0;
 };
 
 #endif

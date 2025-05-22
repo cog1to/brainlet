@@ -10,6 +10,7 @@
 #include <QMimeData>
 #include <QTimer>
 #include <QMenu>
+#include <QDesktopServices>
 
 #include "model/thought.h"
 #include "widgets/style.h"
@@ -35,8 +36,12 @@ MarkdownEditWidget::MarkdownEditWidget(QWidget *widget, Style *style)
 }
 
 MarkdownEditWidget::~MarkdownEditWidget() {
-	for (auto widget: m_blocks)
-		widget->deleteLater();
+	if (m_saveTimer != nullptr) {
+		delete m_saveTimer;
+		m_saveTimer = nullptr;
+	}
+	for (auto block: m_blocks)
+		(*block).deleteLater();
 }
 
 void MarkdownEditWidget::load(QString data) {
@@ -123,6 +128,9 @@ void MarkdownEditWidget::mousePressEvent(QMouseEvent *event) {
 			m_selection.active = true;
 			m_selection.end = cursor;
 		} else {
+			// Detect link.
+			m_pressPoint = event->pos();
+			checkForLinksUnderCursor(cursor);
 			// Set initial cursor position.
 			MarkdownCursor prev = m_cursor;
 			processCursorMove(prev, cursor);
@@ -137,16 +145,16 @@ void MarkdownEditWidget::mousePressEvent(QMouseEvent *event) {
 		if (!hasFocus())
 			setFocus();
 	} else if (found = cursorAbovePoint(event->pos(), &cursor); found) {
-			// Set initial cursor position.
-			MarkdownCursor prev = m_cursor;
-			processCursorMove(prev, cursor);
-			// Adjust selection.
-			m_selection.active = false;
-			m_selection.start = m_cursor;
-			m_selection.end = m_cursor;
+		// Set initial cursor position.
+		MarkdownCursor prev = m_cursor;
+		processCursorMove(prev, cursor);
+		// Adjust selection.
+		m_selection.active = false;
+		m_selection.start = m_cursor;
+		m_selection.end = m_cursor;
 
-			if (!hasFocus())
-				setFocus();
+		if (!hasFocus())
+			setFocus();
 	} else {
 		clearFocus();
 	}
@@ -177,6 +185,20 @@ void MarkdownEditWidget::mouseReleaseEvent(QMouseEvent *event) {
 
 	if (!found || (m_selection.start == cursor)) {
 		m_selection.active = false;
+	}
+
+	if (found) {
+		// Check if still pressing link.
+		if (
+			QPoint pos = event->pos();
+			std::abs(pos.x() - m_pressPoint.x()) < 5 &&
+			std::abs(pos.x() - m_pressPoint.x()) < 5 &&
+			m_anchor.isEmpty() == false
+		) {
+			onAnchorClicked(m_anchor);
+		}
+		m_pressPoint = QPoint(0, 0);
+		m_anchor = "";
 	}
 
 	update();
@@ -227,14 +249,16 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 	} else if (
 		key == Qt::Key_Home ||
 		(key == Qt::Key_Left &&
-		 event->modifiers() & Qt::ControlModifier)
+			event->modifiers() & Qt::ControlModifier)
 	) {
 		cursor = documentStart();
 		processCursorMove(prev, cursor);
 	} else if (
 		key == Qt::Key_End ||
-		(key == Qt::Key_Right &&
-		 event->modifiers() & Qt::ControlModifier)
+		(
+			key == Qt::Key_Right &&
+			event->modifiers() & Qt::ControlModifier
+		)
 	) {
 		cursor = documentEnd();
 		processCursorMove(prev, cursor);
@@ -503,7 +527,7 @@ MarkdownCursor MarkdownEditWidget::moveCursor(
 	} else {
 		// If valid position not found, go to start/end of the document
 		// instead, depending on the diff direction.
-		if (dy > 0) {	
+		if (dy > 0) {
 			return documentEnd();
 		} else if (dy < 0) {
 			return documentStart();
@@ -556,10 +580,10 @@ QTextLayout::FormatRange MarkdownEditWidget::selectionInLine(
 	// TODO: The logic below looks ugly and confusing. Maybe there's a
 	// better way to do all these checks that will come to me when I
 	// get some proper sleep for once in my life.
-	
+
 	// Check if current block/line is outside of selection.
 	if (
-		(curBlockIdx < startBlockIdx) || 
+		(curBlockIdx < startBlockIdx) ||
 		(curBlockIdx > endBlockIdx) ||
 		(curBlockIdx == startBlockIdx && curLineIdx < startLineIdx) ||
 		(curBlockIdx == endBlockIdx && curLineIdx > endLineIdx)
@@ -595,11 +619,11 @@ QTextLayout::FormatRange MarkdownEditWidget::selectionInLine(
 		// Otherwise, select till the selection end. (d'uh)
 		} else if (
 			curBlockIdx == endBlockIdx &&
-			curLineIdx == endLineIdx			
+			curLineIdx == endLineIdx
 		) {
 			range.length = endPos - range.start;
 		}
-	} 
+	}
 
 	QTextCharFormat format = QTextCharFormat();
 	format.setBackground(m_style->selectionBackColor());
@@ -637,7 +661,7 @@ void MarkdownEditWidget::copySelectionToClipboard() {
 
 	int startIdx = indexOfParagraph(start.block->paragraph());
 	int endIdx = indexOfParagraph(end.block->paragraph());
-	
+
 	QList<text::Paragraph> result;
 	QList<text::Paragraph> *pars = m_model.paragraphs();
 	for (int idx = startIdx; idx <= endIdx; idx++) {
@@ -698,7 +722,7 @@ MarkdownCursor MarkdownEditWidget::deleteSelection() {
 	if (cursorAfter(start, end)) {
 		std::swap(start, end);
 	}
-	
+
 	int startIdx = indexOfParagraph(start.block->paragraph());
 	int endIdx = indexOfParagraph(end.block->paragraph());
 
@@ -725,7 +749,7 @@ MarkdownCursor MarkdownEditWidget::deleteSelection() {
 		QList<text::Line> *startLines = startPar->getLines();
 		if (startLines->size() > startLineIdx + 1) {
 			startLines->remove(
-				startLineIdx + 1, 
+				startLineIdx + 1,
 				startLines->size() - startLineIdx - 1
 			);
 		}
@@ -772,7 +796,7 @@ MarkdownCursor MarkdownEditWidget::deleteSelection() {
 		// Delete the selected text within the line.
 		text::Line *line = startLine;
 		QString newText =
-			line->text.left(start.position) 
+			line->text.left(start.position)
 			+ line->text.right(line->text.length() - end.position);
 		line->setText(newText, startPar->getType() == text::Code);
 		start.block->setParagraph(startPar);
@@ -801,7 +825,7 @@ MarkdownCursor MarkdownEditWidget::pasteString(QString text) {
 	QList<text::Paragraph> *newPars = model.paragraphs();
 
 	if (list.size() == 1) {
-		// If we're inserting a single line, just inject it into the 
+		// If we're inserting a single line, just inject it into the
 		// current line.
 		QString textBefore = m_cursor.line->text.left(m_cursor.position);
 		QString textAfter = m_cursor.line->text.right(
@@ -1057,8 +1081,10 @@ void MarkdownEditWidget::saveText() {
 	// Reset dirty flag.
 	m_isDirty = false;
 	// Delete timer.
-	delete m_saveTimer;
-	m_saveTimer = nullptr;
+	if (m_saveTimer != nullptr) {
+		delete m_saveTimer;
+		m_saveTimer = nullptr;
+	}
 }
 
 // Helpers
@@ -1536,7 +1562,7 @@ MarkdownCursor MarkdownEditWidget::splitBlocks(
 
 			// Update cursor to new line.
 			return MarkdownCursor(
-				m_blocks[parIdx],	
+				m_blocks[parIdx],
 				&((*par->getLines())[lineIdx + 1]),
 				0
 			);
@@ -1611,5 +1637,69 @@ bool MarkdownEditWidget::cursorAfter(
 		return true;
 
 	return (first.position > second.position);
+}
+
+void MarkdownEditWidget::checkForLinksUnderCursor(MarkdownCursor cur) {
+	text::Line *line = cur.line;
+	QString anchor = "";
+	int position = cur.position;
+	QList<text::FormatRange> ranges;
+	QString text;
+
+	if (line == nullptr)
+		return;
+
+
+	if (m_cursor.block == cur.block && m_cursor.line == cur.line) {
+		ranges = line->formats;
+		text = line->text;
+	} else {
+		ranges = line->foldedFormats;
+		text = line->folded;
+	}
+
+	for (auto& fmt: ranges) {
+		if (
+			fmt.format != text::Link &&
+			fmt.format != text::PlainLink &&
+			fmt.format != text::NodeLink
+		) {
+			continue;
+		}
+
+		if (!(fmt.from < position && fmt.to > position))
+			continue;
+		if (fmt.link.target.isEmpty())
+			continue;
+		anchor = fmt.link.target;
+		break;
+	}
+
+	if (!anchor.isEmpty()) {
+		m_anchor = anchor;
+	} else {
+		m_anchor = "";
+	}
+}
+
+void MarkdownEditWidget::onAnchorClicked(QString anchor) {
+	static QRegularExpression expr("(.+)://(.+)");
+
+	if (!anchor.isEmpty()) {
+		QRegularExpressionMatch match = expr.match(m_anchor);
+		if (match.hasMatch()) {
+			QString scheme = match.captured(1);
+			if (scheme == "node") {
+				QString value = match.captured(2);
+				bool success = false;
+				ThoughtId thoughtId = value.toInt(&success);
+				if (success) {
+					emit nodeLinkSelected(thoughtId);
+				}
+			} else {
+				QDesktopServices::openUrl(QUrl(anchor));
+			}
+		}
+	}
 }
 

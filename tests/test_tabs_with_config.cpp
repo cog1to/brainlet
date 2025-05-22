@@ -21,11 +21,11 @@ int main(int argc, char **argv) {
 
 	SystemResourceProvider provider = SystemResourceProvider();
 	DatabaseModuleFactory factory = DatabaseModuleFactory(&style, &provider);
-	TabsWidget widget = TabsWidget(nullptr, &style);
-	TabsPresenter presenter = TabsPresenter(&widget, &factory);
+	TabsWidget *widget = new TabsWidget(nullptr, &style);
+	TabsPresenter *presenter = new TabsPresenter(widget, &factory);
 
-	widget.resize(1024, 700);
-	widget.show();
+	widget->resize(1024, 700);
+	widget->show();
 
 	return app.exec();
 }

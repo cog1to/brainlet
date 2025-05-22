@@ -107,8 +107,8 @@ void TabsPresenter::onTabClose(int idx) {
 
 	m_widget->removeTab(idx);
 	delete mod.presenter;
-	delete mod.widget;
 	delete mod.repo;
+	mod.widget->deleteLater();
 
 	m_tabs.erase(m_tabs.begin() + idx);
 }

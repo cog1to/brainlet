@@ -18,9 +18,9 @@ public:
 	void setTitle(QString title);
 
 private:
-	QLabel m_title;
-	QWidget m_separator;
-	QVBoxLayout m_layout;
+	QLabel *m_title;
+	QWidget *m_separator;
+	QVBoxLayout *m_layout;
 	MarkdownScrollWidget *m_markdown;
 };
 

@@ -116,7 +116,7 @@ DismissableModule DatabaseModuleFactory::makeBrainModule(QString id) {
 	return DismissableModule(
 		brainPresenter,
 		brainWidget,
-		repo		
+		repo
 	);
 }
 

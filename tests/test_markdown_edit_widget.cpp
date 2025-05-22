@@ -37,10 +37,10 @@ int main(int argc, char *argv[]) {
 	widget->load(string);
 
 	// Show window.
-	MarkdownScrollWidget window(nullptr, &style);
-	window.setMarkdownWidget(widget);
-	window.setWidgetResizable(true);
-	window.show();
+	MarkdownScrollWidget *window = new MarkdownScrollWidget(nullptr, &style);
+	window->setMarkdownWidget(widget);
+	window->setWidgetResizable(true);
+	window->show();
 
 	// Set focus.
 

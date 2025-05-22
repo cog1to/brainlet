@@ -141,7 +141,7 @@ bool DatabaseBrainRepository::createDb(
 	if (!result)
 		return false;
 
-	*conn = db;
+	*conn = QSqlDatabase(db);
 	return true;
 }
 
@@ -211,7 +211,7 @@ CreateResult DatabaseBrainRepository::createThought(
 
 	timespec_get(&ts, TIME_UTC);
 	qlonglong time = ts.tv_sec * 1000000000 + ts.tv_nsec;
-	
+
 	QSqlTableModel model = QSqlTableModel(nullptr, m_conn);
 	model.setTable("thoughts");
 
@@ -251,7 +251,7 @@ bool DatabaseBrainRepository::connectThoughts(
 	result = disconnectThoughts(fromId, toId);
 	if (!result)
 		return false;
-	
+
 	if (fromId == toId)
 		return false;
 
@@ -301,12 +301,12 @@ bool DatabaseBrainRepository::deleteThought(ThoughtId id) {
 	result = query.exec();
 	if (!result)
 		return false;
-	
+
 	// Delete the text file.
 	QString filePath = filePathFromThought(thought);
 	QFile file = QFile(filePath);
 	if (file.exists()) {
-		file.remove();	
+		file.remove();
 	}
 
 	loadState(m_currentId);
@@ -437,7 +437,7 @@ QString DatabaseBrainRepository::filePathFromName(
 ) {
 	QString sanitized = QString(name);
 	sanitized.replace(
-		QRegularExpression("[^\\w\\\"\\']"), "_"	
+		QRegularExpression("[^\\w\\\"\\']"), "_"
 	);
 
 	return m_root.filePath(
@@ -456,7 +456,7 @@ bool DatabaseBrainRepository::loadState(ThoughtId rootId) {
 	// Find root.
 	ThoughtEntity root = getThought(rootId, &success);
 	if (!success)
-		return false;	
+		return false;
 
 	qDebug() << "Thought loaded:" << root.id << root.name;
 	qDebug() << "DB: Getting connections";
@@ -473,7 +473,7 @@ bool DatabaseBrainRepository::loadState(ThoughtId rootId) {
 		linkConns.size() > 0
 	);
 
-	std::unordered_map<ThoughtId, Thought*> *siblings 
+	std::unordered_map<ThoughtId, Thought*> *siblings
 		= new std::unordered_map<ThoughtId, Thought*>();
 
 	qDebug() << "DB: parsing connections";
@@ -595,7 +595,7 @@ bool DatabaseBrainRepository::loadState(ThoughtId rootId) {
 	}
 
 	// Cross-links.
-	std::vector<ThoughtId>* neighborList[] = { 
+	std::vector<ThoughtId>* neighborList[] = {
 		&links, &siblingIds, &children, &parents
 	};
 	for (int i = 0; i < 4; i++) {
@@ -633,7 +633,7 @@ bool DatabaseBrainRepository::loadState(ThoughtId rootId) {
 			}
 		}
 	}
-	
+
 	qDebug() << "DB: creating state";
 
 	// Construct state.

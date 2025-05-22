@@ -7,7 +7,7 @@ INCLUDEDIRS = -I${QTDIR}/include \
 	-I.
 LIBDIRS = -L${QTDIR}/lib
 LIBS = -lQt6Core -lQt6Widgets -lQt6Gui -lQt6DBus -lQt6Sql
-CFLAGS = ${FLAGS}
+CFLAGS = ${FLAGS} -fsanitize=address,undefined,leak
 # Utils
 MOC = ${QTDIR}/libexec/moc
 RCC = ${QTDIR}/libexec/rcc
