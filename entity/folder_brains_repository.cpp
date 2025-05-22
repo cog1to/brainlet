@@ -101,8 +101,13 @@ BrainRepositoryError FolderBrainsRepository::deleteBrain(
 	QString name
 ) {
 	assert(m_dir != nullptr);
+	qDebug() << "deleting" << name << "from" << m_dir->absolutePath();
 
-	bool result = m_dir->remove(name);
+	QDir brainDir = QDir(m_dir->absolutePath() + "/" + name);
+	if (!brainDir.exists())
+		return BrainRepositoryErrorIO;
+
+	bool result = brainDir.removeRecursively();
 	if (!result) {
 		return BrainRepositoryErrorIO;
 	}

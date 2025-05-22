@@ -541,6 +541,9 @@ QLine MarkdownBlock::lineForCursor(MarkdownCursor cursor) {
 	if (layout->isValidCursorPosition(cursor.position) == false) {
 		// Empty line. Return coordinates of the line.
 		QTextLine line = layout->lineAt(0);
+		if (line.isValid() == false)
+			return QLine(0, 0, 0, 0);
+
 		qreal height = line.height();
 
 		return QLine(

@@ -222,8 +222,6 @@ CreateResult DatabaseBrainRepository::createThought(
 	record.setValue("id", (qlonglong)time);
 	record.setValue("name", QString::fromStdString(text));
 
-	qDebug() << "DB: Creating row" << time << text;
-
 	if (!model.insertRecord(-1, record)) {
 		qDebug() << "DB error:" << model.lastError().text();
 		return CreateResult(false, InvalidThoughtId);
@@ -252,13 +250,12 @@ bool DatabaseBrainRepository::connectThoughts(
 ) {
 	bool result = false;
 
-	qDebug() << "DB: Connecting" << fromId << "and" << toId << "with" << type;
-
 	result = disconnectThoughts(fromId, toId);
 	if (!result)
 		return false;
 	
-	qDebug() << "DB: Inserting connection" << fromId << "and" << toId << "with" << type;
+	if (fromId == toId)
+		return false;
 
 	QSqlTableModel model = QSqlTableModel(nullptr, m_conn);
 	model.setTable("connections");
@@ -273,7 +270,6 @@ bool DatabaseBrainRepository::connectThoughts(
 		return false;
 	}
 
-	qDebug("DB: Inserted connection record");
 	loadState(m_currentId);
 	return true;
 }

@@ -1392,13 +1392,15 @@ void MarkdownEditWidget::mergeBlocks(
 				// single line.
 				if (lines->size() == 1) {
 					deleteParagraph(parIdx);
+					prevPar = &((*m_model.paragraphs())[parIdx - 1]);
+					prevBlock->setParagraph(prevPar);
 				} else {
 					lines->remove(lineIdx);
+					prevLines = prevPar->getLines();
+					lastLine = &((*prevLines)[prevLines->size() - 1]);
+					// Update blocks.
+					block->setParagraph(par);
 				}
-
-				// Update blocks.
-				prevBlock->setParagraph(prevPar);
-				block->setParagraph(par);
 
 				// Update cursor to previous line.
 				cursor = MarkdownCursor(
@@ -1418,6 +1420,8 @@ void MarkdownEditWidget::mergeBlocks(
 
 			// Delete current line.
 			lines->remove(lineIdx);
+			lines = par->getLines();
+			prevLine = &((*lines)[lineIdx - 1]);
 
 			// Update block.
 			block->setParagraph(par);
