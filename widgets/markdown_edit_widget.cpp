@@ -166,8 +166,6 @@ void MarkdownEditWidget::mouseMoveEvent(QMouseEvent *event) {
 	}
 
 	update();
-
-	// TODO: ensure end of selection is visible.
 }
 
 void MarkdownEditWidget::mouseReleaseEvent(QMouseEvent *event) {
@@ -466,7 +464,19 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 	// Ensure cursor is visible.
 	if (m_cursor.block != nullptr && m_cursor.line != nullptr) {
 		QLine cursorLine = m_cursor.block->lineForCursor(m_cursor);
-		emit cursorMoved(cursorLine);
+		bool movedUp = (
+			key == Qt::Key_Left ||
+			key == Qt::Key_Up ||
+			key == Qt::Key_Home ||
+			key == Qt::Key_PageUp
+		);
+		// TODO: Really bad stuff. Because of async relayouts of blocks,
+		// we have to artificially delay cursor visibility update here.
+		// Need to figure out if we can maybe make sure it is done after
+		// relayout is complete?
+		QTimer::singleShot(100, this, [this, cursorLine, movedUp]{
+			emit cursorMoved(cursorLine, movedUp);
+		});
 	}
 }
 
@@ -790,10 +800,7 @@ MarkdownCursor MarkdownEditWidget::pasteString(QString text) {
 	text::TextModel model = text::TextModel(list);
 	QList<text::Paragraph> *newPars = model.paragraphs();
 
-	qDebug() << "pasting" << text;
-
 	if (list.size() == 1) {
-		qDebug() << "single line";
 		// If we're inserting a single line, just inject it into the 
 		// current line.
 		QString textBefore = m_cursor.line->text.left(m_cursor.position);
@@ -1244,18 +1251,6 @@ inline text::Paragraph *MarkdownEditWidget::insertParagraph(
 	int index,
 	text::Paragraph par
 ) {
-	//QList<text::Paragraph> *pars = m_model.paragraphs();
-
-	// Copy list.
-	//QList<text::Paragraph> newList;
-	//for (int i = 0; i < index; i++)
-	//	newList.push_back((*pars)[i]);
-	//newList.push_back(par);
-	//for (int i = index; i < pars->size(); i++)
-	//	newList.push_back((*pars)[i]);
-	//m_model.setParagraphs(newList);
-
-	//pars->insert(index, par);
 	m_model.insert(index, par);
 
 	MarkdownBlock *block = new MarkdownBlock(nullptr, m_style, this);
@@ -1268,11 +1263,11 @@ inline text::Paragraph *MarkdownEditWidget::insertParagraph(
 	m_blocks.insert(index, block);
 	m_layout->insertWidget(index, block);
 
-	// Update paragraph pointers for all blocks after new one.
 	for (int idx = 0; idx < m_model.paragraphs()->size(); idx++) {
 		m_blocks[idx]->updateParagraphWithoutReload(m_model.paragraphs()->data() + idx);
 	}
 
+	m_layout->invalidate();
 	return &((*m_model.paragraphs())[index]);
 }
 

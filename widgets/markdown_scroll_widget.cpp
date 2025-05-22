@@ -34,9 +34,12 @@ MarkdownEditWidget *MarkdownScrollWidget::markdownWidget() {
 	return m_widget;
 }
 
-void MarkdownScrollWidget::onCursorMoved(QLine line) {
-	ensureVisible(line.x1(), line.y1(), 10, 0);
-	ensureVisible(line.x2(), line.y2(), 10, 0);
+void MarkdownScrollWidget::onCursorMoved(QLine line, bool up) {
+	if (up) {
+		ensureVisible(line.x1(), line.y1(), 10, 0);
+	} else {
+		ensureVisible(line.x2(), line.y2(), 10, 0);
+	}
 }
 
 int MarkdownScrollWidget::getPageOffset(bool down) {

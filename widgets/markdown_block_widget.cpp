@@ -232,7 +232,16 @@ bool MarkdownBlock::cursorAbove(
 
 	QTextLayout *layout = m_layouts[idx];
 	if (layout->isValidCursorPosition(cur.position) == false) {
-		return false;
+		// Invalid or empty line. Try the previous line.
+		if (idx > 0) {
+			// We have prev layout to move to.
+			// Calculate the new cursor position in that layout for the same X.
+			QTextLayout *nextLayout = m_layouts[idx - 1];
+			QTextLine nextLine = nextLayout->lineAt(nextLayout->lineCount() - 1);
+			result->line = &((*lines)[idx - 1]);
+			result->position = 0;
+			return true;
+		}
 	}
 
 	QTextLine textLine = layout->lineForTextPosition(cur.position);
@@ -524,6 +533,17 @@ QLine MarkdownBlock::lineForCursor(MarkdownCursor cursor) {
 		return QLine(0, 0, 0, 0);
 	}
 
+	QFontMetrics fontMetrics = QFontMetrics(m_style->textEditFont());
+	QMargins margins = contentsMargins();
+
+	QMargins formatMargins = QMargins(0, 0, 0, 0);
+	if (m_par->getType() == text::Code) {
+		fontMetrics = QFontMetrics(m_style->codeFont());
+		formatMargins = codeMargins;
+	} else if (m_par->getType() == text::BulletList || m_par->getType() == text::NumberList) {
+		formatMargins = listMargins;
+	}
+
 	QList<text::Line> *lines = m_par->getLines();
 	bool found = false;
 	for (idx = 0; idx < lines->size(); idx++) {
@@ -538,26 +558,37 @@ QLine MarkdownBlock::lineForCursor(MarkdownCursor cursor) {
 	}
 
 	QTextLayout *layout = m_layouts[idx];
+	QPointF pos = layout->position();
+
 	if (layout->isValidCursorPosition(cursor.position) == false) {
 		// Empty line. Return coordinates of the line.
 		QTextLine line = layout->lineAt(0);
 		if (line.isValid() == false)
 			return QLine(0, 0, 0, 0);
 
-		qreal height = line.height();
-
+		qreal height = fontMetrics.lineSpacing();
 		return QLine(
 			geo.x(),
-			geo.y() + line.y() - height * 0.5,
+			geo.y() + pos.y() + margins.top() + formatMargins.top() + line.y() + height * 1.5,
 			geo.x(), 
-			geo.y() + line.y() + height * 1.5
+			geo.y() + pos.y() + margins.top() + formatMargins.top() + line.y() + height * 2.0 
 		);
 	}
 
 	// Non-empty line. Calculate the position of the cursor.
 	QTextLine line = layout->lineForTextPosition(cursor.position);
+	if (line.isValid() == false) {
+
+		qreal height = fontMetrics.lineSpacing();
+		return QLine(
+			geo.x(),
+			geo.y() + pos.y() + margins.top() + formatMargins.top() + line.y() + height * 1.5,
+			geo.x(), 
+			geo.y() + pos.y() + margins.top() + formatMargins.top() + line.y() + height * 2.0
+		);
+	}
+
 	qreal x = line.cursorToX(cursor.position);
-	QPointF pos = layout->position();
 	qreal height = line.height();
 
 	return QLine(

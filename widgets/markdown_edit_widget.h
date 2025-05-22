@@ -57,7 +57,7 @@ public:
 
 signals:
 	void onCursorMove(MarkdownCursor, MarkdownCursor);
-	void cursorMoved(QLine);
+	void cursorMoved(QLine, bool);
 	void nodeInsertionActivated(QPoint);
 	void textChanged(QString&);
 	void nodeLinkSelected(ThoughtId);

@@ -29,7 +29,7 @@ public slots:
 	void onError(MarkdownScrollError error);
 
 protected slots:
-	void onCursorMoved(QLine);
+	void onCursorMoved(QLine, bool);
 
 private:
 	MarkdownEditWidget *m_widget = nullptr;
