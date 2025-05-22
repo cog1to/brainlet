@@ -110,8 +110,6 @@ bool DatabaseBrainRepository::createDb(
 	if (!result)
 		return false;
 
-	qDebug() << "DB:" << "SELECT * FROM thoughts WHERE id == 0;";
-
 	// Check if root thought exists.
 	QSqlQuery rootRecordQuery = QSqlQuery(
 		"SELECT * FROM thoughts WHERE id == 0;",
