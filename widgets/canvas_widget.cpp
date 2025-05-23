@@ -532,7 +532,7 @@ void CanvasWidget::updatePaths() {
 // Scroll areas.
 
 void CanvasWidget::layoutScrollAreas() {
-	const std::unordered_map<unsigned int, ScrollAreaLayout> *scrolls = 
+	const std::unordered_map<unsigned int, ScrollAreaLayout> *scrolls =
 		m_layout->scrollAreas();
 	std::unordered_map<unsigned int, ScrollAreaLayout>::const_iterator it;
 

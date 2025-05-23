@@ -58,7 +58,7 @@ void MarkdownBlock::setParagraph(Paragraph *par) {
 
 	text::ParagraphType type = par->getType();
 
-	QColor color = type == text::Code 
+	QColor color = type == text::Code
 		? m_style->codeBackground()
 		: m_style->background();
 	setStyleSheet(
@@ -404,7 +404,7 @@ void MarkdownBlock::paintEvent(QPaintEvent *event) {
 			m_placeholder
 		);
 	}
-	
+
 	painter.setRenderHint(QPainter::Antialiasing, true);
 	painter.setPen(m_style->textEditColor());
 	painter.setBrush(m_style->textEditColor());
@@ -435,7 +435,7 @@ void MarkdownBlock::paintEvent(QPaintEvent *event) {
 				QPointF(
 					(formatMargins.left() - fontMetrics.xHeight()) / 2,
 					y + fontMetrics.lineSpacing() - fontMetrics.descent()
-				), 
+				),
 				number
 			);
 		}
@@ -453,7 +453,7 @@ void MarkdownBlock::paintEvent(QPaintEvent *event) {
 
 		// Draw the line/paragraph.
 		layout->draw(&painter, QPointF(0, 0), selections);
-	
+
 		// Draw cursor.
 		if (
 			cursor != nullptr &&
@@ -476,7 +476,7 @@ void MarkdownBlock::onCursorMove(
 ) {
 	// Ignore when cursor not leaves neither enters this block.
 	if (
-		(from.block == nullptr || from.block != this) && 
+		(from.block == nullptr || from.block != this) &&
 		(to.block == nullptr || to.block != this)
 	) {
 		return;
@@ -535,8 +535,8 @@ QLine MarkdownBlock::lineForCursor(MarkdownCursor cursor) {
 		return QLine(
 			geo.x(),
 			geo.y() + pos.y() + margins.top() + formatMargins.top() + line.y() + height * 1.5,
-			geo.x(), 
-			geo.y() + pos.y() + margins.top() + formatMargins.top() + line.y() + height * 2.0 
+			geo.x(),
+			geo.y() + pos.y() + margins.top() + formatMargins.top() + line.y() + height * 2.0
 		);
 	}
 
@@ -548,7 +548,7 @@ QLine MarkdownBlock::lineForCursor(MarkdownCursor cursor) {
 		return QLine(
 			geo.x(),
 			geo.y() + pos.y() + margins.top() + formatMargins.top() + line.y() + height * 1.5,
-			geo.x(), 
+			geo.x(),
 			geo.y() + pos.y() + margins.top() + formatMargins.top() + line.y() + height * 2.0
 		);
 	}

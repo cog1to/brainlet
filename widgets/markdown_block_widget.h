@@ -56,7 +56,7 @@ private:
 	QString m_placeholder = "";
 	// Helpers.
 	QList<QTextLayout::FormatRange> convertRanges(
-		QList<text::FormatRange> 
+		QList<text::FormatRange>
 	);
 	QTextCharFormat qtFormat(
 		text::FormatRange,

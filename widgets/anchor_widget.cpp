@@ -36,7 +36,7 @@ const AnchorType AnchorWidget::type() const {
 }
 
 void AnchorWidget::setEnabled(bool enabled) {
-	if (enabled)	
+	if (enabled)
 		setAttribute(Qt::WA_TransparentForMouseEvents, false);
 	else
 		setAttribute(Qt::WA_TransparentForMouseEvents, true);

@@ -594,12 +594,16 @@ QTextLayout::FormatRange MarkdownEditWidget::selectionInLine(
 	// Check if current line is completely inside selection.
 	if (
 		(curBlockIdx > startBlockIdx && curBlockIdx < endBlockIdx) ||
-		(curBlockIdx == startBlockIdx &&
-		 endBlockIdx != startBlockIdx &&
-		 curLineIdx > startLineIdx) ||
-		(curBlockIdx == endBlockIdx &&
-		 endBlockIdx != startBlockIdx &&
-		 curLineIdx < endLineIdx)
+		(
+			curBlockIdx == startBlockIdx &&
+			endBlockIdx != startBlockIdx &&
+			curLineIdx > startLineIdx
+		) ||
+		(
+			curBlockIdx == endBlockIdx &&
+			endBlockIdx != startBlockIdx &&
+			curLineIdx < endLineIdx
+		)
 	) {
 		range.start = 0;
 		range.length = line->text.length();
@@ -1362,7 +1366,7 @@ void MarkdownEditWidget::mergeBlocks(
 			deleteParagraph(parIdx);
 
 			// Update cursor.
-		 	cursor = MarkdownCursor(
+			cursor = MarkdownCursor(
 				prevBlock,
 				lines->size() - 1,
 				newPosition
@@ -1454,7 +1458,7 @@ void MarkdownEditWidget::mergeBlocks(
 			block->setParagraph(par);
 
 			// Update cursor to previous line.
-		 	cursor = MarkdownCursor(
+			cursor = MarkdownCursor(
 				block,
 				lineIdx - 1,
 				newPos
