@@ -480,7 +480,6 @@ bool DatabaseBrainRepository::loadState(ThoughtId rootId) {
 	// Children.
 	std::vector<ThoughtId> children;
 	for (auto& c: childConns) {
-		qDebug() << "  child conn:" << c.from << c.to;
 		ThoughtEntity entity = getThought(c.to, &success);
 		if (!success)
 			continue;
@@ -493,8 +492,6 @@ bool DatabaseBrainRepository::loadState(ThoughtId rootId) {
 			getLinks(entity.id).size() > 0
 		);
 
-		qDebug() << "  created child" << thought->id() << "from" << entity.id;
-
 		children.push_back(entity.id);
 		siblings->insert({entity.id, thought});
 	}
@@ -504,7 +501,6 @@ bool DatabaseBrainRepository::loadState(ThoughtId rootId) {
 	// Parents.
 	std::vector<ThoughtId> parents;
 	for (auto& c: parentConns) {
-		qDebug() << "parent conn:" << c.from << c.to;
 		ThoughtEntity entity = getThought(c.from, &success);
 		if (!success)
 			continue;
@@ -692,7 +688,6 @@ std::vector<ConnectionEntity> DatabaseBrainRepository::getConnections(
 
 	for (idx = 0; idx < model.rowCount(); idx++) {
 		QSqlRecord record = model.record(idx);
-		qDebug() << "DB: loading record" << idx;
 
 		result.push_back(
 			ConnectionEntity(

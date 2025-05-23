@@ -199,7 +199,19 @@ void ThoughtWidget::setHighlight(bool value) {
 }
 
 void ThoughtWidget::activate() {
+	qDebug() << "activate!";
 	m_textEdit.setFocus();
+}
+
+void ThoughtWidget::setFocused(bool focused) {
+	m_focused = focused;
+	update();
+}
+
+void ThoughtWidget::removeFocus() {
+	m_highlight = false;
+	m_hover = false;
+	m_textEdit.clearFocus();
 }
 
 // Anchor coordinates.
@@ -283,8 +295,10 @@ AnchorPoint ThoughtWidget::getAnchorTo(ConnectionType type) {
 QSize ThoughtWidget::sizeHint() const {
 	const QSize anchorSize = AnchorWidget::defaultSize;
 
+	QFont font = m_style->font();
+	QFontMetrics metrics(font);
+
 	// Calculate bounding rect for the text.
-	QFontMetrics metrics(m_style->font());
 	QRect bounds = metrics.boundingRect(
 		// 9000 is set due to a quirk in QFontMetrics measurement. When calling
 		// boundingRect() without a restriction rect or with INT_MAX, it produces
@@ -321,7 +335,9 @@ QSize ThoughtWidget::sizeForWidth(int width) const {
 		padding.height() * 2 +
 		m_style->hoverBorderWidth() * 2;
 
-	QFontMetrics metrics(m_style->font());
+	QFont font = m_style->font();
+	QFontMetrics metrics(font);
+
 	QRect bounds = metrics.boundingRect(
 		QRect(0, 0, width - textPadding, INT_MAX),
 		Qt::AlignHCenter | Qt::TextWordWrap,
@@ -441,7 +457,9 @@ void ThoughtWidget::paintEvent(QPaintEvent *event) {
 	const QSize anchorSize = AnchorWidget::defaultSize;
 
 	float borderWidth = m_style->borderWidth();
-	QColor borderColor = m_style->borderColor();
+	QColor borderColor = m_focused
+		? m_style->focusedColor()
+		: m_style->borderColor();
 	QColor hoverColor = m_style->hoverBorderColor();
 	float hoverWidth = m_style->hoverBorderWidth();
 	QSize cur = size();
@@ -542,7 +560,9 @@ void ThoughtWidget::updateText() {
 		m_style->hoverBorderWidth();
 	const int availableWidth = size().width() - textPadding;
 
-	QFontMetrics metrics(m_style->font());
+	QFont font = m_style->font();
+	QFontMetrics metrics(font);
+
 	QRect bounds = metrics.boundingRect(
 		QRect(0, 0, size().width() - textPadding, INT_MAX),
 		Qt::AlignHCenter | Qt::TextWordWrap,

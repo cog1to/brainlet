@@ -30,7 +30,8 @@ public:
 		QColor linkColor,
 		QFont iconFont,
 		QColor selectionBackColor,
-		QColor selectionTextColor
+		QColor selectionTextColor,
+		QColor focusedColor
 	);
 	// Default style.
 	static Style& defaultStyle();
@@ -95,6 +96,9 @@ public:
 	void setSelectionBackColor(QColor);
 	const QColor selectionTextColor() const;
 	void setSelectionTextColor(QColor);
+	// Focused widget style.
+	const QColor focusedColor() const;
+	void setFocusedColor(QColor);
 
 signals:
 	void styleChanged(Style*);
@@ -120,6 +124,7 @@ private:
 	QFont m_iconFont;
 	QColor m_selectionBackColor;
 	QColor m_selectionTextColor;
+	QColor m_focusedColor;
 };
 
 #endif

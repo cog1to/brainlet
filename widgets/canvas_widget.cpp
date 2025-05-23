@@ -402,7 +402,14 @@ void CanvasWidget::updateLayout() {
 		if (widget == nullptr) {
 			widget = createWidget(it->second, it->first != *main);
 		} else {
+			// Important: remove focus BEFORE setting read-only state,
+			// otherwise widget will retain "hidden" focus and will get
+			// automatically reactivated when selected again.
+			if (it->first != *main && widget->isActive())
+				widget->removeFocus();
+
 			widget->setReadOnly(it->first != *main);
+
 			if (widget->text() != it->second.name)
 				widget->setText(it->second.name);
 		}
@@ -418,6 +425,7 @@ void CanvasWidget::updateLayout() {
 		widget->setHasChild(layout.hasChildren);
 		widget->setHasLink(layout.hasLinks);
 		widget->setCanDelete(layout.canDelete);
+		widget->setFocused(it->first == *main);
 
 		// Place the widget in the canvas.
 		widget->setGeometry(
@@ -453,6 +461,7 @@ void CanvasWidget::updateLayout() {
 			continue;
 		}
 
+		// Hide.
 		wit->second->setParent(nullptr);
 	}
 

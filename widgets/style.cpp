@@ -25,7 +25,8 @@ Style::Style(
 	QColor linkColor,
 	QFont iconFont,
 	QColor selectionBackColor,
-	QColor selectionTextColor
+	QColor selectionTextColor,
+	QColor focusedColor
 ) {
 	m_background = background;
 	m_nodeBackground = nodeBackground;
@@ -47,6 +48,7 @@ Style::Style(
 	m_iconFont = iconFont;
 	m_selectionBackColor = selectionBackColor;
 	m_selectionTextColor = selectionTextColor;
+	m_focusedColor = focusedColor;
 }
 
 Style& Style::defaultStyle() {
@@ -86,6 +88,7 @@ Style& Style::defaultStyle() {
 		QColor(162, 187, 219),
 		iconFont,
 		QColor(49, 79, 120),
+		QColor(255, 255, 255),
 		QColor(255, 255, 255)
 	);
 
@@ -368,3 +371,12 @@ void Style::setSelectionTextColor(QColor color) {
 	m_selectionTextColor = color;
 	emit styleChanged(this);
 }
+
+const QColor Style::focusedColor() const {
+	return m_focusedColor;
+}
+
+void Style::setFocusedColor(QColor color) {
+	m_focusedColor = color;
+}
+

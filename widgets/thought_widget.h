@@ -57,6 +57,9 @@ public:
 	void setCanDelete(bool);
 	const bool anchorsActive() const;
 	void setAnchorsActive(bool);
+	// Flag for setting currently focused widget. This doesn't affect
+	// it's input focus state, but highlights it.
+	void setFocused(bool);
 	// Method override.
 	QSize sizeHint() const override;
 	// Calculates bounding rect for given width without height restriction.
@@ -65,6 +68,7 @@ public:
 	const bool isActive() const;
 	void setHighlight(bool);
 	void activate();
+	void removeFocus();
 	// Anchor ponts for connections.
 	AnchorPoint getAnchorFrom(ConnectionType);
 	AnchorPoint getAnchorTo(ConnectionType);
@@ -126,6 +130,7 @@ private:
 	bool m_rightSideLink = false;
 	bool m_canDelete = true;
 	bool m_anchorsActive = true;
+	bool m_focused = false;
 	QString m_text;
 	QString m_originalText;
 	QTextCursor m_cursor;
