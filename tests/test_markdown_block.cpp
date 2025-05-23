@@ -3,7 +3,7 @@
 #include <QList>
 #include <QWidget>
 
-#include "model/text_model.h"
+#include "model/new_text_model.h"
 #include "widgets/base_widget.h"
 #include "widgets/markdown_block_widget.h"
 

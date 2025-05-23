@@ -5,7 +5,6 @@
 #include <QIODevice>
 #include <QApplication>
 
-#include "model/text_model.h"
 #include "layout/default_layout.h"
 #include "widgets/canvas_widget.h"
 #include "layout/default_layout.h"

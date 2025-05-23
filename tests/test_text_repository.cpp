@@ -4,7 +4,7 @@
 #include <QString>
 #include <QIODevice>
 
-#include "model/text_model.h"
+#include "model/new_text_model.h"
 #include "widgets/markdown_scroll_widget.h"
 #include "widgets/markdown_edit_widget.h"
 #include "presenters/text_editor_presenter.h"

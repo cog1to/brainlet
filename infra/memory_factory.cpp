@@ -4,7 +4,6 @@
 #include "infra/module_factory.h"
 #include "infra/memory_factory.h"
 #include "model/thought.h"
-#include "model/text_model.h"
 #include "layout/default_layout.h"
 #include "entity/thought_entity.h"
 #include "entity/connection_entity.h"
@@ -45,7 +44,7 @@ DismissableModule MemoryFactory::makeBrainsModule() {
 	return DismissableModule(
 		presenter,
 		widget,
-		repo		
+		repo
 	);
 }
 
@@ -129,7 +128,7 @@ DismissableModule MemoryFactory::makeBrainModule(QString id) {
 	return DismissableModule(
 		brainPresenter,
 		brainWidget,
-		repo		
+		repo
 	);
 }
 
