@@ -23,8 +23,8 @@ public:
 	MarkdownSelection() {};
 	// Properties.
 	bool active = false;
-	MarkdownCursor start = MarkdownCursor(nullptr, nullptr, 0);
-	MarkdownCursor end = MarkdownCursor(nullptr, nullptr, 0);
+	MarkdownCursor start = MarkdownCursor(nullptr, -1, 0);
+	MarkdownCursor end = MarkdownCursor(nullptr, -1, 0);
 };
 
 class MarkdownEditWidget
@@ -76,7 +76,7 @@ protected slots:
 private:
 	QVBoxLayout *m_layout = nullptr;
 	QList<MarkdownBlock*> m_blocks = {};
-	MarkdownCursor m_cursor = MarkdownCursor(nullptr, nullptr, 0);
+	MarkdownCursor m_cursor = MarkdownCursor(nullptr, -1, 0);
 	MarkdownEditPresenter *m_presenter = nullptr;
 	// State.
 	text::TextModel m_model = text::TextModel();

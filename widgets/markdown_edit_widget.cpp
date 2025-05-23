@@ -21,7 +21,7 @@
 
 MarkdownEditWidget::MarkdownEditWidget(QWidget *widget, Style *style)
 	: BaseWidget(widget, style),
-	m_cursor(nullptr, nullptr, 0)
+	m_cursor(nullptr, -1, 0)
 {
 	setSizePolicy(QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
 	setStyleSheet(
@@ -205,16 +205,17 @@ void MarkdownEditWidget::mouseReleaseEvent(QMouseEvent *event) {
 }
 
 void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
-	text::Line *line = m_cursor.line;
+	int lineIdx = m_cursor.line;
 	MarkdownBlock *block = m_cursor.block;
 	MarkdownCursor prev = m_cursor;
 	MarkdownCursor cursor = m_cursor;
 	int key = event->key();
 
-	if (line == nullptr || block == nullptr)
+	if (lineIdx == -1 || block == nullptr)
 		return;
 
 	text::Paragraph *par = block->paragraph();
+	text::Line *line = &((*par->getLines())[lineIdx]);
 
 	if (
 		key == Qt::Key_PageUp ||
@@ -228,7 +229,7 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 			cursor = documentStart();
 		} else {
 			cursor = moveCursor(diff, prev);
-			if (cursor.block == nullptr || cursor.line == nullptr)
+			if (cursor.block == nullptr || cursor.line == -1)
 				return;
 		}
 
@@ -242,7 +243,7 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 
 		int diff = m_presenter->getPageOffset(true);
 		cursor = moveCursor(diff, prev);
-		if (cursor.block == nullptr || cursor.line == nullptr)
+		if (cursor.block == nullptr || cursor.line == -1)
 			return;
 
 		processCursorMove(prev, cursor);
@@ -268,11 +269,12 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 			processCursorMove(prev, cursor);
 		} else {
 			if (
-				text::Line *prevLine = block->lineBefore(line);
-				prevLine != nullptr
+				int prevLineIdx = lineIdx - 1;
+				prevLineIdx >= 0
 			) {
-				cursor.line = prevLine;
-				cursor.position = prevLine->folded.length();
+
+				cursor.line = prevLineIdx;
+				cursor.position = par->getLines()->at(prevLineIdx).folded.length();
 				processCursorMove(prev, cursor);
 			} else if (
 				MarkdownBlock *prevBlock = blockBefore(block);
@@ -280,8 +282,8 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 			) {
 				QList<text::Line> *prevLines = prevBlock->paragraph()->getLines();
 				cursor.block = prevBlock;
-				cursor.line = &((*prevLines)[prevLines->size() - 1]);
-				cursor.position = cursor.line->folded.length();
+				cursor.line = prevLines->size() - 1;
+				cursor.position = par->getLines()->at(cursor.line).folded.length();
 				processCursorMove(prev, cursor);
 			}
 		}
@@ -291,10 +293,10 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 			processCursorMove(prev, cursor);
 		} else {
 			if (
-				text::Line *nextLine = block->lineAfter(line);
-				nextLine != nullptr
+				int nextIdx = lineIdx + 1;
+				nextIdx < par->getLines()->size()
 			) {
-				cursor.line = nextLine;
+				cursor.line = nextIdx;
 				cursor.position = 0;
 				processCursorMove(prev, cursor);
 			} else if (
@@ -303,7 +305,7 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 			) {
 				QList<text::Line> *nextLines = nextBlock->paragraph()->getLines();
 				cursor.block = nextBlock;
-				cursor.line = &((*nextLines)[0]);
+				cursor.line = 0;
 				cursor.position = 0;
 				processCursorMove(prev, cursor);
 			}
@@ -359,7 +361,7 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 		if (m_selection.active) {
 			cursor = deleteSelection();
 			processCursorMove(cursor, cursor);
-		} else if (cursor.position != cursor.line->text.length()) {
+		} else if (cursor.position != line->text.length()) {
 			QString newText = line->text;
 			newText.remove(cursor.position, 1);
 			line->setText(newText, par->getType() == text::Code);
@@ -397,7 +399,7 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 		}
 
 		text::Paragraph *par = cursor.block->paragraph();
-		text::Line *line = cursor.line;
+		text::Line *line = &((*par->getLines())[cursor.line]);
 		text::ParagraphType type = par->getType();
 		QString empty = "";
 
@@ -486,7 +488,7 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 	}
 
 	// Ensure cursor is visible.
-	if (m_cursor.block != nullptr && m_cursor.line != nullptr) {
+	if (m_cursor.block != nullptr && m_cursor.line != -1) {
 		QLine cursorLine = m_cursor.block->lineForCursor(m_cursor);
 		bool movedUp = (
 			key == Qt::Key_Left ||
@@ -512,14 +514,14 @@ MarkdownCursor MarkdownEditWidget::moveCursor(
 	bool success = false;
 
 	if (prev.block == nullptr) {
-		return MarkdownCursor(nullptr, nullptr, 0);
+		return MarkdownCursor(nullptr, -1, 0);
 	}
 
 	MarkdownBlock *block = prev.block;
 	QPoint p = block->pointAtCursor(prev);
 
 	QPoint newP = QPoint(p.x(), p.y() + dy);
-	MarkdownCursor cursor = MarkdownCursor(nullptr, nullptr, 0);
+	MarkdownCursor cursor = MarkdownCursor(nullptr, -1, 0);
 	success = cursorAtPoint(newP, &cursor);
 
 	if (success) {
@@ -568,13 +570,11 @@ QTextLayout::FormatRange MarkdownEditWidget::selectionInLine(
 
 	// Get start and end of the selection.
 	int startBlockIdx = indexOfParagraph(startCursor.block->paragraph());
-	int startLineIdx = (*m_model.paragraphs())[startBlockIdx]
-		.indexOfLine(startCursor.line);
+	int startLineIdx = startCursor.line;
 	int startPos = startCursor.position;
 
 	int endBlockIdx = indexOfParagraph(endCursor.block->paragraph());
-	int endLineIdx = (*m_model.paragraphs())[endBlockIdx]
-		.indexOfLine(endCursor.line);
+	int endLineIdx = endCursor.line;
 	int endPos = endCursor.position;
 
 	// TODO: The logic below looks ugly and confusing. Maybe there's a
@@ -674,9 +674,9 @@ void MarkdownEditWidget::copySelectionToClipboard() {
 		// Get starting and ending line indexes.
 		int startLineIdx = 0, endLineIdx = lines->size() - 1;
 		if (idx == startIdx)
-			startLineIdx = par->indexOfLine(start.line);
+			startLineIdx = start.line;
 		if (idx == endIdx)
-			endLineIdx = par->indexOfLine(end.line);
+			endLineIdx = end.line;
 
 		for (int lineIdx = startLineIdx; lineIdx <= endLineIdx; lineIdx++) {
 			// Original line.
@@ -737,11 +737,11 @@ MarkdownCursor MarkdownEditWidget::deleteSelection() {
 	QList<text::Paragraph> *pars = m_model.paragraphs();
 
 	text::Paragraph *startPar = &((*pars)[startIdx]);
-	int startLineIdx = startPar->indexOfLine(start.line);
+	int startLineIdx = start.line;
 	text::Line *startLine = &((*startPar->getLines())[startLineIdx]);
 
 	text::Paragraph *endPar = &((*pars)[endIdx]);
-	int endLineIdx = endPar->indexOfLine(end.line);
+	int endLineIdx = end.line;
 	text::Line *endLine = &((*endPar->getLines())[endLineIdx]);
 
 	// Delete all lines in start paragraph after starting line.
@@ -807,7 +807,7 @@ MarkdownCursor MarkdownEditWidget::deleteSelection() {
 		mergeBlocks(endIdx, endLine, start);
 	}
 
-	start.line = startLine;
+	start.line = startLineIdx;
 	return start;
 }
 
@@ -827,13 +827,13 @@ MarkdownCursor MarkdownEditWidget::pasteString(QString text) {
 	if (list.size() == 1) {
 		// If we're inserting a single line, just inject it into the
 		// current line.
-		QString textBefore = m_cursor.line->text.left(m_cursor.position);
-		QString textAfter = m_cursor.line->text.right(
-			m_cursor.line->text.length() - m_cursor.position
+		text::Line *line = &((*m_cursor.block->paragraph()->getLines())[m_cursor.line]);
+		QString textBefore = line->text.left(m_cursor.position);
+		QString textAfter = line->text.right(
+			line->text.length() - m_cursor.position
 		);
 		int pos = m_cursor.position + text.length();
 
-		text::Line *line = m_cursor.line;
 		QString newText = textBefore
 			+ text
 			+ textAfter;
@@ -842,7 +842,7 @@ MarkdownCursor MarkdownEditWidget::pasteString(QString text) {
 
 		cursor = MarkdownCursor(
 			m_cursor.block,
-			line,
+			m_cursor.line,
 			pos
 		);
 	} else if (m_cursor.block->paragraph()->getType() == text::Code) {
@@ -852,24 +852,25 @@ MarkdownCursor MarkdownEditWidget::pasteString(QString text) {
 
 		text::Paragraph *par = m_cursor.block->paragraph();
 		QList<text::Line> *lines = m_cursor.block->paragraph()->getLines();
-		int lineIdx = par->indexOfLine(m_cursor.line);
+		int lineIdx = m_cursor.line;
+		text::Line *line = &((*par->getLines())[lineIdx]);
 
-		QString textBefore = m_cursor.line->text.left(m_cursor.position);
-		QString textAfter = m_cursor.line->text.right(
-			m_cursor.line->text.length() - m_cursor.position
+		QString textBefore = line->text.left(m_cursor.position);
+		QString textAfter = line->text.right(
+			line->text.length() - m_cursor.position
 		);
 
-		for (auto line = list.begin(); line != list.end(); line++) {
-			if (line == list.begin()) {
-				QString newText = textBefore + (*line);
-				m_cursor.line->setText(newText, true);
-			} else if (line + 1 == list.end()) {
-				pos = (*line).length();
-				QString lastText = *line + textAfter;
+		for (auto listLine = list.begin(); listLine != list.end(); listLine++) {
+			if (listLine == list.begin()) {
+				QString newText = textBefore + (*listLine);
+				line->setText(newText, true);
+			} else if (listLine + 1 == list.end()) {
+				pos = (*listLine).length();
+				QString lastText = *listLine + textAfter;
 				lines->insert(lineIdx + 1, text::Line(lastText, true));
 				lineIdx += 1;
 			} else {
-				lines->insert(lineIdx + 1, text::Line(*line, true));
+				lines->insert(lineIdx + 1, text::Line(*listLine, true));
 				lineIdx += 1;
 			}
 		}
@@ -877,15 +878,15 @@ MarkdownCursor MarkdownEditWidget::pasteString(QString text) {
 		m_cursor.block->setParagraph(m_cursor.block->paragraph());
 		cursor = MarkdownCursor(
 			m_cursor.block,
-			&((*lines)[lineIdx]),
+			lineIdx,
 			pos
 		);
 	} else {
 		MarkdownBlock *block = cursor.block;
 		text::Paragraph *par = block->paragraph();
-		text::Line *line = cursor.line;
+		text::Line *line = &((*par->getLines())[cursor.line]);
 		int parIdx = indexOfParagraph(par);
-		int lineIdx = par->indexOfLine(line);
+		int lineIdx = cursor.line;
 
 		// Split current position as if we've pressed Return key.
 		if (!line->text.isEmpty())
@@ -926,7 +927,7 @@ MarkdownCursor MarkdownEditWidget::pasteString(QString text) {
 		text::Line *lastLine = &((*lastLines)[lastLines->size() - 1]);
 		cursor = MarkdownCursor(
 			m_blocks[indexOfParagraph(lastPar)],
-			lastLine,
+			lastLines->size() - 1,
 			lastLine->text.length()
 		);
 	}
@@ -975,11 +976,12 @@ void MarkdownEditWidget::insertNodeLink(ThoughtId id, QString title) {
 	// If we have a selection, put it as a link title.
 	if (m_selection.active) {
 		// But only if the selection is within single block.
-		text::Line *startLine = m_selection.start.line;
-		text::Line *endLine = m_selection.end.line;
-
-		if (startLine == endLine) {
-			linkName = startLine->text.mid(
+		if (m_selection.start.line == m_selection.end.line) {
+			text::Line line = m_selection.start.block
+				->paragraph()
+				->getLines()
+				->at(m_selection.start.line);
+			linkName = line.text.mid(
 				m_selection.start.position,
 				m_selection.end.position - m_selection.start.position
 			);
@@ -1158,7 +1160,7 @@ bool MarkdownEditWidget::cursorAbovePoint(
 		text::Line *lastLine = &((*lines)[lines->size() - 1]);
 		*result = MarkdownCursor(
 			(*it),
-			lastLine,
+			lines->size() - 1,
 			lastLine->text.length()
 		);
 		return true;
@@ -1175,9 +1177,10 @@ void MarkdownEditWidget::processCursorMove(
 
 	// Adjust cursor position for unfolded text.
 	if (
-		(from.block != to.block || (*from.line) != (*to.line))
+		(from.block != to.block || from.line != to.line)
 	) {
-		QList<text::FormatRange> *ranges = &to.line->foldedFormats;
+		text::Line *line = &((*to.block->paragraph()->getLines())[to.line]);
+		QList<text::FormatRange> *ranges = &line->foldedFormats;
 
 		for (auto& range: *ranges) {
 			if (range.to < pos) {
@@ -1201,11 +1204,16 @@ MarkdownCursor MarkdownEditWidget::adjustForUnfolding(
 ) {
 	MarkdownCursor to = cursor;
 	int offset = 0, pos = to.position;
-	QList<text::FormatRange> *ranges = &to.line->foldedFormats;
+
+	if (to.line == -1)
+		return cursor;
 
 	if (
-		(from.block != to.block || (*from.line) != (*to.line))
+		(from.block != to.block || from.line != to.line)
 	) {
+		text::Line *line = &((*to.block->paragraph()->getLines())[to.line]);
+		QList<text::FormatRange> *ranges = &line->foldedFormats;
+
 		for (auto& range: *ranges) {
 			if (range.to <= pos) {
 				offset += range.endOffset();
@@ -1250,9 +1258,7 @@ bool MarkdownEditWidget::cursorAtPoint(
 
 MarkdownCursor MarkdownEditWidget::documentStart() {
 	MarkdownBlock *block = m_blocks[0];
-	text::Paragraph *par = block->paragraph();
-	text::Line *line = &((*par->getLines())[0]);
-	return MarkdownCursor(block, line, 0);
+	return MarkdownCursor(block, 0, 0);
 }
 
 MarkdownCursor MarkdownEditWidget::documentEnd() {
@@ -1260,7 +1266,7 @@ MarkdownCursor MarkdownEditWidget::documentEnd() {
 	text::Paragraph *par = block->paragraph();
 	QList<text::Line> *lines = par->getLines();
 	text::Line *line = &((*lines)[lines->size() - 1]);
-	return MarkdownCursor(block, line, line->folded.length());
+	return MarkdownCursor(block, lines->size() - 1, line->folded.length());
 }
 
 inline int MarkdownEditWidget::indexOfParagraph(text::Paragraph *par) {
@@ -1358,7 +1364,7 @@ void MarkdownEditWidget::mergeBlocks(
 			// Update cursor.
 		 	cursor = MarkdownCursor(
 				prevBlock,
-				lastLine,
+				lines->size() - 1,
 				newPosition
 			);
 			processCursorMove(prev, cursor);
@@ -1393,7 +1399,7 @@ void MarkdownEditWidget::mergeBlocks(
 				// Update cursor to last line of previous paragraph.
 				cursor = MarkdownCursor(
 					prevBlock,
-					&((*prevLines)[oldSize]),
+					oldSize,
 					0
 				);
 				processCursorMove(prev, cursor);
@@ -1426,7 +1432,7 @@ void MarkdownEditWidget::mergeBlocks(
 				// Update cursor to previous line.
 				cursor = MarkdownCursor(
 					prevBlock,
-					lastLine,
+					prevLines->size() - 1,
 					newPos
 				);
 				processCursorMove(prev, cursor);
@@ -1450,7 +1456,7 @@ void MarkdownEditWidget::mergeBlocks(
 			// Update cursor to previous line.
 		 	cursor = MarkdownCursor(
 				block,
-				prevLine,
+				lineIdx - 1,
 				newPos
 			);
 			processCursorMove(prev, cursor);
@@ -1464,7 +1470,8 @@ MarkdownCursor MarkdownEditWidget::splitBlocks(
 ) {
 	MarkdownBlock *block = cursor.block;
 	text::Paragraph *par = block->paragraph();
-	text::Line *line = cursor.line;
+	int lineIdx = cursor.line;
+	text::Line *line = &((*par->getLines())[lineIdx]);
 	int parIdx = indexOfParagraph(par);
 
 	QString beforeText = line->text.left(cursor.position);
@@ -1483,14 +1490,9 @@ MarkdownCursor MarkdownEditWidget::splitBlocks(
 		block->setParagraph(&((*m_model.paragraphs())[parIdx]));
 
 		// Update cursor.
-		return MarkdownCursor(
-			m_blocks[parIdx + 1],
-			&((*ptr->getLines())[0]),
-			0
-		);
+		return MarkdownCursor(m_blocks[parIdx + 1], 0, 0);
 	} else {
 		QList<text::Line> *lines = par->getLines();
-		int lineIdx = par->indexOfLine(line);
 
 		if (
 			line->text.isEmpty() &&
@@ -1527,27 +1529,18 @@ MarkdownCursor MarkdownEditWidget::splitBlocks(
 				text::Paragraph *ptr = insertParagraph(parIdx + 1, newPar);
 
 				// Update cursor to new paragraph.
-				cursor = MarkdownCursor(
-					m_blocks[parIdx + 1],
-					&((*ptr->getLines())[0]),
-					0
-				);
+				cursor = MarkdownCursor(m_blocks[parIdx + 1], 0, 0);
 			} else {
 				par->setType(text::Text);
 				lines->push_back(text::Line(empty, false));
 				block->setParagraph(par);
 
 				// Update cursor to new current empty line.
-				cursor = MarkdownCursor(
-					m_blocks[parIdx],
-					&((*par->getLines())[0]),
-					0
-				);
+				cursor = MarkdownCursor(m_blocks[parIdx], 0, 0);
 			}
 
 			return cursor;
 		} else {
-			int lineIdx = par->indexOfLine(line);
 			QList<text::Line> *lines = par->getLines();
 			line->setText(beforeText, par->getType() == text::Code);
 
@@ -1563,7 +1556,7 @@ MarkdownCursor MarkdownEditWidget::splitBlocks(
 			// Update cursor to new line.
 			return MarkdownCursor(
 				m_blocks[parIdx],
-				&((*par->getLines())[lineIdx + 1]),
+				lineIdx + 1,
 				0
 			);
 		}
@@ -1574,7 +1567,7 @@ MarkdownCursor MarkdownEditWidget::cursorAtPoint(
 	QPoint pos,
 	bool *success
 ) {
-	MarkdownCursor cursor(nullptr, nullptr, 0);
+	MarkdownCursor cursor(nullptr, -1, 0);
 	bool found = false;
 
 	for (auto it = m_blocks.begin(); it != m_blocks.end(); it++) {
@@ -1628,8 +1621,8 @@ bool MarkdownEditWidget::cursorAfter(
 	if (firstParIdx > secondParIdx)
 		return true;
 
-	int firstLineIdx = firstPar->indexOfLine(first.line);
-	int secondLineIdx = secondPar->indexOfLine(second.line);
+	int firstLineIdx = first.line;
+	int secondLineIdx = second.line;
 
 	if (firstLineIdx < secondLineIdx)
 		return false;
@@ -1640,15 +1633,16 @@ bool MarkdownEditWidget::cursorAfter(
 }
 
 void MarkdownEditWidget::checkForLinksUnderCursor(MarkdownCursor cur) {
-	text::Line *line = cur.line;
+	text::Line *line = nullptr;
 	QString anchor = "";
 	int position = cur.position;
 	QList<text::FormatRange> ranges;
 	QString text;
 
-	if (line == nullptr)
+	if (cur.line == -1 || cur.line >= cur.block->paragraph()->getLines()->size())
 		return;
 
+	line = &((*cur.block->paragraph()->getLines())[cur.line]);
 
 	if (m_cursor.block == cur.block && m_cursor.line == cur.line) {
 		ranges = line->formats;

@@ -23,6 +23,7 @@ class MarkdownBlock: public QFrame {
 
 public:
 	MarkdownBlock(QWidget*, Style*, MarkdownCursorProvider*);
+	~MarkdownBlock();
 	// Model.
 	void setParagraph(text::Paragraph*);
 	void updateParagraphWithoutReload(text::Paragraph*);
@@ -30,8 +31,6 @@ public:
 	void setPlaceholder(QString);
 	// Cursor positioning.
 	bool cursorAt(QPoint, MarkdownCursor*);
-	text::Line *lineBefore(text::Line*);
-	text::Line *lineAfter(text::Line*);
 	bool cursorBelow(MarkdownCursor, MarkdownCursor*);
 	bool cursorAbove(MarkdownCursor, MarkdownCursor*);
 	qreal xAtCursor(MarkdownCursor);
@@ -65,7 +64,6 @@ private:
 		QTextCharFormat
 	);
 	inline int indexOfLine(text::Line*);
-	void relayout();
 	// Layout constants.
 	static constexpr QMargins codeMargins = QMargins(10, 10, 10, 10);
 	static constexpr QMargins listMargins = QMargins(40, 0, 0, 0);
@@ -73,11 +71,7 @@ private:
 
 class MarkdownCursor {
 public:
-	MarkdownCursor(
-		MarkdownBlock*,
-		text::Line*,
-		int
-	);
+	MarkdownCursor(MarkdownBlock*, int, int);
 	inline bool operator==(const MarkdownCursor rhs) const {
 		return block == rhs.block && line == rhs.line && position == rhs.position;
 	}
@@ -86,7 +80,7 @@ public:
 	}
 	// Properties
 	MarkdownBlock *block;
-	text::Line *line;
+	int line;
 	int position;
 };
 
