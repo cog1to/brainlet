@@ -4,3 +4,7 @@ bin/
 obj/
 resources/resources.cpp
 *.swp
+config.log
+config.status
+*~
+autom4te.cache

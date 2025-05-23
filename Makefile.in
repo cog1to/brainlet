@@ -1,15 +1,15 @@
 # Compiler and linker
-CXX=g++
+CXX=@CXX@
 
 # Dependencies
 INCLUDEDIRS=-I.
-CXXFLAGS=-I/usr/include/qt6/QtDBus -I/usr/include/qt6 -I/usr/include/qt6/QtWidgets -I/usr/include/qt6/QtGui -I/usr/include/qt6/QtSql -I/usr/include/qt6/QtCore -I/usr/lib/qt6/mkspecs/linux-g++ -g -O2 -fPIC
-LIBDIRS= 
-LIBS=-lQt6DBus -lQt6Widgets -lQt6Gui -lQt6Sql -lQt6Core 
+CXXFLAGS=@CXXFLAGS@ -fPIC
+LIBDIRS=@LDFLAGS@
+LIBS=@LIBS@
 
 # Utils
-MOC=/usr/lib/qt6/moc
-RCC=/usr/lib/qt6/rcc
+MOC=@MOC@
+RCC=@RCC@
 
 # MacOS overrides
 UNAME_S := $(shell uname -s)
