@@ -23,6 +23,7 @@ public:
 	const bool active() const;
 	void setActive(bool);
 	const AnchorType type() const;
+	void setEnabled(bool);
 	// Method overrides.
 	QSize sizeHint() const override;
 	// Size.

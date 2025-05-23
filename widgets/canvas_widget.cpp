@@ -770,6 +770,7 @@ void CanvasWidget::onAnchorEntered(
 	if (m_newThought == nullptr) {
 		m_newThought = new ThoughtWidget(
 			this, m_style, InvalidThoughtId, false, "",
+			false, false, false,
 			false, false, false
 		);
 
@@ -979,6 +980,11 @@ void CanvasWidget::onCreateConfirmed(
 	if (m_anchorSource == nullptr)
 		return;
 
+	if (text.isEmpty()) {
+		onCreateCanceled(widget);
+		return;
+	}
+
 	if (
 		m_suggestions != nullptr &&
 		m_suggestions->items().size() > 0 &&
@@ -998,6 +1004,7 @@ void CanvasWidget::onCreateConfirmed(
 			this->connectWidget(widget);
 			// Set widget's ID and add it to the list of widgets.
 			widget->setId(id);
+			widget->setAnchorsActive(true);
 			this->m_widgets.insert_or_assign(id, widget);
 			this->m_newThought = nullptr;
 			// Clear editing widgets and connections.
@@ -1050,23 +1057,27 @@ void CanvasWidget::onMenuRequested(
 	if (thoughtName.size() > 15)
 		thoughtName = thoughtName.left(12) + "...";
 
-	QString forgetMenu = tr("Forget") + " \"" + thoughtName + "\"";
+	QString forgetMenu = tr("Forget \"%1\"").arg(thoughtName);
 	QAction action(forgetMenu, this);
 	connect(&action, SIGNAL(triggered()), this, SLOT(onDeleteThought()));
-	connect(&contextMenu, SIGNAL(aboutToHide()), SLOT(onMenuHide()));
+	connect(&contextMenu, SIGNAL(destroyed()), SLOT(onMenuHide()));
 
 	contextMenu.addAction(&action);
 	contextMenu.exec(mapToGlobal(point));
 }
 
 void CanvasWidget::onMenuHide() {
+	// Do nothing for now.
 	m_menuThought = nullptr;
 }
 
 void CanvasWidget::onDeleteThought() {
-	if (m_menuThought == nullptr)
+	if (m_menuThought == nullptr) {
 		return;
+	}
+
 	emit thoughtDeleted(m_menuThought->id());
+	m_menuThought = nullptr;
 }
 
 void CanvasWidget::onDisconnect() {

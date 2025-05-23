@@ -277,8 +277,9 @@ bool DatabaseBrainRepository::deleteThought(ThoughtId id) {
 	QSqlQuery query;
 
 	ThoughtEntity thought = getThought(id, &result);
-	if (!result)
+	if (!result) {
 		return false;
+	}
 
 	// Clear connections.
 	query = QSqlQuery(nullptr, m_conn);
@@ -437,7 +438,7 @@ QString DatabaseBrainRepository::filePathFromName(
 ) {
 	QString sanitized = QString(name);
 	sanitized.replace(
-		QRegularExpression("[^\\w\\\"\\']"), "_"
+		QRegularExpression("[^\\w\\\"\\']", QRegularExpression::UseUnicodePropertiesOption), "_"
 	);
 
 	return m_root.filePath(
@@ -476,10 +477,6 @@ bool DatabaseBrainRepository::loadState(ThoughtId rootId) {
 	std::unordered_map<ThoughtId, Thought*> *siblings
 		= new std::unordered_map<ThoughtId, Thought*>();
 
-	qDebug() << "DB: parsing connections";
-
-	qDebug() << "DB: parsing children";
-
 	// Children.
 	std::vector<ThoughtId> children;
 	for (auto& c: childConns) {
@@ -504,8 +501,6 @@ bool DatabaseBrainRepository::loadState(ThoughtId rootId) {
 
 	center->children() = children;
 
-	qDebug() << "DB: parsing parents";
-
 	// Parents.
 	std::vector<ThoughtId> parents;
 	for (auto& c: parentConns) {
@@ -522,20 +517,15 @@ bool DatabaseBrainRepository::loadState(ThoughtId rootId) {
 			getLinks(entity.id).size() > 0
 		);
 
-		qDebug() << "  created parent" << thought->id() << "from" << entity.id;
-
 		parents.push_back(entity.id);
 		siblings->insert({entity.id, thought});
 	}
 
 	center->parents() = parents;
 
-	qDebug() << "DB: parsing links";
-
 	// Links.
 	std::vector<ThoughtId> links;
 	for (auto& c: linkConns) {
-		qDebug() << "link conn:" << c.from << c.to;
 		ThoughtId linkId = (c.to == rootId ? c.from : c.to);
 		ThoughtEntity entity = getThought(linkId, &success);
 		if (!success)
@@ -548,8 +538,6 @@ bool DatabaseBrainRepository::loadState(ThoughtId rootId) {
 			getChildren(entity.id).size() > 0,
 			getLinks(entity.id).size() > 0
 		);
-
-		qDebug() << "  created link" << thought->id() << "from" << entity.id;
 
 		links.push_back(entity.id);
 		siblings->insert({entity.id, thought});
@@ -584,12 +572,8 @@ bool DatabaseBrainRepository::loadState(ThoughtId rootId) {
 
 							siblings->insert({found.id, thought});
 						}
-
-						qDebug() << "DB: added sibling" << c.to;
 					}
 				}
-			} else {
-				qDebug() << "DB: sibling" << c.to << "already loaded as link or parent";
 			}
 		}
 	}
@@ -646,15 +630,12 @@ ThoughtEntity DatabaseBrainRepository::getThought(
 	ThoughtId id,
 	bool *success
 ) {
-	qDebug() << "DB: get thought" << id;
-
 	QSqlTableModel model(nullptr, m_conn);
 	model.setTable("thoughts");
 	model.setFilter(QString("id == %1").arg(id));
 	model.select();
 
 	if (model.rowCount() > 0) {
-		qDebug() << "DB:" << id << "found";
 		*success = true;
 		QSqlRecord rec = model.record(0);
 		return ThoughtEntity(
@@ -662,7 +643,6 @@ ThoughtEntity DatabaseBrainRepository::getThought(
 			rec.value("name").toString().toStdString()
 		);
 	} else {
-		qDebug() << "DB:" << id << "not found";
 		*success = false;
 		return ThoughtEntity(InvalidThoughtId, "");
 	}
@@ -710,8 +690,6 @@ std::vector<ConnectionEntity> DatabaseBrainRepository::getConnections(
 	);
 	model.select();
 
-	qDebug() << "DB: row count:" << model.rowCount() << "for type" << type;
-
 	for (idx = 0; idx < model.rowCount(); idx++) {
 		QSqlRecord record = model.record(idx);
 		qDebug() << "DB: loading record" << idx;
@@ -723,8 +701,6 @@ std::vector<ConnectionEntity> DatabaseBrainRepository::getConnections(
 				ConnectionType(record.value("conn_type").toInt())
 			)
 		);
-
-		qDebug() << "DB: loaded record for type" << type;
 	}
 
 	return result;

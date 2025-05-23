@@ -35,6 +35,13 @@ const AnchorType AnchorWidget::type() const {
 	return m_type;
 }
 
+void AnchorWidget::setEnabled(bool enabled) {
+	if (enabled)	
+		setAttribute(Qt::WA_TransparentForMouseEvents, false);
+	else
+		setAttribute(Qt::WA_TransparentForMouseEvents, true);
+}
+
 QSize AnchorWidget::sizeHint() const {
 	return QSize(24, 24);
 }

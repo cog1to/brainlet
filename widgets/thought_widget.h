@@ -33,7 +33,8 @@ public:
 		QString name,
 		bool hasParent, bool hasChild, bool hasLink,
 		bool rightSideLink = false,
-		bool canDelete = true
+		bool canDelete = true,
+		bool anchorsActive = true
 	);
 	~ThoughtWidget();
 	// Id.
@@ -54,6 +55,8 @@ public:
 	void setRightSideLink(bool);
 	const bool canDelete() const;
 	void setCanDelete(bool);
+	const bool anchorsActive() const;
+	void setAnchorsActive(bool);
 	// Method override.
 	QSize sizeHint() const override;
 	// Calculates bounding rect for given width without height restriction.
@@ -122,6 +125,7 @@ private:
 	bool m_highlight = false;
 	bool m_rightSideLink = false;
 	bool m_canDelete = true;
+	bool m_anchorsActive = true;
 	QString m_text;
 	QString m_originalText;
 	QTextCursor m_cursor;

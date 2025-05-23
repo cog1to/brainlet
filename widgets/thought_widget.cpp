@@ -16,7 +16,8 @@ ThoughtWidget::ThoughtWidget(
 	bool hasChild,
 	bool hasLink,
 	bool rightSideLink,
-	bool canDelete
+	bool canDelete,
+	bool anchorsActive
 ): BaseWidget(parent, style),
 	m_anchorLink(this, style, AnchorType::AnchorLink, hasLink),
 	m_anchorParent(this, style, AnchorType::AnchorParent, hasParent),
@@ -26,6 +27,7 @@ ThoughtWidget::ThoughtWidget(
 	m_id = id;
 	m_text = text;
 	m_rightSideLink = rightSideLink;
+	m_anchorsActive = anchorsActive;
 
 	QObject::connect(
 		&m_textEdit, SIGNAL(mouseEnter()),
@@ -74,6 +76,8 @@ ThoughtWidget::ThoughtWidget(
 
 	AnchorWidget *anchors[] = {&m_anchorLink, &m_anchorParent, &m_anchorChild};
 	for (AnchorWidget *widget: anchors) {
+		widget->setEnabled(anchorsActive);
+
 		QObject::connect(
 			widget, SIGNAL(mouseEnter(AnchorWidget*)),
 			this, SLOT(onAnchorEntered(AnchorWidget*))
@@ -171,6 +175,19 @@ const bool ThoughtWidget::canDelete() const {
 
 void ThoughtWidget::setCanDelete(bool value) {
 	m_canDelete = value;
+}
+
+const bool ThoughtWidget::anchorsActive() const {
+	return m_anchorsActive;
+}
+
+void ThoughtWidget::setAnchorsActive(bool active) {
+	m_anchorsActive = active;
+
+	AnchorWidget *anchors[] = {&m_anchorLink, &m_anchorParent, &m_anchorChild};
+	for (AnchorWidget *widget: anchors) {
+		widget->setEnabled(active);
+	}
 }
 
 const bool ThoughtWidget::isActive() const {
@@ -386,6 +403,9 @@ void ThoughtWidget::onTextConfirmed(std::function<void(bool)> callback) {
 // Anchor events
 
 void ThoughtWidget::onAnchorEntered(AnchorWidget* widget) {
+	if (m_anchorsActive == false)
+		return;
+
 	QRect rect = widget->geometry();
 	QPoint center = QPoint(
 		rect.x() + rect.width() / 2,
