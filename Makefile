@@ -87,6 +87,14 @@ obj/mocs/%.o: mocs/%.cpp
 	$(CXX) -c $< -g $(INCLUDEDIRS) $(CFLAGS) \
 		-o $@
 
-# Tests makefile
-include tests/Makefile
+# Test targets
+
+TESTS = $(patsubst tests/%.cpp,bin/%,$(wildcard tests/*.cpp))
+
+bin/test_%: $(OBJECTS) tests/test_%.cpp
+	$(CXX) -g $(INCLUDEDIRS) $(CFLAGS) \
+		$^ -o $@ \
+		$(LIBDIRS) $(LIBS)
+
+tests: $(TESTS)
 
