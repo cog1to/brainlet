@@ -42,6 +42,7 @@ MarkdownEditWidget::~MarkdownEditWidget() {
 	}
 	for (auto block: m_blocks)
 		(*block).deleteLater();
+	delete m_layout;
 }
 
 void MarkdownEditWidget::load(QString data) {
@@ -52,12 +53,15 @@ void MarkdownEditWidget::load(QString data) {
 	m_model = text::TextModel(lines);
 
 	// Clear old blocks.
-	for (auto widget: m_blocks) {
-		m_layout->removeWidget(widget);
-		widget->deleteLater();
+	QLayoutItem *child;
+	while (m_layout->count() != 0) {
+		child = m_layout->takeAt(0);
+		if (child->widget() != nullptr) {
+			delete child->widget();
+		}
+		delete child;
 	}
 	m_blocks.clear();
-	m_layout->removeItem(m_layout->itemAt(0));
 
 	// Create blocks.
 	QList<text::Paragraph> *list = m_model.paragraphs();

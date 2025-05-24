@@ -15,6 +15,7 @@ class ThoughtDetailsWidget: public BaseWidget {
 
 public:
 	ThoughtDetailsWidget(QWidget*, Style*, MarkdownScrollWidget*);
+	~ThoughtDetailsWidget();
 	void setTitle(QString title);
 
 private:

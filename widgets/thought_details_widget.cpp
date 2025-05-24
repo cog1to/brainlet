@@ -47,6 +47,10 @@ ThoughtDetailsWidget::ThoughtDetailsWidget(
 	m_layout->addWidget(markdown);
 }
 
+ThoughtDetailsWidget::~ThoughtDetailsWidget() {
+	delete m_layout;
+}
+
 void ThoughtDetailsWidget::setTitle(QString title) {
 	m_title->setText(title);
 }

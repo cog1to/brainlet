@@ -1,13 +1,15 @@
 #ifndef H_THOUGHT_EDIT_WIDGET
 #define H_THOUGHT_EDIT_WIDGET
 
+#include <string>
+
 #include <QTextEdit>
 #include <QObject>
 #include <QString>
 #include <QEnterEvent>
 #include <QMouseEvent>
 #include <QFocusEvent>
-#include <string>
+#include <QMimeData>
 
 #include "widgets/style.h"
 
@@ -43,6 +45,10 @@ protected:
 	void mousePressEvent(QMouseEvent *) override;
 	void keyPressEvent(QKeyEvent *) override;
 	bool eventFilter(QObject *obj, QEvent *event) override;
+	void insertFromMimeData(const QMimeData *source) override;
+
+private:
+	static const int maxLength = 150; // Max text length.
 };
 
 #endif

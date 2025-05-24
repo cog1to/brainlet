@@ -38,6 +38,7 @@ ThoughtEditWidget::ThoughtEditWidget(
 	setAlignment(Qt::AlignCenter);
 	setFocusPolicy(Qt::NoFocus);
 	setContextMenuPolicy(Qt::CustomContextMenu);
+	setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
 
 	installEventFilter(this);
 
@@ -101,6 +102,16 @@ void ThoughtEditWidget::keyPressEvent(QKeyEvent *event) {
 		emit nextSuggestion();
 	} else if (event->key() == Qt::Key_Tab) {
 		emit cycleSuggestion();
+	} else if (QString text = event->text(); !text.isEmpty()) {
+		QString currentText = toPlainText();
+		if (
+			(currentText.length() + text.length() > maxLength) &&
+			(text.length() > 1 || text[0].isPrint())
+		) {
+			return;
+		} else {
+			QTextEdit::keyPressEvent(event);
+		}
 	} else {
 		QTextEdit::keyPressEvent(event);
 	}
@@ -114,3 +125,21 @@ void ThoughtEditWidget::focusOutEvent(QFocusEvent *event) {
 void ThoughtEditWidget::clearFocus() {
 	QTextEdit::clearFocus();
 }
+
+void ThoughtEditWidget::insertFromMimeData(const QMimeData *source) {
+	if (source == nullptr)
+		return;
+
+	QString text = source->text();
+	QString currentText = toPlainText();
+	int availableLength = maxLength - currentText.length();
+
+	if (availableLength  > 0) {
+		qDebug() << "can paste";
+		QString availableText = text.left(availableLength);
+		QMimeData newData = QMimeData();
+		newData.setText(availableText);
+		QTextEdit::insertFromMimeData(&newData);
+	}
+}
+
