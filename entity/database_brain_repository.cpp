@@ -88,6 +88,12 @@ bool DatabaseBrainRepository::createDb(
 
 	qDebug() << "DB: Creating tables...";
 
+	// Set encoding.
+	QSqlQuery encodingQuery = QSqlQuery("PRAGMA encoding = 'UTF-8';");
+	result = encodingQuery.exec();
+	if (!result)
+		return false;
+
 	// Create tables.
 	QSqlQuery thoughtsQuery = QSqlQuery("CREATE TABLE IF NOT EXISTS thoughts (id INTEGER PRIMARY KEY, name TEXT);", db);
 	result = thoughtsQuery.exec();
