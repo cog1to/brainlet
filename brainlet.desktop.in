@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Brainlet
+Exec=PREFIX/bin/brainlet
+Type=Application
+Comment=Thoughts and notes organizer.
+Icon=brainlet
+

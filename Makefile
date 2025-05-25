@@ -1,9 +1,11 @@
+# Install prefix
+PREFIX=/usr/local
+
 # Basic config
 INCLUDEDIRS = `pkg-config --cflags Qt6Core Qt6Widgets Qt6Gui Qt6Sql Qt6DBus` -I.
 LIBDIRS = `pkg-config --libs-only-L Qt6Core Qt6Widgets Qt6Gui Qt6Sql Qt6DBus`
 LIBS = `pkg-config --libs-only-l Qt6Core Qt6Widgets Qt6Gui Qt6Sql Qt6DBus`
-CFLAGS = ${FLAGS} -fPIC -fsanitize=address,undefined,leak
-
+CFLAGS = ${FLAGS} -fPIC
 # Utils
 QTLIBEXEC = `pkg-config --variable=libexecdir Qt6Core`
 MOC = ${QTLIBEXEC}/moc
@@ -21,6 +23,13 @@ ifeq ($(UNAME_S),Darwin)
 	CFLAGS += -DDARWIN=1
 endif
 
+# Debug flags
+ifdef DEBUG
+	CFLAGS += -DDEBUG_GUI=1 -g -fsanitize=address,undefined,leak
+else
+	CFLAGS += -O2
+endif
+
 # Widgets
 WIDGETS_H = $(wildcard widgets/*.h)
 WIDGETS_MOCS_C = $(patsubst widgets/%.cpp,mocs/%.cpp,$(WIDGETS_H:.h=.moc.cpp))
@@ -31,17 +40,17 @@ PRESENTERS_MOCS_C = $(patsubst presenters/%.cpp,mocs/%.cpp,$(PRESENTERS_H:.h=.mo
 RESOURCES = resources/resources.qrc
 RESOURCES_C = resources/resources.cpp
 # All object files
-SOURCES = $(shell find . \( -path ./resources -prune -o -path ./tests -prune -o -path ./mocs -prune \) -o -name "*.cpp" -print | sed -e 's/\.\///') $(WIDGETS_MOCS_C) $(PRESENTERS_MOCS_C) $(RESOURCES_C)
+SOURCES = $(shell find . \( -path ./resources -prune -o -path ./tests -prune -o -path ./mocs -prune -o -path ./main.cpp -prune \) -o -name "*.cpp" -print | sed -e 's/\.\///') $(WIDGETS_MOCS_C) $(PRESENTERS_MOCS_C) $(RESOURCES_C)
 OBJECTS = $(patsubst %.cpp,obj/%.o,$(SOURCES))
 
 .PRECIOUS: $(OBJECTS)
 
 # Main target
-all: tests
+default: app
 
 # Clean
 clean:
-	rm -rf mocs/* bin/* obj/*
+	rm -rf mocs/* bin/* obj/* build/*
 
 # Directories
 bin:
@@ -52,7 +61,6 @@ moc: mocs
 
 # Tests with debug graphics
 debug: CFLAGS += -DDEBUG_GUI=1
-debug: tests
 
 # Resources
 $(RESOURCES_C): $(RESOURCES) $(wildcard resources/icons/*)
@@ -95,4 +103,31 @@ bin/test_%: $(OBJECTS) tests/test_%.cpp
 		$(LIBDIRS) $(LIBS)
 
 tests: $(TESTS)
+
+# App target
+app: build/brainlet build/brainlet.desktop build/brainlet.png
+
+build/brainlet: $(OBJECTS) main.cpp
+	@mkdir -p $(@D)
+	$(CXX) $(INCLUDEDIRS) $(CFLAGS) \
+		$^ -o $@ \
+		$(LIBDIRS) $(LIBS)
+
+build/brainlet.desktop: brainlet.desktop.in
+	@mkdir -p $(@D)
+	cp $< $@
+	sed "s|PREFIX|$(PREFIX)|" <$< >$@
+
+build/brainlet.png: resources/icons/icon.png
+	@mkdir -p $(@D)
+	cp $< $@
+
+# Install target
+install: build/brainlet build/brainlet.desktop build/brainlet.png
+	mkdir -p $(PREFIX)/share/applications/ && \
+		cp build/brainlet.desktop $(PREFIX)/share/applications/
+	mkdir -p $(PREFIX)/share/icons/hicolor/256x256/apps/ && \
+		cp build/brainlet.png $(PREFIX)/share/icons/hicolor/256x256/apps/
+	mkdir -p $(PREFIX)/bin && \
+		cp build/brainlet $(PREFIX)/bin/
 
