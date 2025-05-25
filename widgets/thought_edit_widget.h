@@ -48,7 +48,7 @@ protected:
 	void insertFromMimeData(const QMimeData *source) override;
 
 private:
-	static const int maxLength = 150; // Max text length.
+	static const int maxLength = 200; // Max text length.
 };
 
 #endif

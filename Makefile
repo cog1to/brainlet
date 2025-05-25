@@ -1,17 +1,16 @@
 # Basic config
-INCLUDEDIRS = -I${QTDIR}/include \
-	-I${QTDIR}/include/QtCore \
-	-I${QTDIR}/include/QtWidgets \
-	-I${QTDIR}/include/QtGui \
-	-I${QTDIR}/include/QtSql \
-	-I.
-LIBDIRS = -L${QTDIR}/lib
-LIBS = -lQt6Core -lQt6Widgets -lQt6Gui -lQt6DBus -lQt6Sql
-CFLAGS = ${FLAGS} -fsanitize=address,undefined,leak
+INCLUDEDIRS = `pkg-config --cflags Qt6Core Qt6Widgets Qt6Gui Qt6Sql Qt6DBus` -I.
+LIBDIRS = `pkg-config --libs-only-L Qt6Core Qt6Widgets Qt6Gui Qt6Sql Qt6DBus`
+LIBS = `pkg-config --libs-only-l Qt6Core Qt6Widgets Qt6Gui Qt6Sql Qt6DBus`
+CFLAGS = ${FLAGS} -fPIC -fsanitize=address,undefined,leak
+
 # Utils
-MOC = ${QTDIR}/libexec/moc
-RCC = ${QTDIR}/libexec/rcc
+QTLIBEXEC = `pkg-config --variable=libexecdir Qt6Core`
+MOC = ${QTLIBEXEC}/moc
+RCC = ${QTLIBEXEC}/rcc
+
 # MacOS overrides
+# TODO: Is there a way to query install paths from homebrew?
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
 	CXX = /opt/homebrew/opt/llvm/bin/clang++
@@ -88,7 +87,6 @@ obj/mocs/%.o: mocs/%.cpp
 		-o $@
 
 # Test targets
-
 TESTS = $(patsubst tests/%.cpp,bin/%,$(wildcard tests/*.cpp))
 
 bin/test_%: $(OBJECTS) tests/test_%.cpp
