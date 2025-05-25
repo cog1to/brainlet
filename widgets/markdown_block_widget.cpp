@@ -169,7 +169,7 @@ bool MarkdownBlock::cursorBelow(
 
 	QTextLayout *layout = m_layouts[cur.line];
 	if (layout->isValidCursorPosition(cur.position) == false) {
-		return false;
+		cur.position = 0;
 	}
 
 	QTextLine textLine = layout->lineForTextPosition(cur.position);
