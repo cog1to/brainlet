@@ -1595,7 +1595,8 @@ MarkdownCursor MarkdownEditWidget::cursorAtPoint(
 	bool found = false;
 
 	for (auto it = m_blocks.begin(); it != m_blocks.end(); it++) {
-		if ((*it)->geometry().contains(pos) == false)
+		QRect geometry = (*it)->geometry();
+		if (geometry.y() > pos.y() || geometry.y() + geometry.height() < pos.y())
 			continue;
 
 		QPoint pointInside = (*it)->mapFromParent(pos);

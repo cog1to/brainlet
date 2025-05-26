@@ -127,7 +127,7 @@ bool MarkdownBlock::cursorAt(QPoint point, MarkdownCursor *out) {
 
 		QPointF layoutPosition = layout->position();
 		QPointF pos = QPointF(
-			point.x() - layoutPosition.x(),
+			std::max((qreal)0.0, point.x() - layoutPosition.x()),
 			point.y() - layoutPosition.y()
 		);
 
