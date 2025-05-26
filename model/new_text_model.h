@@ -31,7 +31,7 @@ namespace text {
 		CodeSpan,
 		Escape
 	};
-	
+
 	// Link metadata.
 	struct LinkFormat {
 		QString target;
@@ -58,12 +58,13 @@ namespace text {
 	// Single line model.
 	class Line {
 	public:
-		Line(QString&, bool);
+		Line(QString&, bool, int lvl = 0);
 		// Properties.
 		QString text;
 		QList<FormatRange> formats;
 		QString folded;
 		QList<FormatRange> foldedFormats;
+		unsigned int level = 0;
 		// Modificators.
 		void setText(QString&, bool);
 		// Comparison.

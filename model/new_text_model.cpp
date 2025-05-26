@@ -104,7 +104,7 @@ int text::FormatRange::endOffset() const {
 
 // Line parsing.
 
-text::Line::Line(QString& input, bool preformatted) {
+text::Line::Line(QString& input, bool preformatted, int lvl) : level(lvl) {
 	setText(input, preformatted);
 }
 
@@ -404,7 +404,7 @@ QList<text::Line> *text::Paragraph::getLines() {
 
 void text::Paragraph::setLine(int idx, text::Line line) {
 	m_lines.replace(idx, line);
-}	
+}
 
 void text::Paragraph::setLines(QList<text::Line> lines) {
 	m_lines = lines;
@@ -428,8 +428,8 @@ text::TextModel::TextModel(QList<Paragraph> pars) {
 }
 
 text::TextModel::TextModel(QStringList data) {
-	static QRegularExpression bulletExp("^([\\-\\*\\+]) ");
-	static QRegularExpression numberExp("^([0-9]+\\.) ");
+	static QRegularExpression bulletExp("^([\t ]*)([\\-\\*\\+]) ");
+	static QRegularExpression numberExp("^([\t ]*)([0-9]+\\.) ");
 
 	int emptyCount = 0;
 	QList<text::Line> currentLines;
@@ -494,6 +494,7 @@ text::TextModel::TextModel(QStringList data) {
 				QRegularExpressionMatch match = bulletExp.match(line);
 				match.hasMatch()
 			) {
+				// Close previous paragraph.
 				QString text = line.right(line.length() - match.capturedEnd());
 				if (type != text::BulletList && currentLines.size() > 0) {
 					m_data.push_back(
@@ -502,12 +503,18 @@ text::TextModel::TextModel(QStringList data) {
 					currentLines.clear();
 				}
 
+				// Get list level.
+				QString offset = match.captured(1);
+				unsigned int level = offset.length();
+
+				// Push new line.
 				type = text::BulletList;
-				currentLines.push_back(text::Line(text, false));
+				currentLines.push_back(text::Line(text, false, level));
 			} else if (
 				QRegularExpressionMatch match = numberExp.match(line);
 				match.hasMatch()
 			) {
+				// Close previous paragraph.
 				QString text = line.right(line.length() - match.capturedEnd());
 				if (type != text::NumberList && currentLines.size() > 0) {
 					m_data.push_back(
@@ -517,8 +524,13 @@ text::TextModel::TextModel(QStringList data) {
 					type = text::NumberList;
 				}
 
+				// Get list level.
+				QString offset = match.captured(1);
+				unsigned int level = offset.length();
+
+				// Push new line.
 				type = text::NumberList;
-				currentLines.push_back(text::Line(text, false));
+				currentLines.push_back(text::Line(text, false, level));
 			} else {
 				content.push_back(line);
 			}
@@ -563,7 +575,7 @@ QString text::TextModel::text() {
 		QList<text::Line> *lines = (*par).getLines();
 		QStringList parLines;
 		text::ParagraphType type = (*par).getType();
-		
+
 		// Wrap code in ```
 		if (type == text::Code)
 			parLines.push_back("```");
@@ -571,13 +583,14 @@ QString text::TextModel::text() {
 		// Copy each line.
 		for (auto line = lines->begin(); line != lines->end(); line++) {
 			// Add prefix for lists.
+			QString offset = QString("\t").repeated(line->level);
 			QString prefix = "";
 			if (type == text::NumberList)
 				prefix = "1. ";
 			else if (type == text::BulletList)
 				prefix = "- ";
 
-			parLines.push_back(prefix + (*line).text);
+			parLines.push_back(offset + prefix + (*line).text);
 		}
 
 		// Wrap code in ```

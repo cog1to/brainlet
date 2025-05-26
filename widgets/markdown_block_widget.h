@@ -67,6 +67,7 @@ private:
 	// Layout constants.
 	static constexpr QMargins codeMargins = QMargins(10, 10, 10, 10);
 	static constexpr QMargins listMargins = QMargins(40, 0, 0, 0);
+	static constexpr qreal listLevelOffset = 20;
 };
 
 class MarkdownCursor {

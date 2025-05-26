@@ -13,6 +13,7 @@ MarkdownScrollWidget::MarkdownScrollWidget(
 	Style *style
 ) : QScrollArea(parent), m_style(style) {
 	setStyleSheet("QScrollArea{border:none;}");
+	setFocusPolicy(Qt::NoFocus);
 }
 
 MarkdownScrollWidget::~MarkdownScrollWidget() {};

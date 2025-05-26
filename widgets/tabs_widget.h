@@ -10,6 +10,7 @@
 #include <QShowEvent>
 #include <QVBoxLayout>
 #include <QCloseEvent>
+#include <QKeyEvent>
 
 #include "widgets/style.h"
 #include "widgets/base_widget.h"

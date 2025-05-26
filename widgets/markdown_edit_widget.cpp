@@ -147,7 +147,7 @@ void MarkdownEditWidget::mousePressEvent(QMouseEvent *event) {
 		update();
 
 		if (!hasFocus())
-			setFocus();
+			setFocus(Qt::MouseFocusReason);
 	} else if (found = cursorAbovePoint(event->pos(), &cursor); found) {
 		// Set initial cursor position.
 		MarkdownCursor prev = m_cursor;
@@ -157,8 +157,9 @@ void MarkdownEditWidget::mousePressEvent(QMouseEvent *event) {
 		m_selection.start = m_cursor;
 		m_selection.end = m_cursor;
 
-		if (!hasFocus())
+		if (!hasFocus()) {
 			setFocus();
+		}
 	} else {
 		clearFocus();
 	}
@@ -395,6 +396,14 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 			copySelectionToClipboard();
 			cursor = deleteSelection();
 			processCursorMove(prev, cursor);
+		}
+	} else if (
+		key == Qt::Key_Tab &&
+		(par->getType() == text::BulletList || par->getType() == text::NumberList)
+	) {
+		if (line->level < 4) {
+			line->level = line->level + 1;
+			block->setParagraph(par);
 		}
 	} else if (QString text = event->text(); !text.isEmpty()) {
 		if (m_selection.active) {
@@ -780,7 +789,7 @@ MarkdownCursor MarkdownEditWidget::deleteSelection() {
 			startLineIdx + 1,
 			endLineIdx - startLineIdx - 1
 		);
-		// Reajust end line index after deletion.
+		// Adjust end line index after deletion.
 		endLineIdx = startLineIdx + 1;
 		endLine = &((*endPar->getLines())[endLineIdx]);
 		// Update paragraph.
@@ -1381,7 +1390,13 @@ void MarkdownEditWidget::mergeBlocks(
 		int parIdx = indexOfParagraph(par);
 		int lineIdx = par->indexOfLine(line);
 
-		if (lineIdx == 0) {
+		if (
+			(par->getType() == text::BulletList || par->getType() == text::NumberList) &&
+			line->level > 0
+		) {
+			line->level = line->level - 1;
+			block->setParagraph(par);
+		} else if (lineIdx == 0) {
 			QList<text::Paragraph> *pars = m_model.paragraphs();
 			if (
 				parIdx > 0 &&
@@ -1523,6 +1538,7 @@ MarkdownCursor MarkdownEditWidget::splitBlocks(
 				);
 				text::Paragraph *ptr = insertParagraph(parIdx + 1, newPar);
 				par = m_model.paragraphs()->data() + parIdx;
+				lines = par->getLines();
 			}
 
 			QString empty = "";
@@ -1555,7 +1571,7 @@ MarkdownCursor MarkdownEditWidget::splitBlocks(
 			// Insert new line.
 			lines->insert(
 				lineIdx + 1,
-				text::Line(afterText, par->getType() == text::Code)
+				text::Line(afterText, par->getType() == text::Code, line->level)
 			);
 
 			// Reload current paragraph.

@@ -25,7 +25,10 @@ TabsWidget::TabsWidget(
 		.arg(style->background().darker(150).name(QColor::HexRgb))
 	);
 
+	setFocusPolicy(Qt::NoFocus);
 	m_tabWidget = new QTabWidget(nullptr);
+	m_tabWidget->setFocusPolicy(Qt::NoFocus);
+	m_tabWidget->tabBar()->setFocusPolicy(Qt::NoFocus);
 	m_tabWidget->setTabsClosable(true);
 	m_tabWidget->setElideMode(Qt::ElideRight);
 	m_tabWidget->setStyleSheet(

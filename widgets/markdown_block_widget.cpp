@@ -5,6 +5,7 @@
 #include <QMargins>
 #include <QPainter>
 #include <QLine>
+#include <QStack>
 
 #include "model/new_text_model.h"
 #include "widgets/style.h"
@@ -330,10 +331,16 @@ QSize MarkdownBlock::sizeHint() const {
 	qreal start = margins.left() + formatMargins.left();
 
 	for (qsizetype i = 0; i < m_layouts.size(); i++) {
-		qreal lineY = 0;
+		qreal lineY = 0, offset = 0;
 		const QTextLayout *item = m_layouts.at(i);
+
+		text::Line *parLine = &((*m_par->getLines())[i]);
+		if ((type == text::BulletList || type == text::NumberList) && parLine->level > 0) {
+			offset += parLine->level * listLevelOffset;
+		}
+
 		QTextLayout *layout = (QTextLayout*)item;
-		layout->setPosition(QPoint(start, height));
+		layout->setPosition(QPoint(start + offset, height));
 		layout->beginLayout();
 
 		while (true) {
@@ -341,7 +348,7 @@ QSize MarkdownBlock::sizeHint() const {
 			if (!line.isValid())
 				break;
 
-			line.setLineWidth(lineWidth);
+			line.setLineWidth(lineWidth - offset);
 			line.setPosition(QPointF(0, lineY));
 			height += line.height();
 			lineY += line.height();
@@ -407,7 +414,6 @@ void MarkdownBlock::paintEvent(QPaintEvent *event) {
 
 	painter.setRenderHint(QPainter::Antialiasing, true);
 	painter.setPen(m_style->textEditColor());
-	painter.setBrush(m_style->textEditColor());
 
 	int lineSpacing = fontMetrics.lineSpacing();
 	int lineWidth = size().width()
@@ -415,29 +421,67 @@ void MarkdownBlock::paintEvent(QPaintEvent *event) {
 		- formatMargins.left() - formatMargins.right();
 	qreal y = margins.top() + formatMargins.top();
 
+	// List enumeration by level. We need this to maintain enumeration on the
+	// same level.
+	QStack<unsigned int> enumStack;
+	unsigned int prevLevel = 0, levelCount = 0;
+
 	for (qsizetype i = 0; i < m_layouts.size(); ++i) {
+		bool hollowPoint = false;
+		qreal offset = 0;
 		const QTextLayout *item = m_layouts.at(i);
 		QTextLayout *layout = (QTextLayout*)item;
 
+		text::Line *parLine = &((*m_par->getLines())[i]);
+		offset = parLine->level * listLevelOffset;
+		hollowPoint = (parLine->level + 2) % 2 == 1;
+
+		if (parLine->level == prevLevel) {
+			levelCount += 1;
+		} else if (parLine->level > prevLevel) {
+			while (parLine->level > enumStack.size()) {
+				enumStack.push(levelCount);
+				levelCount = 0;
+			}
+			levelCount = 1;
+		} else {
+			while (parLine->level < enumStack.size())
+				levelCount = enumStack.pop() + 1;
+		}
+		prevLevel = parLine->level;
+
 		// Draw list thingy.
 		if (type == text::BulletList) {
+			if (hollowPoint)
+				painter.setBrush(Qt::NoBrush);
+			else
+				painter.setBrush(m_style->textEditColor());
+
 			painter.drawEllipse(
 				QRectF(
-					(formatMargins.left() - fontMetrics.xHeight()) / 2,
+					(formatMargins.left() - fontMetrics.xHeight()) / 2 + offset,
 					y + (fontMetrics.ascent() - fontMetrics.xHeight()) - 1,
 					fontMetrics.xHeight(),
 					fontMetrics.xHeight()
 				)
 			);
 		} else if (type == text::NumberList) {
-			QString number = QString("%1.").arg(i + 1);
+			QString number = QString("%1.").arg(levelCount);
+			QRect numberRect = fontMetrics.boundingRect(number);
+			qreal xPos = (formatMargins.left() - fontMetrics.xHeight()) / 2 + offset;
+
 			painter.drawText(
 				QPointF(
-					(formatMargins.left() - fontMetrics.xHeight()) / 2,
+					xPos,
 					y + fontMetrics.lineSpacing() - fontMetrics.descent()
 				),
 				number
 			);
+
+			// TODO: We don't take into account the space required for the number,
+			// which can lead in overlap between line text and numbering, but only
+			// in case of very big lists of 100+ items. Ideally the layou should be
+			// adjusted for this case to move further to the right.
 		}
 
 		// Apply current selection.
@@ -452,6 +496,7 @@ void MarkdownBlock::paintEvent(QPaintEvent *event) {
 		}
 
 		// Draw the line/paragraph.
+		painter.setBrush(m_style->textEditColor());
 		layout->draw(&painter, QPointF(0, 0), selections);
 
 		// Draw cursor.
