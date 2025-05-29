@@ -1715,7 +1715,7 @@ void MarkdownEditWidget::onAnchorClicked(QString anchor) {
 			if (scheme == "node") {
 				QString value = match.captured(2);
 				bool success = false;
-				ThoughtId thoughtId = value.toInt(&success);
+				ThoughtId thoughtId = value.toULongLong(&success);
 				if (success) {
 					emit nodeLinkSelected(thoughtId);
 				}
