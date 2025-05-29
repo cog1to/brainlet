@@ -9,6 +9,7 @@
 #include <QKeyEvent>
 #include <QLine>
 #include <QTimer>
+#include <QTime>
 
 #include "model/thought.h"
 #include "widgets/style.h"
@@ -21,6 +22,8 @@ class MarkdownEditPresenter;
 class MarkdownSelection {
 public:
 	MarkdownSelection() {};
+	MarkdownSelection(MarkdownCursor _start, MarkdownCursor _end)
+		: start(_start), end(_end), active(true) {};
 	// Properties.
 	bool active = false;
 	MarkdownCursor start = MarkdownCursor(nullptr, -1, 0);
@@ -84,6 +87,8 @@ private:
 	MarkdownSelection m_selection = MarkdownSelection();
 	QString m_anchor = "";
 	QPoint m_pressPoint = QPoint(0, 0);
+	QTime m_lastMouseReleaseTime;
+	QPoint m_lastMouseReleasePoint;
 	// Saving text.
 	bool m_isDirty = false;
 	QTimer *m_saveTimer = nullptr;
@@ -99,27 +104,32 @@ private:
 	// Links handling.
 	void checkForLinksUnderCursor(MarkdownCursor);
 	void onAnchorClicked(QString);
-	// Helpers.
+	// Cursor positioning.
 	MarkdownBlock *blockBefore(MarkdownBlock*);
 	MarkdownBlock *blockAfter(MarkdownBlock*);
 	bool cursorAtBlockBelow(MarkdownCursor, MarkdownCursor*);
 	bool cursorAtBlockAbove(MarkdownCursor, MarkdownCursor*);
+	MarkdownCursor cursorAtPoint(QPoint, bool*);
+	bool cursorAfter(MarkdownCursor, MarkdownCursor);
 	void processCursorMove(MarkdownCursor, MarkdownCursor);
 	bool cursorAtPoint(QPoint, MarkdownCursor*);
 	bool cursorAbovePoint(QPoint, MarkdownCursor*);
 	MarkdownCursor moveCursor(int, MarkdownCursor);
+	void selectWordUnderCursor();
+	// Document anchors.
 	MarkdownCursor documentStart();
 	MarkdownCursor documentEnd();
 	inline int indexOfParagraph(text::Paragraph*);
 	inline text::Paragraph *insertParagraph(int index, text::Paragraph);
+	// Text manipulation.
 	inline void deleteParagraph(int index);
 	void mergeBlocks(int next, text::Line *line, MarkdownCursor prev);
 	MarkdownCursor splitBlocks(MarkdownCursor cursor, bool shiftUsed);
-	MarkdownCursor cursorAtPoint(QPoint, bool*);
-	bool isMovementKey(QKeyEvent*);
 	MarkdownCursor adjustForUnfolding(MarkdownCursor, MarkdownCursor);
-	bool cursorAfter(MarkdownCursor, MarkdownCursor);
+	// Menu.
 	void showContextMenu(QMouseEvent*);
+	// Misc.
+	bool isMovementKey(QKeyEvent*);
 };
 
 class MarkdownEditPresenter {

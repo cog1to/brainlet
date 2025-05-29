@@ -11,6 +11,7 @@
 #include <QTimer>
 #include <QMenu>
 #include <QDesktopServices>
+#include <QTime>
 
 #include "model/thought.h"
 #include "widgets/style.h"
@@ -193,17 +194,32 @@ void MarkdownEditWidget::mouseReleaseEvent(QMouseEvent *event) {
 	}
 
 	if (found) {
+		QPoint pos = event->pos();
+
 		// Check if still pressing link.
 		if (
-			QPoint pos = event->pos();
 			std::abs(pos.x() - m_pressPoint.x()) < 5 &&
-			std::abs(pos.x() - m_pressPoint.x()) < 5 &&
+			std::abs(pos.y() - m_pressPoint.y()) < 5 &&
 			m_anchor.isEmpty() == false
 		) {
 			onAnchorClicked(m_anchor);
 		}
 		m_pressPoint = QPoint(0, 0);
 		m_anchor = "";
+
+		// Check for double-clicks.
+		if (
+			m_lastMouseReleaseTime.isValid() &&
+			std::abs(pos.x() - m_lastMouseReleasePoint.x()) < 5 &&
+			std::abs(pos.y() - m_lastMouseReleasePoint.y()) < 5
+		) {
+			QTime now = QTime::currentTime();
+			if (m_lastMouseReleaseTime.msecsTo(now) <= 300) {
+				selectWordUnderCursor();
+			}
+		}
+		m_lastMouseReleaseTime = QTime::currentTime();
+		m_lastMouseReleasePoint = pos;
 	}
 
 	update();
@@ -551,6 +567,32 @@ MarkdownCursor MarkdownEditWidget::moveCursor(
 
 	// We should not really get here.
 	return cursor;
+}
+
+void MarkdownEditWidget::selectWordUnderCursor() {
+	if (m_cursor.block == nullptr || m_cursor.line == -1)
+		return;
+
+	text::Paragraph *par = m_cursor.block->paragraph();
+	text::Line *line = &((*par->getLines())[m_cursor.line]);
+	QString text = line->text;
+
+	int start = m_cursor.position, end = m_cursor.position;
+	while (start > 0 && text[start - 1].isLetterOrNumber())
+		start -= 1;
+	while (end < text.length() && text[end].isLetterOrNumber())
+		end += 1;
+
+	if (start != end) {
+		MarkdownCursor startCursor = MarkdownCursor(m_cursor.block, m_cursor.line, start);
+		MarkdownCursor endCursor = MarkdownCursor(m_cursor.block, m_cursor.line, end);
+
+		m_selection = MarkdownSelection(startCursor, endCursor);
+
+		// Redraw.
+		processCursorMove(m_cursor, startCursor);
+		//update();
+	}
 }
 
 // Cursor provider.

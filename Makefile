@@ -27,7 +27,7 @@ endif
 ifdef DEBUG
 	CFLAGS += -DDEBUG_GUI=1 -g -fsanitize=address,undefined,leak
 else
-	CFLAGS += -O2
+	CFLAGS += -O2 -DQT_NO_DEBUG_OUTPUT=1
 endif
 
 # Widgets
