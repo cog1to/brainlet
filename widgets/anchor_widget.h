@@ -27,7 +27,7 @@ public:
 	// Method overrides.
 	QSize sizeHint() const override;
 	// Size.
-	static constexpr QSize defaultSize = QSize(24, 24);
+	static constexpr QSize defaultSize = QSize(18, 18);
 
 signals:
 	void mouseEnter(AnchorWidget*);

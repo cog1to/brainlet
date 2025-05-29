@@ -199,7 +199,6 @@ void ThoughtWidget::setHighlight(bool value) {
 }
 
 void ThoughtWidget::activate() {
-	qDebug() << "activate!";
 	m_textEdit.setFocus();
 }
 

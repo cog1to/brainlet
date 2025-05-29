@@ -43,7 +43,7 @@ void AnchorWidget::setEnabled(bool enabled) {
 }
 
 QSize AnchorWidget::sizeHint() const {
-	return QSize(24, 24);
+	return defaultSize;
 }
 
 void AnchorWidget::enterEvent(QEnterEvent*) {
@@ -117,7 +117,12 @@ void AnchorWidget::paintEvent(QPaintEvent *) {
 	QBrush brush = QBrush(background);
 	QPen pen(border, borderWidth);
 	QPainter painter(this);
-	QRectF circle((cur.width() - 8.0) / 2.0, (cur.height() - 8.0) / 2.0, 8.0, 8.0);
+
+	QRectF circle(
+		(cur.width() - 8.0) / 2.0, 
+		(cur.height() - 8.0) / 2.0, 
+		8.0, 8.0
+	);
 
 	painter.setRenderHint(QPainter::Antialiasing);
 
