@@ -273,7 +273,11 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 		(key == Qt::Key_Left &&
 			event->modifiers() & Qt::ControlModifier)
 	) {
-		cursor = documentStart();
+		if (prev.position == 0) {
+			cursor = documentStart();
+		} else {
+			cursor = MarkdownCursor(prev.block, prev.line, 0);
+		}
 		processCursorMove(prev, cursor);
 	} else if (
 		key == Qt::Key_End ||
@@ -282,7 +286,11 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 			event->modifiers() & Qt::ControlModifier
 		)
 	) {
-		cursor = documentEnd();
+		if (prev.position == line->text.length()) {
+			cursor = documentEnd();
+		} else {
+			cursor = MarkdownCursor(prev.block, prev.line, line->text.length());
+		}
 		processCursorMove(prev, cursor);
 	} else if (key == Qt::Key_Left) {
 		if (m_cursor.position > 0) {
