@@ -1005,6 +1005,10 @@ void MarkdownEditWidget::insertNodeLink(ThoughtId id, QString title) {
 		}
 	}
 
+	if (m_selection.active) {
+		deleteSelection();
+	}
+
 	QString data = QString("[%1](node://%2)")
 		.arg(linkName)
 		.arg(id);
