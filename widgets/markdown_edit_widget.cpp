@@ -543,6 +543,11 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 	}
 }
 
+void MarkdownEditWidget::focusOutEvent(QFocusEvent*) {
+	m_cursor = MarkdownCursor(nullptr, -1, -1);
+	update();
+}
+
 // Cursor manipulation.
 
 MarkdownCursor MarkdownEditWidget::moveCursor(

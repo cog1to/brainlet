@@ -10,6 +10,7 @@
 #include <QLine>
 #include <QTimer>
 #include <QTime>
+#include <QFocusEvent>
 
 #include "model/thought.h"
 #include "widgets/style.h"
@@ -71,6 +72,7 @@ protected:
 	void mouseMoveEvent(QMouseEvent*) override;
 	void mouseReleaseEvent(QMouseEvent*) override;
 	void keyPressEvent(QKeyEvent*) override;
+	void focusOutEvent(QFocusEvent*) override;
 
 protected slots:
 	void saveText();
