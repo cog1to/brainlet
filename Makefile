@@ -17,9 +17,20 @@ UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
 	CXX = /opt/homebrew/opt/llvm/bin/clang++
 	LIBDIRS = -F${QTDIR}/lib
-	LIBS = -framework QtWidgets -framework QtCore -framework QtGui -framework QtDBus -framework QtSql
+	LIBS = -framework QtWidgets \
+				 -framework QtCore \
+				 -framework QtGui \
+				 -framework QtDBus \
+				 -framework QtSql
 	MOC = ${QTDIR}/share/qt/libexec/moc
 	RCC = ${QTDIR}/share/qt/libexec/rcc
+	INCLUDEDIRS = -I. \
+								-I${QTDIR}/include \
+								-I${QTDIR}/include/QtCore \
+								-I${QTDIR}/include/QtWidgets \
+								-I${QTDIR}/include/QtGui \
+								-I${QTDIR}/include/QtSql \
+								-I${QTDIR}/include/QtDBus
 	CFLAGS += -DDARWIN=1
 endif
 
