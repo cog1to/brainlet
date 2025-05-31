@@ -25,6 +25,11 @@ public:
 	MarkdownSelection() {};
 	MarkdownSelection(MarkdownCursor _start, MarkdownCursor _end)
 		: start(_start), end(_end), active(true) {};
+	void reset() {
+		start = MarkdownCursor(nullptr, -1, 0);
+		end = MarkdownCursor(nullptr, -1, 0);
+		active = false;
+	};
 	// Properties.
 	bool active = false;
 	MarkdownCursor start = MarkdownCursor(nullptr, -1, 0);
@@ -128,6 +133,7 @@ private:
 	void mergeBlocks(int next, text::Line *line, MarkdownCursor prev);
 	MarkdownCursor splitBlocks(MarkdownCursor cursor, bool shiftUsed);
 	MarkdownCursor adjustForUnfolding(MarkdownCursor, MarkdownCursor);
+	MarkdownCursor applyStyleToSelection(QString);
 	// Menu.
 	void showContextMenu(QMouseEvent*);
 	// Misc.

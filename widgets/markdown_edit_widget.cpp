@@ -421,6 +421,20 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 			cursor = deleteSelection();
 			processCursorMove(prev, cursor);
 		}
+	} else if (event->matches(QKeySequence::Bold)) {
+		cursor = applyStyleToSelection("**");
+		processCursorMove(prev, cursor);
+		if (m_selection.active) {
+			m_selection.reset();
+			update();
+		}
+	} else if (event->matches(QKeySequence::Italic)) {
+		cursor = applyStyleToSelection("*");
+		processCursorMove(prev, cursor);
+		if (m_selection.active) {
+			m_selection.reset();
+			update();
+		}
 	} else if (
 		key == Qt::Key_Tab &&
 		(par->getType() == text::BulletList || par->getType() == text::NumberList)
@@ -1069,8 +1083,7 @@ void MarkdownEditWidget::insertNodeLink(ThoughtId id, QString title) {
 		.arg(id);
 	MarkdownCursor cursor = pasteString(data);
 
-	// Reset selection.
-	m_selection.active = false;
+	m_selection.reset();
 
 	processCursorMove(m_cursor, cursor);
 
@@ -1303,6 +1316,51 @@ MarkdownCursor MarkdownEditWidget::adjustForUnfolding(
 	}
 
 	return to;
+}
+
+MarkdownCursor MarkdownEditWidget::applyStyleToSelection(
+	QString style
+) {
+	MarkdownCursor startCursor = m_cursor;
+	MarkdownCursor endCursor = m_cursor;
+
+	if (m_selection.active) {
+		startCursor = m_selection.start;
+		endCursor = m_selection.end;
+		if (cursorAfter(startCursor, endCursor))
+			std::swap(startCursor, endCursor);
+	}
+
+	// Adjust for unfolding.
+	startCursor = adjustForUnfolding(startCursor, m_cursor);
+	endCursor = adjustForUnfolding(endCursor, m_cursor);
+
+	// Add bold mark before selection.
+	text::Paragraph *startPar = startCursor.block->paragraph();
+	text::Line *startLine = &((*startPar->getLines())[startCursor.line]);
+	QString newText = startLine->text;
+	newText.insert(startCursor.position, style);
+	startLine->setText(newText, startPar->getType() == text::Code);
+
+	// Add bold mark after selection.
+	text::Paragraph *endPar = endCursor.block->paragraph();
+	text::Line *endLine = &((*endPar->getLines())[endCursor.line]);
+	if (endLine == startLine)
+		endCursor.position += style.length();
+	newText = endLine->text;
+	newText.insert(endCursor.position, style);
+	endLine->setText(newText, endPar->getType() == text::Code);
+
+	// Update paragraphs.
+	startCursor.block->setParagraph(startPar);
+	if (endCursor.block != startCursor.block)
+		endCursor.block->setParagraph(endPar);
+
+	// Put cursor at the end of the selection if there is a selection.
+	if (m_selection.active)
+		endCursor.position += style.length();
+
+	return endCursor;
 }
 
 bool MarkdownEditWidget::cursorAtPoint(
