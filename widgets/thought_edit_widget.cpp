@@ -1,5 +1,15 @@
 #include <QColor>
+#include <QString>
 #include <QWindow>
+#include <QWidget>
+#include <QFocusEvent>
+#include <QGuiApplication>
+#include <QTextEdit>
+#include <QFrame>
+#include <QMouseEvent>
+#include <QEnterEvent>
+#include <QKeyEvent>
+#include <QMimeData>
 #include <QFocusEvent>
 
 #include "widgets/thought_edit_widget.h"
