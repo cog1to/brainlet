@@ -53,8 +53,11 @@ RESOURCES_C = resources/resources.cpp
 # All object files
 SOURCES = $(shell find . \( -path ./resources -prune -o -path ./tests -prune -o -path ./mocs -prune -o -path ./main.cpp -prune \) -o -name "*.cpp" -print | sed -e 's/\.\///') $(WIDGETS_MOCS_C) $(PRESENTERS_MOCS_C) $(RESOURCES_C)
 OBJECTS = $(patsubst %.cpp,obj/%.o,$(SOURCES))
+# All moc files
+MOCS = $(WIDGETS_MOCS_C) $(PRESENTERS_MOCS_C)
 
-.PRECIOUS: $(OBJECTS)
+# Don't delete obj and moc files.
+.PRECIOUS: $(OBJECTS) $(MOCS)
 
 # Main target
 default: app
@@ -67,9 +70,6 @@ clean:
 bin:
 	mkdir -p bin
 
-moc: mocs
-	mkdir -p mocs
-
 # Tests with debug graphics
 debug: CFLAGS += -DDEBUG_GUI=1
 
@@ -78,15 +78,16 @@ $(RESOURCES_C): $(RESOURCES) $(wildcard resources/icons/*)
 	$(RCC) -name resources $(RESOURCES) -o $(RESOURCES_C)
 
 # MOCs
-mocfiles: moc $(WIDGETS_MOCS_C) $(PRESENTERS_MOCS_C)
-
 mocs/%widget.moc.cpp: widgets/%widget.h
+	@mkdir -p $(@D)
 	$(MOC) $< -o $@
 
 mocs/%presenter.moc.cpp: presenters/%presenter.h
+	@mkdir -p $(@D)
 	$(MOC) $< -o $@
 
 mocs/style.moc.cpp: widgets/style.h
+	@mkdir -p $(@D)
 	$(MOC) $< -o $@
 
 # Object rules
