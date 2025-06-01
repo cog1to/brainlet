@@ -973,7 +973,7 @@ void CanvasWidget::onNewThoughtTextChanged(ThoughtWidget *widget) {
 	// Relayout.
 	onWidgetActivated(widget);
 	// Emit text update.
-	emit newThoughtTextChanged(QString::fromStdString(widget->text()));
+	emit newThoughtTextChanged(widget->text());
 }
 
 void CanvasWidget::onCreateCanceled(ThoughtWidget *widget) {
@@ -1062,7 +1062,7 @@ void CanvasWidget::onMenuRequested(
 		contextMenu.setStyleSheet(m_style->menuStyle());
 	}
 
-	QString thoughtName = QString::fromStdString(m_menuThought->text());
+	QString thoughtName = m_menuThought->text();
 	if (thoughtName.size() > 15)
 		thoughtName = thoughtName.left(12) + "...";
 

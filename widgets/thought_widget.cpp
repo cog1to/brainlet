@@ -137,8 +137,8 @@ void ThoughtWidget::setHasLink(bool value) {
 	m_anchorLink.setActive(value);
 }
 
-const std::string ThoughtWidget::text() const {
-	return m_text.toStdString();
+const QString ThoughtWidget::text() const {
+	return m_text;
 }
 
 void ThoughtWidget::setText(QString value) {

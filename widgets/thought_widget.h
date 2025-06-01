@@ -1,8 +1,6 @@
 #ifndef H_THOUGHT_WIDGET
 #define H_THOUGHT_WIDGET
 
-#include <string>
-
 #include <QObject>
 #include <QWidget>
 #include <QResizeEvent>
@@ -49,7 +47,7 @@ public:
 	void setHasChild(bool);
 	const bool hasLink() const;
 	void setHasLink(bool);
-	const std::string text() const;
+	const QString text() const;
 	void setText(QString);
 	const bool rightSideLink() const;
 	void setRightSideLink(bool);
