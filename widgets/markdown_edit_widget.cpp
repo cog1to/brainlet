@@ -558,8 +558,11 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 }
 
 void MarkdownEditWidget::focusOutEvent(QFocusEvent*) {
-	m_cursor = MarkdownCursor(nullptr, -1, -1);
-	update();
+	if (m_cursor.block != nullptr) {
+		m_lastCursor = m_cursor;
+		m_cursor = MarkdownCursor(nullptr, -1, 0);
+		update();
+	}
 }
 
 // Cursor manipulation.
@@ -1078,6 +1081,11 @@ void MarkdownEditWidget::insertNodeLink(ThoughtId id, QString title) {
 		deleteSelection();
 	}
 
+	if (m_lastCursor.block != nullptr) {
+		m_cursor = m_lastCursor;
+		setFocus();
+	}
+
 	QString data = QString("[%1](node://%2)")
 		.arg(linkName)
 		.arg(id);
@@ -1137,6 +1145,10 @@ void MarkdownEditWidget::showContextMenu(QMouseEvent *event) {
 // Linking nodes.
 
 void MarkdownEditWidget::onInsertNodeLink() {
+	if (m_lastCursor.block != nullptr) {
+		m_cursor = m_lastCursor;
+	}
+
 	QLine cursorLine = m_cursor.block->lineForCursor(m_cursor);
 	emit nodeInsertionActivated(cursorLine.p2());
 }

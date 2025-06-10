@@ -11,6 +11,7 @@
 #include <QTimer>
 #include <QTime>
 #include <QFocusEvent>
+#include <QMenu>
 
 #include "model/thought.h"
 #include "widgets/style.h"
@@ -90,12 +91,12 @@ private:
 	MarkdownEditPresenter *m_presenter = nullptr;
 	// State.
 	text::TextModel m_model = text::TextModel();
-	MarkdownBlock *m_activeBlock = nullptr;
 	MarkdownSelection m_selection = MarkdownSelection();
 	QString m_anchor = "";
 	QPoint m_pressPoint = QPoint(0, 0);
 	QTime m_lastMouseReleaseTime;
 	QPoint m_lastMouseReleasePoint;
+	MarkdownCursor m_lastCursor = MarkdownCursor(nullptr, -1, 0);
 	// Saving text.
 	bool m_isDirty = false;
 	QTimer *m_saveTimer = nullptr;
