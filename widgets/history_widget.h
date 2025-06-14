@@ -8,6 +8,7 @@
 #include <QMouseEvent>
 #include <QList>
 #include <QHBoxLayout>
+#include <QResizeEvent>
 
 #include "model/thought.h"
 #include "widgets/style.h"
@@ -47,13 +48,18 @@ public:
 signals:
 	void itemSelected(ThoughtId, QString&);
 
+protected:
+	void resizeEvent(QResizeEvent*) override;
+
 private slots:
 	void onItemClicked(HistoryItem*);
 
 private:
 	Style *m_style;
 	QList<HistoryItem *> m_items;
-	QHBoxLayout m_layout;
+	int m_prevVisibleCount = 0;
+	// Internal.
+	void relayout();
 };
 
 #endif

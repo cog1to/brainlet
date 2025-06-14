@@ -8,16 +8,13 @@
 #include "model/thought.h"
 #include "widgets/history_widget.h"
 
+// History list widget.
+
 HistoryWidget::HistoryWidget(QWidget *parent, Style *style)
-	: QFrame(parent), m_style(style), m_layout(this)
+	: QFrame(parent), m_style(style)
 {
 	setContentsMargins(QMargins(0, 0, 0, 0));
 	setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-
-	m_layout.setSpacing(6);
-	m_layout.setContentsMargins(QMargins(0, 0, 0, 0));
-	m_layout.setDirection(QBoxLayout::RightToLeft);
-	m_layout.addStretch(0);
 }
 
 HistoryWidget::~HistoryWidget() {
@@ -31,22 +28,23 @@ QSize HistoryWidget::sizeHint() const {
 	return QSize(100, metrics.height() + 4);
 }
 
+void HistoryWidget::resizeEvent(QResizeEvent*) {
+	relayout();
+}
+
 void HistoryWidget::addItem(ThoughtId id, QString& title) {
-	for (int idx = 0; idx < m_layout.count(); idx++) {
-		auto item = m_layout.itemAt(idx);
-		if (item->widget() != nullptr) {
-			HistoryItem *w = static_cast<HistoryItem*>(item->widget());
-			if (w->id() == id) {
-				m_layout.removeItem(item);
-				m_layout.insertWidget(0, w);
-				return;
-			}
+	for (int idx = 0; idx < m_items.size(); idx++) {
+		HistoryItem *w = m_items[idx];
+		if (w->id() == id) {
+			m_items.removeAt(idx);
+			m_items.insert(0, w);
+			relayout();
+			return;
 		}
 	}
 
-	HistoryItem *item = new HistoryItem(nullptr, m_style, id, title);
-	m_layout.insertWidget(0, item);
-	m_items.push_back(item);
+	HistoryItem *item = new HistoryItem(this, m_style, id, title);
+	m_items.insert(0, item);
 
 	// Connect.
 	connect(
@@ -55,44 +53,54 @@ void HistoryWidget::addItem(ThoughtId id, QString& title) {
 	);
 
 	// Clean up if we got too many widgets.
-	while (m_layout.count() > 10) {
-		HistoryItem *lastWidget = nullptr;
-		QLayoutItem *lastItem = nullptr;
-
-		// Find last history item.
-		for (int iidx = m_layout.count() - 1; iidx >= 0; iidx--) {
-			auto item = m_layout.itemAt(iidx);
-			if (item->widget() != nullptr) {
-				HistoryItem *it = static_cast<HistoryItem*>(item->widget());
-				if (it != nullptr) {
-					lastWidget = it;
-					lastItem = item;
-					break;
-				}
-			}
-		}
-
-		if (lastWidget != nullptr && lastItem != nullptr) {
-			// Delete from list.
-			for (int idx = 0; idx < m_items.size(); idx++) {
-				if (m_items[idx] == lastWidget) {
-					m_items.removeAt(idx);
-					delete lastWidget;
-					break;
-				}
-			}
-			m_layout.removeItem(lastItem);
-		} else {
-			break;
-		}
+	while (m_items.count() > 20) {
+		HistoryItem *lastWidget = m_items[m_items.count() - 1];
+		m_items.removeAt(m_items.count() - 1);
+		delete lastWidget;
 	}
 
 	// Trigger redraw.
+	relayout();
 	update();
 }
 
 void HistoryWidget::onItemClicked(HistoryItem *item) {
 	emit itemSelected(item->id(), item->name());
+}
+
+void HistoryWidget::relayout() {
+	int spacing = 0, vcount = 0, layoutSpacing = 6;
+	int offset = size().width();
+	QMargins margins = contentsMargins();
+	int availableWidth = size().width() - margins.left() - margins.right();
+
+	// Calculate the number of visible items.
+	int consumedWidth = 0;
+	for (vcount = 0; vcount < m_items.size(); vcount++) {
+		int w = m_items[vcount]->sizeHint().width() + spacing;
+		if (consumedWidth + w > availableWidth)
+			break;
+		consumedWidth += w;
+		spacing = layoutSpacing;
+	}
+
+	// Make everyting that fits visible.
+	for (int idx = 0; idx < vcount; idx++) {
+		QWidget *item = m_items[idx];
+		QSize hint = item->sizeHint();
+
+		item->setParent(this);
+		item->show();
+		item->setGeometry(
+			offset - hint.width(), 0,
+			hint.width(), hint.height()
+		);
+		offset -= hint.width() + spacing;
+	}
+
+	// Hide everything that is not fit.
+	for (int idx = vcount; idx < m_items.size(); idx++)
+		m_items[idx]->setParent(nullptr);
 }
 
 // History item.
@@ -111,7 +119,7 @@ HistoryItem::HistoryItem(
 			border-radius: 4px;\
 		}\
 		QFrame::hover{\
-			background-color: #74444444;\
+			background-color: #74343434;\
 		}"
 	);
 
@@ -125,7 +133,7 @@ QSize HistoryItem::sizeHint() const {
 	QMargins margins = contentsMargins();
 
 	return QSize(
-		std::min(textRect.width() + margins.left() + margins.right(), 100),
+		std::min(textRect.width() + margins.left() + margins.right(), 150),
 		metrics.height() + margins.top() + margins.bottom()
 	);
 }
