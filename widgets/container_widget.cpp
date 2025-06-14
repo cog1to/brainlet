@@ -12,10 +12,12 @@ ContainerWidget::ContainerWidget(
 	CanvasWidget *canvas
 ) : BaseWidget(parent, style),
 	m_canvas(canvas),
-	m_search(this, style, false, tr("Go to..."), false)
+	m_search(this, style, false, tr("Go to..."), false),
+	m_history(this, style)
 {
 	canvas->setParent(this);
 	m_search.raise();
+	m_history.raise();
 
 	// Events.
 	connect(
@@ -38,18 +40,20 @@ ContainerWidget::ContainerWidget(
 
 void ContainerWidget::resizeEvent(QResizeEvent *event) {
 	BaseWidget::resizeEvent(event);
+	QSize historyHint = m_history.sizeHint();
 
 	// Stretch canvas to full size.
 	if (m_canvas != nullptr) {
 		QSize size = event->size();
 		m_canvas->setGeometry(
 			0, 0,
-			size.width(), size.height()
+			size.width(), size.height() - historyHint.height() - 4
 		);
 	}
 
 	updateSearchWidth();
 	layoutSearch();
+	layoutHistory();
 }
 
 CanvasWidget *ContainerWidget::canvas() {
@@ -58,6 +62,10 @@ CanvasWidget *ContainerWidget::canvas() {
 
 SearchWidget *ContainerWidget::search() {
 	return &m_search;
+}
+
+HistoryWidget *ContainerWidget::history() {
+	return &m_history;
 }
 
 // Slots.
@@ -93,6 +101,16 @@ void ContainerWidget::layoutSearch() {
 		0, 0,
 		m_search.isActive() ? (current.width() / 2) : 94,
 		hint.height()
+	);
+}
+
+void ContainerWidget::layoutHistory() {
+	QSize current = size();
+	QSize hint = m_history.sizeHint();
+
+	m_history.setGeometry(
+		0, current.height() - hint.height(),
+		current.width(), hint.height()
 	);
 }
 

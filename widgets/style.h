@@ -31,7 +31,8 @@ public:
 		QFont iconFont,
 		QColor selectionBackColor,
 		QColor selectionTextColor,
-		QColor focusedColor
+		QColor focusedColor,
+		QFont historyFont
 	);
 	// Default style.
 	static Style& defaultStyle();
@@ -99,6 +100,9 @@ public:
 	// Focused widget style.
 	const QColor focusedColor() const;
 	void setFocusedColor(QColor);
+	// History font.
+	const QFont historyFont() const;
+	void setHistoryFont(QFont);
 
 signals:
 	void styleChanged(Style*);
@@ -125,6 +129,7 @@ private:
 	QColor m_selectionBackColor;
 	QColor m_selectionTextColor;
 	QColor m_focusedColor;
+	QFont m_historyFont;
 };
 
 #endif

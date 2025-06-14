@@ -8,6 +8,7 @@
 #include "presenters/text_editor_presenter.h"
 #include "presenters/search_presenter.h"
 #include "presenters/dismissable_presenter.h"
+#include "presenters/history_presenter.h"
 #include "widgets/brain_widget.h"
 
 class BrainPresenter: public DismissablePresenter {
@@ -18,7 +19,8 @@ public:
 		BrainWidget*,
 		CanvasPresenter*,
 		TextEditorPresenter*,
-		SearchPresenter*
+		SearchPresenter*,
+		HistoryPresenter*
 	);
 	~BrainPresenter();
 
@@ -28,6 +30,7 @@ protected slots:
 	void onSearchItemSelected(ThoughtId, QString);
 	void onThoughtLinkSelected(ThoughtId);
 	void onConnectionCreated();
+	void onItemSelected(ThoughtId, QString&);
 	void onDismiss() override;
 
 private:
@@ -35,6 +38,7 @@ private:
 	CanvasPresenter *m_canvas;
 	TextEditorPresenter *m_editor;
 	SearchPresenter *m_search;
+	HistoryPresenter *m_history;
 };
 
 #endif

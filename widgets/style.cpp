@@ -26,7 +26,8 @@ Style::Style(
 	QFont iconFont,
 	QColor selectionBackColor,
 	QColor selectionTextColor,
-	QColor focusedColor
+	QColor focusedColor,
+	QFont historyFont
 ) {
 	m_background = background;
 	m_nodeBackground = nodeBackground;
@@ -49,6 +50,7 @@ Style::Style(
 	m_selectionBackColor = selectionBackColor;
 	m_selectionTextColor = selectionTextColor;
 	m_focusedColor = focusedColor;
+	m_historyFont = historyFont;
 }
 
 Style& Style::defaultStyle() {
@@ -67,6 +69,9 @@ Style& Style::defaultStyle() {
 
 	static QFont iconFont = QFont("Font Awesome 6 Free");
 	iconFont.setPixelSize(12);
+
+	static QFont historyFont = QFont("Noto Sans Mono");
+	historyFont.setPixelSize(12);
 
 	static Style style(
 		QColor(23, 43, 52, 255),
@@ -89,7 +94,8 @@ Style& Style::defaultStyle() {
 		iconFont,
 		QColor(49, 79, 120),
 		QColor(255, 255, 255),
-		QColor(255, 255, 255)
+		QColor(255, 255, 255),
+		historyFont
 	);
 
 	return style;
@@ -378,5 +384,14 @@ const QColor Style::focusedColor() const {
 
 void Style::setFocusedColor(QColor color) {
 	m_focusedColor = color;
+}
+
+const QFont Style::historyFont() const {
+	return m_historyFont;
+}
+
+void Style::setHistoryFont(QFont font) {
+	m_historyFont = font;
+	emit styleChanged(this);
 }
 

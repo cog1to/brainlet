@@ -15,11 +15,13 @@
 #include "widgets/brain_widget.h"
 #include "widgets/thought_details_widget.h"
 #include "widgets/container_widget.h"
+#include "widgets/history_widget.h"
 #include "presenters/brain_list_presenter.h"
 #include "presenters/text_editor_presenter.h"
 #include "presenters/canvas_presenter.h"
 #include "presenters/brain_presenter.h"
 #include "presenters/search_presenter.h"
+#include "presenters/history_presenter.h"
 
 MemoryFactory::MemoryFactory(Style *style) {
 	m_style = style;
@@ -110,6 +112,11 @@ DismissableModule MemoryFactory::makeBrainModule(QString id) {
 		containerWidget->search()
 	);
 
+	// History presenter.
+	HistoryPresenter *historyPresenter = new HistoryPresenter(
+		containerWidget->history()
+	);
+
 	// Top-level brain widget.
 	BrainWidget *brainWidget = new BrainWidget(
 		nullptr, m_style,
@@ -122,7 +129,8 @@ DismissableModule MemoryFactory::makeBrainModule(QString id) {
 		brainWidget,
 		canvasPresenter,
 		markdownPresenter,
-		searchPresenter
+		searchPresenter,
+		historyPresenter
 	);
 
 	return DismissableModule(

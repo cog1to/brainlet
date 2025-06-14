@@ -28,6 +28,7 @@ BrainWidget::BrainWidget(
 		QSizePolicy(QSizePolicy::Maximum, QSizePolicy::Expanding)
 	);
 
+	m_layout.setContentsMargins(QMargins(8, 8, 8, 8));
 	m_layout.addWidget(container, 1);
 	m_layout.addWidget(separator, 0);
 	m_layout.addWidget(details, 1);

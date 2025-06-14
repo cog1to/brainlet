@@ -10,6 +10,7 @@
 #include "widgets/style.h"
 #include "widgets/canvas_widget.h"
 #include "widgets/search_widget.h"
+#include "widgets/history_widget.h"
 
 class ContainerWidget: public BaseWidget {
 	Q_OBJECT
@@ -18,6 +19,7 @@ public:
 	ContainerWidget(QWidget*, Style*, CanvasWidget*);
 	CanvasWidget *canvas();
 	SearchWidget *search();
+	HistoryWidget *history();
 	void resizeEvent(QResizeEvent *) override;
 
 private slots:
@@ -28,8 +30,10 @@ private slots:
 private:
 	CanvasWidget *m_canvas = nullptr;
 	SearchWidget m_search;
+	HistoryWidget m_history;
 	// Helpers
 	void layoutSearch();
+	void layoutHistory();
 	void updateSearchWidth();
 };
 

@@ -11,9 +11,11 @@ BrainPresenter::BrainPresenter(
 	BrainWidget *view,
 	CanvasPresenter *canvas,
 	TextEditorPresenter *editor,
-	SearchPresenter *search
+	SearchPresenter *search,
+	HistoryPresenter *history
 )
-	: m_view(view), m_canvas(canvas), m_editor(editor), m_search(search)
+	: m_view(view), m_canvas(canvas), m_editor(editor), m_search(search),
+	m_history(history)
 {
 	connect(
 		canvas, SIGNAL(thoughtSelected(ThoughtId, QString)),
@@ -35,6 +37,10 @@ BrainPresenter::BrainPresenter(
 		editor, SIGNAL(connectionCreated()),
 		canvas,	SLOT(reload())
 	);
+	connect(
+		history, SIGNAL(itemSelected(ThoughtId, QString&)),
+		this, SLOT(onItemSelected(ThoughtId, QString&))
+	);
 }
 
 BrainPresenter::~BrainPresenter() {
@@ -44,6 +50,8 @@ BrainPresenter::~BrainPresenter() {
 		delete m_editor;
 	if (m_search != nullptr)
 		delete m_search;
+	if (m_history != nullptr)
+		delete m_history;
 }
 
 void BrainPresenter::onThoughtSelected(ThoughtId id, QString title) {
@@ -58,6 +66,15 @@ void BrainPresenter::onThoughtSelected(ThoughtId id, QString title) {
 	if (m_search != nullptr) {
 		m_search->clear();
 	}
+
+	if (m_history != nullptr) {
+		m_history->onThoughtSelected(id, title);
+	}
+}
+
+void BrainPresenter::onItemSelected(ThoughtId id, QString& title) {
+	m_canvas->setThought(id);
+	onThoughtSelected(id, title);
 }
 
 void BrainPresenter::onThoughtRenamed(ThoughtId id, QString title) {
