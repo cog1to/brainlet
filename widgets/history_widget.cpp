@@ -25,7 +25,7 @@ HistoryWidget::~HistoryWidget() {
 
 QSize HistoryWidget::sizeHint() const {
 	QFontMetrics metrics = QFontMetrics(m_style->historyFont());
-	return QSize(100, metrics.height() + 4);
+	return QSize(100, metrics.height() + 8);
 }
 
 void HistoryWidget::resizeEvent(QResizeEvent*) {
@@ -123,7 +123,7 @@ HistoryItem::HistoryItem(
 		}"
 	);
 
-	setContentsMargins(QMargins(6, 2, 6, 2));
+	setContentsMargins(QMargins(6, 4, 6, 4));
 	setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
 }
 
@@ -133,7 +133,7 @@ QSize HistoryItem::sizeHint() const {
 	QMargins margins = contentsMargins();
 
 	return QSize(
-		std::min(textRect.width() + margins.left() + margins.right(), 150),
+		std::min(textRect.width() + margins.left() + margins.right(), 100),
 		metrics.height() + margins.top() + margins.bottom()
 	);
 }
