@@ -12,7 +12,12 @@
 
 ConnectionsPresenter::ConnectionsPresenter(
 	MarkdownConnectionsWidget *view
-) : m_view(view) {}
+) : m_view(view) {
+	connect(
+		view, &MarkdownConnectionsWidget::anchorClicked,
+		this, &ConnectionsPresenter::onAnchorClicked
+	);
+}
 
 void ConnectionsPresenter::onStateUpdated(const State *state) {
 	if (state == nullptr)
@@ -32,6 +37,14 @@ void ConnectionsPresenter::onStateUpdated(const State *state) {
 	sortNodes(center->children(), thoughts, &result, ConnChild);
 
 	m_view->setConnections(result);
+}
+
+void ConnectionsPresenter::onAnchorClicked(const QUrl &link) {
+	bool success = false;
+	ThoughtId thoughtId = link.fragment().toULongLong(&success);
+	if (success) {
+		emit nodeLinkSelected(thoughtId);
+	}
 }
 
 // Helpers

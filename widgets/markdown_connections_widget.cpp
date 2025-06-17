@@ -29,6 +29,9 @@ MarkdownConnectionsWidget::MarkdownConnectionsWidget(
 		.arg(Padding)
 	);
 
+	setOpenLinks(false);
+	setOpenExternalLinks(false);
+
 	setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
@@ -115,7 +118,7 @@ void MarkdownConnectionsWidget::addLines(
 ) {
 	for (auto it = conns.begin(); it != conns.end(); it++) {
 		lines.push_back(
-			QString("<p>%1 <a href=\"node://%2\">%3</a></p>")
+			QString("<p>%1 <a href=\"#%2\">%3</a></p>")
 			.arg(type)
 			.arg((*it).id())
 			.arg((*it).name())

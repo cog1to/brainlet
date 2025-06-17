@@ -18,8 +18,12 @@ class ConnectionsPresenter: public QObject {
 public:
 	ConnectionsPresenter(MarkdownConnectionsWidget*);
 
+signals:
+	void nodeLinkSelected(ThoughtId);
+
 public slots:
 	void onStateUpdated(const State*);
+	void onAnchorClicked(const QUrl&);
 
 private:
 	MarkdownConnectionsWidget *m_view;

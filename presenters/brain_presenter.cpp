@@ -58,6 +58,13 @@ BrainPresenter::BrainPresenter(
 		);
 	}
 
+	if (conns != nullptr) {
+		connect(
+			conns, &ConnectionsPresenter::nodeLinkSelected,
+			this, &BrainPresenter::onThoughtLinkSelected
+		);
+	}
+
 	if (conns != nullptr && canvas != nullptr) {
 		connect(
 			canvas, SIGNAL(stateUpdated(const State*)),
