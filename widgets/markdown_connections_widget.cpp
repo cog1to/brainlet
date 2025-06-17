@@ -29,6 +29,7 @@ MarkdownConnectionsWidget::MarkdownConnectionsWidget(
 		.arg(Padding)
 	);
 
+	setFocusPolicy(Qt::NoFocus);
 	setOpenLinks(false);
 	setOpenExternalLinks(false);
 
