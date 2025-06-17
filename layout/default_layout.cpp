@@ -323,7 +323,7 @@ void DefaultLayout::layoutVerticalSide(
 		float relativeOffset = maxCount != 0 ? ((float)offset / (float)sorted.size()) : 0;
 
 		ScrollAreaLayout layout(
-			rect.x() - scrollWidth,
+			rect.x() - scrollWidth / 2,
 			rect.y(),
 			rect.width() + scrollWidth,
 			rect.height(),
