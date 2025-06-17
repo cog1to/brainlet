@@ -2,6 +2,8 @@
 #include <QScrollArea>
 #include <QLine>
 #include <QScrollBar>
+#include <QVBoxLayout>
+#include <QMargins>
 
 #include "widgets/markdown_scroll_widget.h"
 #include "widgets/markdown_edit_widget.h"
@@ -11,14 +13,24 @@
 MarkdownScrollWidget::MarkdownScrollWidget(
 	QWidget *parent,
 	Style *style
-) : QScrollArea(parent), m_style(style) {
+) : QScrollArea(parent),
+	m_style(style),
+	m_container(nullptr),
+	m_layout(nullptr)
+{
 	setStyleSheet("QScrollArea{border:none;}");
 	setFocusPolicy(Qt::NoFocus);
+	m_layout.setContentsMargins(QMargins(0, 0, 0, 0));
+	m_container.setLayout(&m_layout);
+	setWidget(&m_container);
 }
 
 MarkdownScrollWidget::~MarkdownScrollWidget() {};
 
-void MarkdownScrollWidget::setMarkdownWidget(MarkdownEditWidget *w) {
+void MarkdownScrollWidget::setMarkdownWidgets(
+	MarkdownEditWidget *w,
+	MarkdownConnectionsWidget *c
+) {
 	assert(w != nullptr);
 
 	connect(
@@ -27,8 +39,13 @@ void MarkdownScrollWidget::setMarkdownWidget(MarkdownEditWidget *w) {
 	);
 
 	m_widget = w;
-	setWidget(w);
 	m_widget->setPresenter(this);
+	m_layout.addWidget(w);
+
+	if (c != nullptr) {
+		m_connections = c;
+		m_layout.addWidget(c);
+	}
 }
 
 MarkdownEditWidget *MarkdownScrollWidget::markdownWidget() {

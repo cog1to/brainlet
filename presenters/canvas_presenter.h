@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QString>
 
+#include "model/state.h"
 #include "layout/base_layout.h"
 #include "entity/graph_repository.h"
 #include "entity/search_repository.h"
@@ -20,6 +21,7 @@ public:
 signals:
 	void thoughtSelected(ThoughtId, QString);
 	void thoughtRenamed(ThoughtId, QString);
+	void stateUpdated(const State*);
 
 public slots:
 	void onThoughtSelected(ThoughtId);

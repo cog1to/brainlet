@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
 	MarkdownEditWidget *markdownWidget = new MarkdownEditWidget(nullptr, &style);
 
 	MarkdownScrollWidget scroll = MarkdownScrollWidget(nullptr, &style);
-	scroll.setMarkdownWidget(markdownWidget);
+	scroll.setMarkdownWidgets(markdownWidget, nullptr);
 	scroll.setWidgetResizable(true);
 	scroll.resize(600, 600);
 

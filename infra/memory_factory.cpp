@@ -11,6 +11,7 @@
 #include "widgets/brain_list_widget.h"
 #include "widgets/markdown_scroll_widget.h"
 #include "widgets/markdown_edit_widget.h"
+#include "widgets/markdown_connections_widget.h"
 #include "widgets/canvas_widget.h"
 #include "widgets/brain_widget.h"
 #include "widgets/thought_details_widget.h"
@@ -22,6 +23,7 @@
 #include "presenters/brain_presenter.h"
 #include "presenters/search_presenter.h"
 #include "presenters/history_presenter.h"
+#include "presenters/connections_presenter.h"
 
 MemoryFactory::MemoryFactory(Style *style) {
 	m_style = style;
@@ -71,9 +73,10 @@ DismissableModule MemoryFactory::makeBrainModule(QString id) {
 
 	// Text editor widget and presenter.
 	MarkdownEditWidget *markdownWidget = new MarkdownEditWidget(nullptr, m_style);
+	MarkdownConnectionsWidget *connWidget = new MarkdownConnectionsWidget(nullptr, m_style);
 
 	MarkdownScrollWidget *scroll = new MarkdownScrollWidget(nullptr, m_style);
-	scroll->setMarkdownWidget(markdownWidget);
+	scroll->setMarkdownWidgets(markdownWidget, connWidget);
 	scroll->setWidgetResizable(true);
 
 	TextEditorPresenter *markdownPresenter = new TextEditorPresenter(
@@ -117,6 +120,11 @@ DismissableModule MemoryFactory::makeBrainModule(QString id) {
 		containerWidget->history()
 	);
 
+	// Connections presenter.
+	ConnectionsPresenter *connPresenter = new ConnectionsPresenter(
+		connWidget
+	);
+
 	// Top-level brain widget.
 	BrainWidget *brainWidget = new BrainWidget(
 		nullptr, m_style,
@@ -130,7 +138,8 @@ DismissableModule MemoryFactory::makeBrainModule(QString id) {
 		canvasPresenter,
 		markdownPresenter,
 		searchPresenter,
-		historyPresenter
+		historyPresenter,
+		connPresenter
 	);
 
 	return DismissableModule(

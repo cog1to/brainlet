@@ -5,6 +5,7 @@
 #include "presenters/text_editor_presenter.h"
 #include "presenters/brain_presenter.h"
 #include "presenters/search_presenter.h"
+#include "presenters/connections_presenter.h"
 #include "widgets/brain_widget.h"
 
 BrainPresenter::BrainPresenter(
@@ -12,35 +13,57 @@ BrainPresenter::BrainPresenter(
 	CanvasPresenter *canvas,
 	TextEditorPresenter *editor,
 	SearchPresenter *search,
-	HistoryPresenter *history
+	HistoryPresenter *history,
+	ConnectionsPresenter* conns
 )
 	: m_view(view), m_canvas(canvas), m_editor(editor), m_search(search),
-	m_history(history)
+	m_history(history), m_conns(conns)
 {
-	connect(
-		canvas, SIGNAL(thoughtSelected(ThoughtId, QString)),
-		this, SLOT(onThoughtSelected(ThoughtId, QString))
-	);
-	connect(
-		canvas, SIGNAL(thoughtRenamed(ThoughtId, QString)),
-		this, SLOT(onThoughtRenamed(ThoughtId, QString))
-	);
-	connect(
-		search, SIGNAL(searchItemSelected(ThoughtId, QString)),
-		this, SLOT(onSearchItemSelected(ThoughtId, QString))
-	);
-	connect(
-		editor, SIGNAL(nodeLinkSelected(ThoughtId)),
-		this,	SLOT(onThoughtLinkSelected(ThoughtId))
-	);
-	connect(
-		editor, SIGNAL(connectionCreated()),
-		canvas,	SLOT(reload())
-	);
-	connect(
-		history, SIGNAL(itemSelected(ThoughtId, QString&)),
-		this, SLOT(onItemSelected(ThoughtId, QString&))
-	);
+	if (canvas != nullptr) {
+		connect(
+			canvas, SIGNAL(thoughtSelected(ThoughtId, QString)),
+			this, SLOT(onThoughtSelected(ThoughtId, QString))
+		);
+		connect(
+			canvas, SIGNAL(thoughtRenamed(ThoughtId, QString)),
+			this, SLOT(onThoughtRenamed(ThoughtId, QString))
+		);
+	}
+
+	if (search != nullptr) {
+		connect(
+			search, SIGNAL(searchItemSelected(ThoughtId, QString)),
+			this, SLOT(onSearchItemSelected(ThoughtId, QString))
+		);
+	}
+
+	if (editor != nullptr) {
+		connect(
+			editor, SIGNAL(nodeLinkSelected(ThoughtId)),
+			this,	SLOT(onThoughtLinkSelected(ThoughtId))
+		);
+	}
+
+	if (editor != nullptr && canvas != nullptr) {
+		connect(
+			editor, SIGNAL(connectionCreated()),
+			canvas,	SLOT(reload())
+		);
+	}
+
+	if (history != nullptr) {
+		connect(
+			history, SIGNAL(itemSelected(ThoughtId, QString&)),
+			this, SLOT(onItemSelected(ThoughtId, QString&))
+		);
+	}
+
+	if (conns != nullptr && canvas != nullptr) {
+		connect(
+			canvas, SIGNAL(stateUpdated(const State*)),
+			conns, SLOT(onStateUpdated(const State*))
+		);
+	}
 }
 
 BrainPresenter::~BrainPresenter() {
@@ -52,6 +75,8 @@ BrainPresenter::~BrainPresenter() {
 		delete m_search;
 	if (m_history != nullptr)
 		delete m_history;
+	if (m_conns != nullptr)
+		delete m_conns;
 }
 
 void BrainPresenter::onThoughtSelected(ThoughtId id, QString title) {

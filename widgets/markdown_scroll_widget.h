@@ -3,10 +3,12 @@
 
 #include <QWidget>
 #include <QScrollArea>
+#include <QVBoxLayout>
 #include <QLine>
 
 #include "widgets/style.h"
 #include "widgets/markdown_edit_widget.h"
+#include "widgets/markdown_connections_widget.h"
 #include "widgets/toast_widget.h"
 
 enum MarkdownScrollError {
@@ -21,7 +23,7 @@ class MarkdownScrollWidget
 public:
 	MarkdownScrollWidget(QWidget*, Style*);
 	~MarkdownScrollWidget();
-	void setMarkdownWidget(MarkdownEditWidget*);
+	void setMarkdownWidgets(MarkdownEditWidget*, MarkdownConnectionsWidget*);
 	MarkdownEditWidget *markdownWidget();
 	int getPageOffset(bool) override;
 
@@ -33,6 +35,9 @@ protected slots:
 
 private:
 	MarkdownEditWidget *m_widget = nullptr;
+	MarkdownConnectionsWidget *m_connections = nullptr;
+	QWidget m_container;
+	QVBoxLayout m_layout;
 	Style *m_style = nullptr;
 	// Error.
 	ToastWidget *m_error = nullptr;

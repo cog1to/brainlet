@@ -9,6 +9,7 @@
 #include "presenters/search_presenter.h"
 #include "presenters/dismissable_presenter.h"
 #include "presenters/history_presenter.h"
+#include "presenters/connections_presenter.h"
 #include "widgets/brain_widget.h"
 
 class BrainPresenter: public DismissablePresenter {
@@ -20,7 +21,8 @@ public:
 		CanvasPresenter*,
 		TextEditorPresenter*,
 		SearchPresenter*,
-		HistoryPresenter*
+		HistoryPresenter*,
+		ConnectionsPresenter*
 	);
 	~BrainPresenter();
 
@@ -39,6 +41,7 @@ private:
 	TextEditorPresenter *m_editor;
 	SearchPresenter *m_search;
 	HistoryPresenter *m_history;
+	ConnectionsPresenter *m_conns;
 };
 
 #endif

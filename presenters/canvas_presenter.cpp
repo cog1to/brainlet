@@ -1,5 +1,6 @@
 #include <QObject>
 
+#include "entity/graph_repository.h"
 #include "presenters/canvas_presenter.h"
 
 CanvasPresenter::CanvasPresenter(
@@ -203,8 +204,9 @@ void CanvasPresenter::reload() {
 // Helpers.
 
 void CanvasPresenter::reloadState() {
-	if (auto state = m_repo->getState(); state != nullptr) {
+	if (const State *state = m_repo->getState(); state != nullptr) {
 		m_layout->setState(state);
+		emit stateUpdated(state);
 	}
 }
 

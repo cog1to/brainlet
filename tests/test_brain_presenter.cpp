@@ -11,10 +11,12 @@
 #include "widgets/brain_widget.h"
 #include "widgets/thought_details_widget.h"
 #include "widgets/container_widget.h"
+#include "widgets/markdown_connections_widget.h"
 #include "presenters/text_editor_presenter.h"
 #include "presenters/canvas_presenter.h"
 #include "presenters/brain_presenter.h"
 #include "presenters/search_presenter.h"
+#include "presenters/connections_presenter.h"
 #include "entity/thought_entity.h"
 #include "entity/connection_entity.h"
 #include "entity/memory_repository.h"
@@ -47,9 +49,10 @@ int main(int argc, char *argv[]) {
 
 	// Make text widget.
 	MarkdownEditWidget *markdownWidget = new MarkdownEditWidget(nullptr, &style);
+	MarkdownConnectionsWidget *connWidget = new MarkdownConnectionsWidget(nullptr, &style);
 
 	MarkdownScrollWidget *scroll = new MarkdownScrollWidget(nullptr, &style);
-	scroll->setMarkdownWidget(markdownWidget);
+	scroll->setMarkdownWidgets(markdownWidget, connWidget);
 	scroll->setWidgetResizable(true);
 
 	TextEditorPresenter *markdownPresenter = new TextEditorPresenter(
@@ -78,6 +81,7 @@ int main(int argc, char *argv[]) {
 		&repo,
 		canvasWidget
 	);
+
 	// Make canvas container.
 	ContainerWidget *containerWidget = new ContainerWidget(
 		nullptr,
@@ -91,6 +95,16 @@ int main(int argc, char *argv[]) {
 		containerWidget->search()
 	);
 
+	// History presenter.
+	HistoryPresenter *historyPresenter = new HistoryPresenter(
+		containerWidget->history()
+	);
+
+	// Connections presenter.
+	ConnectionsPresenter *connsPresenter = new ConnectionsPresenter(
+		connWidget
+	);
+
 	// Make brain widget.
 	BrainWidget brainWidget = BrainWidget(
 		nullptr,
@@ -102,7 +116,9 @@ int main(int argc, char *argv[]) {
 		&brainWidget,
 		canvasPresenter,
 		markdownPresenter,
-		searchPresenter
+		searchPresenter,
+		historyPresenter,
+		connsPresenter
 	);
 
 	// Show window.
