@@ -239,6 +239,11 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 	text::Line *line = &((*par->getLines())[lineIdx]);
 
 	if (
+		key == Qt::Key_Escape
+	) {
+		clearFocus();
+		return;
+	} else if (
 		key == Qt::Key_PageUp ||
 		(key == Qt::Key_Up && event->modifiers() & Qt::ControlModifier)
 	) {
