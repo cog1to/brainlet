@@ -29,7 +29,7 @@ ThoughtDetailsWidget::ThoughtDetailsWidget(
 			.arg(style->textEditFont().family())
 	);
 	m_title->setWordWrap(true);
-	m_title->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Minimum);
+	m_title->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Minimum);
 
 	m_separator->setMinimumSize(1, 1);
 	m_separator->setStyleSheet(
@@ -53,5 +53,7 @@ ThoughtDetailsWidget::~ThoughtDetailsWidget() {
 
 void ThoughtDetailsWidget::setTitle(QString title) {
 	m_title->setText(title);
+	m_title->updateGeometry();
+	m_layout->update();
 }
 

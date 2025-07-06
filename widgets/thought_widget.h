@@ -67,6 +67,7 @@ public:
 	void setHighlight(bool);
 	void activate();
 	void removeFocus();
+	void removeHover();
 	// Anchor ponts for connections.
 	AnchorPoint getAnchorFrom(ConnectionType);
 	AnchorPoint getAnchorTo(ConnectionType);

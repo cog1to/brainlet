@@ -213,6 +213,11 @@ void ThoughtWidget::removeFocus() {
 	m_textEdit.clearFocus();
 }
 
+void ThoughtWidget::removeHover() {
+	m_highlight = false;
+	m_hover = false;
+}
+
 // Anchor coordinates.
 
 AnchorPoint ThoughtWidget::getAnchorFrom(ConnectionType type) {

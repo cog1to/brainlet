@@ -407,6 +407,8 @@ void CanvasWidget::updateLayout() {
 			// automatically reactivated when selected again.
 			if (it->first != *main && widget->isActive())
 				widget->removeFocus();
+			if (it->first != *main)
+				widget->removeHover();
 
 			widget->setReadOnly(it->first != *main);
 
