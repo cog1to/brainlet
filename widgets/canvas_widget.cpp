@@ -28,7 +28,7 @@ CanvasWidget::CanvasWidget(
 	m_anchorHighlight.hide();
 	m_overlay.setStyleSheet("background-color: #00000000");
 
-	// Enable mouse tracking for highlighting connections.
+	// Enable mouse tracking for highlighting connections when moving the mouse.
 	setMouseTracking(true);
 
 	setStyleSheet(
@@ -37,7 +37,6 @@ CanvasWidget::CanvasWidget(
 		)
 	);
 
-	// Size policy.
 	setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
 
 	// Update callback.

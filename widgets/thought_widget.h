@@ -83,6 +83,17 @@ signals:
 	void anchorMoved(QPoint);
 	void anchorReleased(QPoint);
 	void anchorCanceled();
+	// This signal is not a good design. The requirement here is that we want to
+	// get a value back from the signal handler to confirm that the rename is
+	// valid and can be saved into the widget's state. But since signals can't
+	// pass values back, we do this by passing a callback function to the signal,
+	// hoping that it will get called with validation flag.
+	//
+	// A better solution would be to inject a validation function into this widget
+	// or a validator interface to call explicitly. But I kinda wanted to tinker
+	// with C++ closures API, and this logic did fit for that purpose.
+	//
+	// TODO: Refactor to make it not stink.
 	void textConfirmed(ThoughtWidget*, QString, std::function<void(bool)>);
 	void clicked(ThoughtWidget*);
 	void textCanceled(ThoughtWidget*);
