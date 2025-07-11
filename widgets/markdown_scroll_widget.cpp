@@ -21,6 +21,7 @@ MarkdownScrollWidget::MarkdownScrollWidget(
 	setStyleSheet("QScrollArea{border:none;}");
 	setFocusPolicy(Qt::NoFocus);
 	m_layout.setContentsMargins(QMargins(0, 0, 0, 0));
+	m_layout.setSpacing(16);
 	m_container.setLayout(&m_layout);
 	m_container.setFocusPolicy(Qt::NoFocus);
 	setWidget(&m_container);

@@ -914,7 +914,10 @@ MarkdownCursor MarkdownEditWidget::pasteFromClipboard() {
 MarkdownCursor MarkdownEditWidget::pasteString(QString text) {
 	MarkdownCursor cursor = m_cursor;
 	QList<text::Paragraph> *pars = m_model.paragraphs();
-	QStringList list = text.split("\n");
+
+	QRegularExpression delimRegex("\r?\n");
+	QStringList list = text.split(delimRegex);
+
 	text::TextModel model = text::TextModel(list);
 	QList<text::Paragraph> *newPars = model.paragraphs();
 
