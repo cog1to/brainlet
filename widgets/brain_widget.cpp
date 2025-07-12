@@ -29,9 +29,11 @@ BrainWidget::BrainWidget(
 	);
 
 	m_layout.setContentsMargins(QMargins(8, 8, 8, 8));
-	m_layout.addWidget(container, 1);
+	// Custom stretch factor of 5/6 for graph vs. editor.
+	// We want to editor area to grow slightly faster.
+	m_layout.addWidget(container, 5);
 	m_layout.addWidget(separator, 0);
-	m_layout.addWidget(details, 1);
+	m_layout.addWidget(details, 6);
 }
 
 ThoughtDetailsWidget *BrainWidget::details() {

@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
 	TabsWidget *widget = new TabsWidget(nullptr, &style);
 	TabsPresenter *presenter = new TabsPresenter(widget, &factory);
 
-	widget->resize(1024, 760);
+	widget->resize(1024, 768);
 	widget->show();
 
 	return app.exec();
