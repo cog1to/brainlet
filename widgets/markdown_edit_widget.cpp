@@ -124,13 +124,13 @@ void MarkdownEditWidget::mousePressEvent(QMouseEvent *event) {
 
 	if (found) {
 		if (event->button() == Qt::RightButton) {
-			// Show menu.
 			showContextMenu(event);
 			return;
 		} else if (event->modifiers() & Qt::ShiftModifier) {
 			// When shift-click, activate selection from previous to current
 			// position.
 			m_selection.active = true;
+			m_selection.start = m_cursor;
 			m_selection.end = cursor;
 		} else {
 			// Detect link.
@@ -901,6 +901,7 @@ MarkdownCursor MarkdownEditWidget::deleteSelection() {
 		mergeBlocks(endIdx, endLine, start);
 	}
 
+	m_selection.reset();
 	start.line = startLineIdx;
 	return start;
 }
@@ -1078,17 +1079,24 @@ void MarkdownEditWidget::insertNodeLink(ThoughtId id, QString title) {
 				->paragraph()
 				->getLines()
 				->at(m_selection.start.line);
-			linkName = line.text.mid(
-				m_selection.start.position,
-				m_selection.end.position - m_selection.start.position
-			);
+
+			// Handle reversed selection.
+			int start = m_selection.start.position, end = m_selection.end.position;
+			if (start > end) {
+				std::swap(start, end);
+			}
+
+			linkName = line.text.mid(start, end - start);
 		}
 	}
 
+	// If we have active selection, we need to delete text first, and then update
+	// last known cursor position (which is saved at the moment we lost focus). 
 	if (m_selection.active) {
-		deleteSelection();
+		m_lastCursor = deleteSelection();
 	}
 
+	// Refocus. Focus is usually lost because context menu was presented.
 	if (m_lastCursor.block != nullptr) {
 		m_cursor = m_lastCursor;
 		setFocus();
@@ -1099,11 +1107,8 @@ void MarkdownEditWidget::insertNodeLink(ThoughtId id, QString title) {
 		.arg(id);
 	MarkdownCursor cursor = pasteString(data);
 
-	m_selection.reset();
-
 	processCursorMove(m_cursor, cursor);
 
-	// Schedule save.
 	m_isDirty = true;
 	throttleSave();
 }
@@ -1189,9 +1194,7 @@ void MarkdownEditWidget::saveText() {
 	// Emit text change event.
 	emit textChanged(txt);
 
-	// Reset dirty flag.
 	m_isDirty = false;
-	// Delete timer.
 	if (m_saveTimer != nullptr) {
 		delete m_saveTimer;
 		m_saveTimer = nullptr;
@@ -1317,6 +1320,9 @@ MarkdownCursor MarkdownEditWidget::adjustForUnfolding(
 	if (to.line == -1)
 		return cursor;
 
+	// The ufolding logic is pretty straightforward: we take target position,
+	// and move it forward for every fomatting sequence that is present in the
+	// text before this position.
 	if (
 		(from.block != to.block || from.line != to.line)
 	) {
@@ -1475,7 +1481,7 @@ inline void MarkdownEditWidget::deleteParagraph(int index) {
 	// Delete from layout.
 	m_layout->removeWidget(block);
 
-	// Delete the object.
+	// Delete the object itself.
 	block->deleteLater();
 
 	// Update paragraph pointers for all blocks after new one.
