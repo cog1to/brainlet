@@ -79,6 +79,7 @@ protected:
 	void mouseReleaseEvent(QMouseEvent*) override;
 	void keyPressEvent(QKeyEvent*) override;
 	void focusOutEvent(QFocusEvent*) override;
+	void focusInEvent(QFocusEvent*) override;
 
 protected slots:
 	void saveText();

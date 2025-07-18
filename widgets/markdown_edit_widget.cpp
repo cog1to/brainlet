@@ -139,7 +139,7 @@ void MarkdownEditWidget::mousePressEvent(QMouseEvent *event) {
 			// Set initial cursor position.
 			MarkdownCursor prev = m_cursor;
 			processCursorMove(prev, cursor);
-			// Adjust selection.
+			// Reset selection.
 			m_selection.active = false;
 			m_selection.start = m_cursor;
 			m_selection.end = m_cursor;
@@ -559,6 +559,13 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 		QTimer::singleShot(100, this, [this, cursorLine, movedUp]{
 			emit cursorMoved(cursorLine, movedUp);
 		});
+	}
+}
+
+void MarkdownEditWidget::focusInEvent(QFocusEvent*) {
+	if (m_lastCursor.block != nullptr) {
+		m_cursor = m_lastCursor;
+		update();
 	}
 }
 
@@ -1294,12 +1301,16 @@ void MarkdownEditWidget::processCursorMove(
 		text::Line *line = &((*to.block->paragraph()->getLines())[to.line]);
 		QList<text::FormatRange> *ranges = &line->foldedFormats;
 
-		for (auto& range: *ranges) {
-			if (range.to < pos) {
-				offset += range.endOffset();
-			}
-			if (range.from < pos) {
-				offset += range.startOffset();
+		if (line->text.length() <= to.position) {
+			to.position = line->text.length();
+		} else {
+			for (auto& range: *ranges) {
+				if (range.to < pos) {
+					offset += range.endOffset();
+				}
+				if (range.from < pos) {
+					offset += range.startOffset();
+				}
 			}
 		}
 
