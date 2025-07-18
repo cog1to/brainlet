@@ -1098,7 +1098,7 @@ void MarkdownEditWidget::insertNodeLink(ThoughtId id, QString title) {
 	}
 
 	// If we have active selection, we need to delete text first, and then update
-	// last known cursor position (which is saved at the moment we lost focus). 
+	// last known cursor position (which is saved at the moment we lost focus).
 	if (m_selection.active) {
 		m_lastCursor = deleteSelection();
 	}
