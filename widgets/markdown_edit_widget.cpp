@@ -64,6 +64,10 @@ void MarkdownEditWidget::load(QString data) {
 	}
 	m_blocks.clear();
 
+	// Reset cursor.
+	m_cursor = MarkdownCursor::empty();
+	m_lastCursor = MarkdownCursor::empty();
+
 	// Create blocks.
 	QList<text::Paragraph> *list = m_model.paragraphs();
 
@@ -765,6 +769,7 @@ void MarkdownEditWidget::copySelectionToClipboard() {
 
 	QList<text::Paragraph> result;
 	QList<text::Paragraph> *pars = m_model.paragraphs();
+
 	for (int idx = startIdx; idx <= endIdx; idx++) {
 		// Original paragraph.
 		text::Paragraph *par = &((*pars)[idx]);
@@ -801,11 +806,20 @@ void MarkdownEditWidget::copySelectionToClipboard() {
 		result.push_back(newPar);
 	}
 
+	if (startIdx == endIdx && result[0].getType() == text::Code) {
+		text::Paragraph *par = &(result[0]);
+		par->setType(text::Text);
+	}
+
 	// Convert resulting paragraphs into text.
 	text::TextModel model = text::TextModel(result);
 	QString text = model.text();
 
-	// Save resulting text to clipboard
+	// Save resulting text to clipboard.
+	saveToClipboard(text);
+}
+
+void MarkdownEditWidget::saveToClipboard(QString& text) {
 	QClipboard *clipboard = QApplication::clipboard();
 	QMimeData *data = new QMimeData();
 	data->setText(text);
@@ -914,8 +928,14 @@ MarkdownCursor MarkdownEditWidget::deleteSelection() {
 }
 
 MarkdownCursor MarkdownEditWidget::pasteFromClipboard() {
+	// Don't do anything if cursor is not active.
+	if (m_cursor.block == nullptr) {
+		return m_cursor;
+	}
+
 	QClipboard *clipboard = QApplication::clipboard();
 	QString text = clipboard->text();
+
 	return pasteString(text);
 }
 

@@ -108,6 +108,7 @@ private:
 	void copySelectionToClipboard();
 	MarkdownCursor pasteFromClipboard();
 	MarkdownCursor pasteString(QString);
+	void saveToClipboard(QString&);
 	// Saving.
 	void throttleSave();
 	// Links handling.

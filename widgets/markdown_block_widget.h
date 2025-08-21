@@ -73,12 +73,19 @@ private:
 class MarkdownCursor {
 public:
 	MarkdownCursor(MarkdownBlock*, int, int);
+
 	inline bool operator==(const MarkdownCursor rhs) const {
 		return block == rhs.block && line == rhs.line && position == rhs.position;
 	}
+
 	inline bool operator!=(const MarkdownCursor rhs) const {
 		return block != rhs.block || line != rhs.line || position != rhs.position;
 	}
+
+	static MarkdownCursor empty() {
+		return MarkdownCursor(nullptr, -1, 0);
+	}
+
 	// Properties
 	MarkdownBlock *block;
 	int line;
