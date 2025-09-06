@@ -553,14 +553,52 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 	}
 
 	if (!isMovementKey(event)) {
-		// Only mark as dirty if there's actual change to the text.
 		QString newState = m_model.text();
+
+		// Undo stack logic below. Only applies if there were any actual changes
+		// to the data.
 		if (lastState != newState) {
+			if (!m_stateDirty) {
+				// If this is a new state change, update cursor position in last state
+				// to current position. This way undo will restore the cursor to the
+				// position before new changes.
+				TextState state = m_textStates.last();
+				state.cursor = StaticCursor{
+					.block = indexOfBlock(prev.block),
+					.line = prev.line,
+					.position = prev.position
+				};
+				m_textStates.replace(m_textStates.length() - 1, state);
+			}
+
 			if (
 				(event->matches(QKeySequence::Cut) ||
 				event->matches(QKeySequence::Paste))
 			) {
-				saveState(newState);
+				if (m_stateDirty) {
+					// If there were "unsaved" changes, save them first into the Undo
+					// stack. This way we can revert to state right before cut/paste.
+					saveState(
+						lastState,
+						StaticCursor{
+							.block = indexOfBlock(prev.block),
+							.line = prev.line,
+							.position = prev.position
+						}
+					);
+				}
+
+				// Immediately push state after cut or paste onto the stack.
+				// This is usually how Undo stack behaves, from what I remember.
+				saveState(
+					newState,
+					StaticCursor{
+						.block = indexOfBlock(m_cursor.block),
+						.line = m_cursor.line,
+						.position = m_cursor.position
+					}
+				);
+				m_stateDirty = false;
 			} else {
 				m_stateDirty = true;
 			}
@@ -1254,7 +1292,16 @@ void MarkdownEditWidget::saveText() {
 	QString txt = m_model.text();
 
 	// Save state.
-	saveState(txt);
+	if (m_stateDirty) {
+		saveState(
+			txt,
+			StaticCursor{
+				.block = indexOfBlock(m_cursor.block),
+				.line = m_cursor.line,
+				.position = m_cursor.position
+			}
+		);
+	}
 
 	// Emit text change event.
 	emit textChanged(txt);
@@ -1505,6 +1552,13 @@ inline int MarkdownEditWidget::indexOfParagraph(text::Paragraph *par) {
 			return idx;
 	}
 
+	return -1;
+}
+
+inline int MarkdownEditWidget::indexOfBlock(MarkdownBlock *block) {
+	for (int idx = 0; idx < m_blocks.size(); idx++)
+		if (m_blocks[idx] == block)
+			return idx;
 	return -1;
 }
 
@@ -1936,27 +1990,28 @@ void MarkdownEditWidget::onAnchorClicked(QString anchor) {
 
 // Undo/Redo.
 
-void MarkdownEditWidget::saveState(QString& state) {
+void MarkdownEditWidget::saveState(QString& state, StaticCursor cursor) {
 	if (m_stateIdx + 1 < m_textStates.length())
 		m_textStates.remove(m_stateIdx + 1, m_textStates.length() - (m_stateIdx + 1));
 
-	m_textStates.push_back(TextState{.text = state});
+	m_textStates.push_back(TextState{.text = state, .cursor = cursor});
 	m_stateIdx += 1;
-
-	qDebug() << "state after save:";
-	qDebug() << "+" << m_stateIdx;
-	for (auto& it: m_textStates) {
-		qDebug() << "*" << it.text;
-	}
 }
 
 void MarkdownEditWidget::undoIfPossible() {
 	if (m_stateDirty) {
-		qDebug() << "dirty, saving";
 		if (m_stateIdx + 1 < m_textStates.length())
 			m_textStates.remove(m_stateIdx + 1, m_textStates.length() - (m_stateIdx + 1));
 
 		TextState currentState = TextState{.text = m_model.text()};
+		if (m_cursor.block != nullptr) {
+			currentState.cursor = StaticCursor{
+				.block = indexOfBlock(m_cursor.block),
+				.line = m_cursor.line,
+				.position = m_cursor.position
+			};
+		}
+
 		m_textStates.push_back(currentState);
 		m_stateDirty = false;
 		m_stateIdx += 1;
@@ -1968,6 +2023,7 @@ void MarkdownEditWidget::undoIfPossible() {
 
 		TextState lastState = m_textStates.at(m_stateIdx);
 		loadInternal(lastState.text, false);
+		restoreCursor(lastState.cursor);
 	}
 }
 
@@ -1978,6 +2034,17 @@ void MarkdownEditWidget::redoIfPossible() {
 
 		TextState lastState = m_textStates.at(m_stateIdx);
 		loadInternal(lastState.text, false);
+		restoreCursor(lastState.cursor);
 	}
+}
+
+void MarkdownEditWidget::restoreCursor(StaticCursor cursor) {
+	MarkdownCursor mcursor = MarkdownCursor(
+		m_blocks[cursor.block],
+		cursor.line,
+		cursor.position
+	);
+	m_cursor = mcursor;
+	emit onCursorMove(MarkdownCursor::empty(), mcursor);
 }
 

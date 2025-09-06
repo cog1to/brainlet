@@ -19,8 +19,15 @@
 #include "widgets/markdown_block_widget.h"
 #include "model/new_text_model.h"
 
+struct StaticCursor {
+	int block;
+	int line;
+	int position;
+};
+
 struct TextState {
 	QString text;
+	StaticCursor cursor;
 };
 
 class MarkdownEditPresenter;
@@ -139,6 +146,7 @@ private:
 	MarkdownCursor documentStart();
 	MarkdownCursor documentEnd();
 	inline int indexOfParagraph(text::Paragraph*);
+	inline int indexOfBlock(MarkdownBlock*);
 	inline text::Paragraph *insertParagraph(int index, text::Paragraph);
 	// Text manipulation.
 	inline void deleteParagraph(int index);
@@ -151,8 +159,8 @@ private:
 	// Undo/Redo.
 	void undoIfPossible();
 	void redoIfPossible();
-	void saveState(QString&);
-	//void saveState(QString&, MarkdownCursor);
+	void saveState(QString&, StaticCursor);
+	void restoreCursor(StaticCursor);
 	// Misc.
 	bool isMovementKey(QKeyEvent*);
 };

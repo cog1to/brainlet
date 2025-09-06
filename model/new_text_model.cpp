@@ -544,6 +544,11 @@ text::TextModel::TextModel(QStringList data) {
 		m_data.push_back(
 			text::Paragraph(type, currentLines)
 		);
+	} else if (emptyCount == 2) {
+		QString emptyString = QString("");
+		m_data.push_back(
+			text::Paragraph(type, text::Line(emptyString, false))
+		);
 	} else if (content.size() > 0 && type == text::Text) {
 		QString paragraph = content.join(" ");
 		m_data.push_back(
