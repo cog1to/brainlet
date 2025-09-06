@@ -47,6 +47,10 @@ MarkdownEditWidget::~MarkdownEditWidget() {
 }
 
 void MarkdownEditWidget::load(QString data) {
+	loadInternal(data, true);
+}
+
+void MarkdownEditWidget::loadInternal(QString& data, bool clearHistory) {
 	QRegularExpression splitExp(
 		"(\\n|\r\\n)", QRegularExpression::MultilineOption
 	);
@@ -94,6 +98,11 @@ void MarkdownEditWidget::load(QString data) {
 
 		m_blocks.push_back(block);
 		m_layout->addWidget(block);
+	}
+
+	if (clearHistory) {
+		m_textStates.clear();
+		m_textStates.push_back(TextState{.text = data});
 	}
 
 	m_layout->addStretch();
@@ -235,6 +244,19 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 	MarkdownCursor prev = m_cursor;
 	MarkdownCursor cursor = m_cursor;
 	int key = event->key();
+	QString lastState = m_model.text();
+
+	if (
+		key == Qt::Key_Z && event->modifiers() & Qt::ControlModifier
+	) {
+		undoIfPossible();
+		return;
+	} else if (
+		key == Qt::Key_R && event->modifiers() & Qt::ControlModifier
+	) {
+		redoIfPossible();
+		return;
+	}
 
 	if (lineIdx == -1 || block == nullptr)
 		return;
@@ -531,8 +553,21 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 	}
 
 	if (!isMovementKey(event)) {
-		m_isDirty = true;
-		throttleSave();
+		// Only mark as dirty if there's actual change to the text.
+		QString newState = m_model.text();
+		if (lastState != newState) {
+			if (
+				(event->matches(QKeySequence::Cut) ||
+				event->matches(QKeySequence::Paste))
+			) {
+				saveState(newState);
+			} else {
+				m_stateDirty = true;
+			}
+
+			m_isDirty = true;
+			throttleSave();
+		}
 	}
 
 	// I don't like this. Have to wait for widgets to redraw to avoid
@@ -1218,6 +1253,9 @@ void MarkdownEditWidget::saveText() {
 	// Select all text.
 	QString txt = m_model.text();
 
+	// Save state.
+	saveState(txt);
+
 	// Emit text change event.
 	emit textChanged(txt);
 
@@ -1893,6 +1931,53 @@ void MarkdownEditWidget::onAnchorClicked(QString anchor) {
 				QDesktopServices::openUrl(QUrl(anchor));
 			}
 		}
+	}
+}
+
+// Undo/Redo.
+
+void MarkdownEditWidget::saveState(QString& state) {
+	if (m_stateIdx + 1 < m_textStates.length())
+		m_textStates.remove(m_stateIdx + 1, m_textStates.length() - (m_stateIdx + 1));
+
+	m_textStates.push_back(TextState{.text = state});
+	m_stateIdx += 1;
+
+	qDebug() << "state after save:";
+	qDebug() << "+" << m_stateIdx;
+	for (auto& it: m_textStates) {
+		qDebug() << "*" << it.text;
+	}
+}
+
+void MarkdownEditWidget::undoIfPossible() {
+	if (m_stateDirty) {
+		qDebug() << "dirty, saving";
+		if (m_stateIdx + 1 < m_textStates.length())
+			m_textStates.remove(m_stateIdx + 1, m_textStates.length() - (m_stateIdx + 1));
+
+		TextState currentState = TextState{.text = m_model.text()};
+		m_textStates.push_back(currentState);
+		m_stateDirty = false;
+		m_stateIdx += 1;
+	}
+
+	if (m_stateIdx > 0) {
+		m_stateIdx -= 1;
+		m_stateDirty = false;
+
+		TextState lastState = m_textStates.at(m_stateIdx);
+		loadInternal(lastState.text, false);
+	}
+}
+
+void MarkdownEditWidget::redoIfPossible() {
+	if (m_stateIdx < m_textStates.length() - 1) {
+		m_stateIdx += 1;
+		m_stateDirty = false;
+
+		TextState lastState = m_textStates.at(m_stateIdx);
+		loadInternal(lastState.text, false);
 	}
 }
 

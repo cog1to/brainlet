@@ -19,6 +19,10 @@
 #include "widgets/markdown_block_widget.h"
 #include "model/new_text_model.h"
 
+struct TextState {
+	QString text;
+};
+
 class MarkdownEditPresenter;
 
 class MarkdownSelection {
@@ -99,8 +103,13 @@ private:
 	QPoint m_lastMouseReleasePoint;
 	MarkdownCursor m_lastCursor = MarkdownCursor(nullptr, -1, 0);
 	// Saving text.
+	void loadInternal(QString&, bool);
 	bool m_isDirty = false;
 	QTimer *m_saveTimer = nullptr;
+	// Undo/Redo.
+	QList<TextState> m_textStates;
+	int m_stateIdx = 0;
+	bool m_stateDirty = false;
 	// Search.
 	QWidget *m_search = nullptr;
 	// Selection and clipboard.
@@ -139,6 +148,11 @@ private:
 	MarkdownCursor applyStyleToSelection(QString);
 	// Menu.
 	void showContextMenu(QMouseEvent*);
+	// Undo/Redo.
+	void undoIfPossible();
+	void redoIfPossible();
+	void saveState(QString&);
+	//void saveState(QString&, MarkdownCursor);
 	// Misc.
 	bool isMovementKey(QKeyEvent*);
 };
