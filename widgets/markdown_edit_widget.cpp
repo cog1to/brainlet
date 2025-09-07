@@ -2039,6 +2039,14 @@ void MarkdownEditWidget::redoIfPossible() {
 }
 
 void MarkdownEditWidget::restoreCursor(StaticCursor cursor) {
+	// Check for out of bounds cases. Should not really be happening, but...
+	if (
+		cursor.block >= m_blocks.size() ||
+		cursor.line >= m_blocks[cursor.block]->paragraph()->getLines()->size()
+	) {
+		return;
+	}
+
 	MarkdownCursor mcursor = MarkdownCursor(
 		m_blocks[cursor.block],
 		cursor.line,
