@@ -95,6 +95,8 @@ protected:
 protected slots:
 	void saveText();
 	void onInsertNodeLink();
+	void onMenuUndo();
+	void onMenuRedo();
 
 private:
 	QVBoxLayout *m_layout = nullptr;

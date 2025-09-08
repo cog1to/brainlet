@@ -1232,6 +1232,18 @@ void MarkdownEditWidget::showContextMenu(QMouseEvent *event) {
 		}\
 		QMenu::item:selected{\
 			background-color: %7;\
+		}\
+		QMenu::separator{\
+			background: %8;\
+			height: 1px;\
+			margin-left: 6px;\
+			margin-right: 6px;\
+			margin-top: 4px;\
+			margin-bottom: 4px;\
+		}\
+		QMenu::item:disabled{\
+			color: %9;\
+			background-color: %5;\
 		}")
 		.arg(m_style->background().name(QColor::HexRgb))
 		.arg(m_style->textColor().name(QColor::HexRgb))
@@ -1240,22 +1252,51 @@ void MarkdownEditWidget::showContextMenu(QMouseEvent *event) {
 		.arg(m_style->background().name(QColor::HexRgb))
 		.arg(m_style->background().lighter(150).name(QColor::HexRgb))
 		.arg(m_style->background().lighter(200).name(QColor::HexRgb))
+		.arg(m_style->textColor().darker(150).name(QColor::HexRgb))
+		.arg(m_style->textColor().darker(300).name(QColor::HexRgb))
 	);
 
 	// Custom node link action.
 	QString connectMenu = tr("Connect thought...");
-	QAction *action = new QAction(connectMenu, this);
+	QAction *connectAction = new QAction(connectMenu, this);
 	connect(
-		action, SIGNAL(triggered()),
+		connectAction, SIGNAL(triggered()),
 		this, SLOT(onInsertNodeLink())
 	);
-	menu->insertAction(nullptr, action);
+	menu->insertAction(nullptr, connectAction);
+
+	// Undo.
+	QString undoMenu = tr("Undo");
+	QAction *undoAction = new QAction(undoMenu, this);
+	undoAction->setShortcut(QKeySequence::Undo);
+	undoAction->setEnabled(m_stateIdx != 0 || m_stateDirty);
+
+	connect(
+		undoAction, SIGNAL(triggered()),
+		this, SLOT(onMenuUndo())
+	);
+	menu->insertAction(nullptr, undoAction);
+
+	// Redo.
+	QString redoMenu = tr("Redo");
+	QAction *redoAction = new QAction(redoMenu, this);
+	redoAction->setShortcut(QKeySequence(tr("Ctrl+R")));
+	redoAction->setEnabled(m_stateIdx != (m_textStates.length() - 1));
+
+	connect(
+		redoAction, SIGNAL(triggered()),
+		this, SLOT(onMenuRedo())
+	);
+	menu->insertAction(nullptr, redoAction);
+
+	// Separator.
+	menu->insertSeparator(undoAction);
 
 	// Show the menu.
 	menu->exec(mapToGlobal(event->pos()));
 }
 
-// Linking nodes.
+// Menu handlers.
 
 void MarkdownEditWidget::onInsertNodeLink() {
 	if (m_lastCursor.block != nullptr) {
@@ -1264,6 +1305,14 @@ void MarkdownEditWidget::onInsertNodeLink() {
 
 	QLine cursorLine = m_cursor.block->lineForCursor(m_cursor);
 	emit nodeInsertionActivated(cursorLine.p2());
+}
+
+void MarkdownEditWidget::onMenuUndo() {
+	undoIfPossible();
+}
+
+void MarkdownEditWidget::onMenuRedo() {
+	redoIfPossible();
 }
 
 // Saving.
