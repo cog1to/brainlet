@@ -1146,15 +1146,18 @@ void MarkdownEditWidget::showSearchWidget(
 	QSize hint = widget->sizeHint();
 	QSize cur = size();
 	int width = std::min(cur.width(), 400);
-	int x = std::max(belowPoint.x() - width / 2, 0);
+	int x = std::min(std::max(belowPoint.x() - width / 2, 0), cur.width() - width);
+
+	QPoint coords = QPoint(x, belowPoint.y() + 5);
+	QPoint parentCoords = mapToParent(coords);
 
 	widget->setMinimumWidth(width);
 	widget->setGeometry(
-		x, belowPoint.y() + 5,
+		parentCoords.x(), parentCoords.y(),
 		width, hint.height()
 	);
 
-	widget->setParent(this);
+	widget->setParent(this->parentWidget());
 	widget->raise();
 	widget->show();
 	widget->setFocus();
