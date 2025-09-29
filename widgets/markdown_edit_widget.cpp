@@ -219,17 +219,6 @@ void MarkdownEditWidget::mouseReleaseEvent(QMouseEvent *event) {
 	if (found) {
 		QPoint pos = event->pos();
 
-		// Check if still pressing link.
-		if (
-			std::abs(pos.x() - m_pressPoint.x()) < 5 &&
-			std::abs(pos.y() - m_pressPoint.y()) < 5 &&
-			m_anchor.isEmpty() == false
-		) {
-			onAnchorClicked(m_anchor);
-		}
-		m_pressPoint = QPoint(0, 0);
-		m_anchor = "";
-
 		// Check for double-clicks.
 		if (
 			m_lastMouseReleaseTime.isValid() &&
@@ -238,9 +227,17 @@ void MarkdownEditWidget::mouseReleaseEvent(QMouseEvent *event) {
 		) {
 			QTime now = QTime::currentTime();
 			if (m_lastMouseReleaseTime.msecsTo(now) <= 300) {
-				selectWordUnderCursor();
+				// Check if still pressing link.
+				if (m_anchor.isEmpty() == false && !(event->modifiers() & Qt::ShiftModifier)) {
+					onAnchorClicked(m_anchor);
+				} else {
+					selectWordUnderCursor();
+				}
 			}
 		}
+
+		m_pressPoint = QPoint(0, 0);
+		m_anchor = "";
 		m_lastMouseReleaseTime = QTime::currentTime();
 		m_lastMouseReleasePoint = pos;
 	}
