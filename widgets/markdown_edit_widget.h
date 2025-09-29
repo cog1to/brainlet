@@ -12,6 +12,7 @@
 #include <QTime>
 #include <QFocusEvent>
 #include <QMenu>
+#include <QClipboard>
 
 #include "model/thought.h"
 #include "widgets/style.h"
@@ -123,10 +124,10 @@ private:
 	QWidget *m_search = nullptr;
 	// Selection and clipboard.
 	MarkdownCursor deleteSelection();
-	void copySelectionToClipboard();
-	MarkdownCursor pasteFromClipboard();
+	void copySelectionToClipboard(QClipboard::Mode);
+	MarkdownCursor pasteFromClipboard(QClipboard::Mode);
 	MarkdownCursor pasteString(QString);
-	void saveToClipboard(QString&);
+	void saveToClipboard(QString&, QClipboard::Mode);
 	// Saving.
 	void throttleSave();
 	// Links handling.

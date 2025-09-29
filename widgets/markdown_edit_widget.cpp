@@ -135,6 +135,11 @@ void MarkdownEditWidget::mousePressEvent(QMouseEvent *event) {
 	bool found = false;
 	MarkdownCursor cursor = cursorAtPoint(event->pos(), &found);
 
+	if ((event->button() == Qt::MiddleButton) && (event->modifiers() & Qt::ShiftModifier)) {
+		MarkdownCursor next = pasteFromClipboard(QClipboard::Selection);
+		processCursorMove(cursor, next);
+	}
+
 	if (found) {
 		if (event->button() == Qt::RightButton) {
 			showContextMenu(event);
@@ -204,6 +209,11 @@ void MarkdownEditWidget::mouseReleaseEvent(QMouseEvent *event) {
 
 	if (!found || (m_selection.start == cursor)) {
 		m_selection.active = false;
+	}
+
+	// Copy selection to selection buffer.
+	if (m_selection.active && m_selection.start != m_selection.end) {
+		copySelectionToClipboard(QClipboard::Selection);
 	}
 
 	if (found) {
@@ -438,17 +448,17 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 		}
 	} else if (event->matches(QKeySequence::Copy)) {
 		if (m_selection.active) {
-			copySelectionToClipboard();
+			copySelectionToClipboard(QClipboard::Clipboard);
 		}
 	} else if (event->matches(QKeySequence::Paste)) {
 		if (m_selection.active) {
 			cursor = deleteSelection();
 		}
-		cursor = pasteFromClipboard();
+		cursor = pasteFromClipboard(QClipboard::Clipboard);
 		processCursorMove(prev, cursor);
 	} else if (event->matches(QKeySequence::Cut)) {
 		if (m_selection.active) {
-			copySelectionToClipboard();
+			copySelectionToClipboard(QClipboard::Clipboard);
 			cursor = deleteSelection();
 			processCursorMove(prev, cursor);
 		}
@@ -825,7 +835,7 @@ bool MarkdownEditWidget::isDocumentEmpty() {
 
 // Selections and clipboard.
 
-void MarkdownEditWidget::copySelectionToClipboard() {
+void MarkdownEditWidget::copySelectionToClipboard(QClipboard::Mode mode) {
 	if (m_selection.active == false)
 		return;
 
@@ -889,14 +899,14 @@ void MarkdownEditWidget::copySelectionToClipboard() {
 	QString text = model.text();
 
 	// Save resulting text to clipboard.
-	saveToClipboard(text);
+	saveToClipboard(text, mode);
 }
 
-void MarkdownEditWidget::saveToClipboard(QString& text) {
+void MarkdownEditWidget::saveToClipboard(QString& text, QClipboard::Mode mode) {
 	QClipboard *clipboard = QApplication::clipboard();
 	QMimeData *data = new QMimeData();
 	data->setText(text);
-	clipboard->setMimeData(data);
+	clipboard->setMimeData(data, mode);
 }
 
 MarkdownCursor MarkdownEditWidget::deleteSelection() {
@@ -1000,14 +1010,14 @@ MarkdownCursor MarkdownEditWidget::deleteSelection() {
 	return start;
 }
 
-MarkdownCursor MarkdownEditWidget::pasteFromClipboard() {
+MarkdownCursor MarkdownEditWidget::pasteFromClipboard(QClipboard::Mode mode) {
 	// Don't do anything if cursor is not active.
 	if (m_cursor.block == nullptr) {
 		return m_cursor;
 	}
 
 	QClipboard *clipboard = QApplication::clipboard();
-	QString text = clipboard->text();
+	QString text = clipboard->text(mode);
 
 	return pasteString(text);
 }
