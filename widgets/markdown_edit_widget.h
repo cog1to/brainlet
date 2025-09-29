@@ -152,6 +152,7 @@ private:
 	inline int indexOfBlock(MarkdownBlock*);
 	inline text::Paragraph *insertParagraph(int index, text::Paragraph);
 	// Text manipulation.
+	void handleInput(int key, int mouseButton, Qt::KeyboardModifiers mods, QKeySequence seq, QString text);
 	inline void deleteParagraph(int index);
 	void mergeBlocks(int next, text::Line *line, MarkdownCursor prev);
 	MarkdownCursor splitBlocks(MarkdownCursor cursor, bool shiftUsed);
@@ -165,7 +166,8 @@ private:
 	void saveState(QString&, StaticCursor);
 	void restoreCursor(StaticCursor);
 	// Misc.
-	bool isMovementKey(QKeyEvent*);
+	bool isMovementKey(int);
+	QKeySequence keySequence(QKeyEvent*);
 };
 
 class MarkdownEditPresenter {

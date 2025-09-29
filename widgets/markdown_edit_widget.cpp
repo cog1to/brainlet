@@ -135,22 +135,21 @@ void MarkdownEditWidget::mousePressEvent(QMouseEvent *event) {
 	bool found = false;
 	MarkdownCursor cursor = cursorAtPoint(event->pos(), &found);
 
-	if ((event->button() == Qt::MiddleButton) && (event->modifiers() & Qt::ShiftModifier)) {
-		MarkdownCursor next = pasteFromClipboard(QClipboard::Selection);
-		processCursorMove(cursor, next);
+	if (event->button() == Qt::MiddleButton) {
+		handleInput(Qt::Key_unknown, event->button(), event->modifiers(), QKeySequence::UnknownKey, "");
 	}
 
 	if (found) {
 		if (event->button() == Qt::RightButton) {
 			showContextMenu(event);
 			return;
-		} else if (event->modifiers() & Qt::ShiftModifier) {
+		} else if (event->button() == Qt::LeftButton && event->modifiers() & Qt::ShiftModifier) {
 			// When shift-click, activate selection from previous to current
 			// position.
 			m_selection.active = true;
 			m_selection.start = m_cursor;
 			m_selection.end = cursor;
-		} else {
+		} else if (event->button() == Qt::LeftButton) {
 			// Detect link.
 			m_pressPoint = event->pos();
 			checkForLinksUnderCursor(cursor);
@@ -246,20 +245,27 @@ void MarkdownEditWidget::mouseReleaseEvent(QMouseEvent *event) {
 }
 
 void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
+	handleInput(event->key(), Qt::NoButton, event->modifiers(), keySequence(event), event->text());
+}
+
+void MarkdownEditWidget::handleInput(
+	int key, int mouseButton,
+	Qt::KeyboardModifiers mods, QKeySequence seq,
+	QString text
+) {
 	int lineIdx = m_cursor.line;
 	MarkdownBlock *block = m_cursor.block;
 	MarkdownCursor prev = m_cursor;
 	MarkdownCursor cursor = m_cursor;
-	int key = event->key();
 	QString lastState = m_model.text();
 
 	if (
-		key == Qt::Key_Z && event->modifiers() & Qt::ControlModifier
+		key == Qt::Key_Z && mods & Qt::ControlModifier
 	) {
 		undoIfPossible();
 		return;
 	} else if (
-		key == Qt::Key_R && event->modifiers() & Qt::ControlModifier
+		key == Qt::Key_R && mods & Qt::ControlModifier
 	) {
 		redoIfPossible();
 		return;
@@ -278,7 +284,7 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 		return;
 	} else if (
 		key == Qt::Key_PageUp ||
-		(key == Qt::Key_Up && event->modifiers() & Qt::ControlModifier)
+		(key == Qt::Key_Up && mods & Qt::ControlModifier)
 	) {
 		if (m_presenter == nullptr)
 			return;
@@ -295,7 +301,7 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 		processCursorMove(prev, cursor);
 	} else if (
 		key == Qt::Key_PageDown ||
-		(key == Qt::Key_Down && event->modifiers() & Qt::ControlModifier)
+		(key == Qt::Key_Down && mods & Qt::ControlModifier)
 	) {
 		if (m_presenter == nullptr)
 			return;
@@ -309,7 +315,7 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 	} else if (
 		key == Qt::Key_Home ||
 		(key == Qt::Key_Left &&
-			event->modifiers() & Qt::ControlModifier)
+			mods & Qt::ControlModifier)
 	) {
 		if (prev.position == 0) {
 			cursor = documentStart();
@@ -321,7 +327,7 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 		key == Qt::Key_End ||
 		(
 			key == Qt::Key_Right &&
-			event->modifiers() & Qt::ControlModifier
+			mods & Qt::ControlModifier
 		)
 	) {
 		if (prev.position == line->text.length()) {
@@ -375,6 +381,8 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 				cursor.line = 0;
 				cursor.position = 0;
 				processCursorMove(prev, cursor);
+			} else if (m_selection.active) {
+				m_selection.reset();	
 			}
 		}
 	} else if (key == Qt::Key_Up) {
@@ -402,7 +410,7 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 			processCursorMove(prev, cursor);
 		}
 	} else if (key == Qt::Key_Enter || key == Qt::Key_Return) {
-		bool shiftUsed = (event->modifiers() & Qt::ShiftModifier);
+		bool shiftUsed = (mods & Qt::ShiftModifier);
 		cursor = splitBlocks(cursor, shiftUsed);
 		processCursorMove(prev, cursor);
 	} else if (key == Qt::Key_Backspace) {
@@ -443,36 +451,39 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 				mergeBlocks(parIdx + 1, firstLine, prev);
 			}
 		}
-	} else if (event->matches(QKeySequence::Copy)) {
+	} else if (seq == QKeySequence::Copy) {
 		if (m_selection.active) {
 			copySelectionToClipboard(QClipboard::Clipboard);
 		}
-	} else if (event->matches(QKeySequence::Paste)) {
+	} else if (seq == QKeySequence::Paste) {
 		if (m_selection.active) {
 			cursor = deleteSelection();
 		}
 		cursor = pasteFromClipboard(QClipboard::Clipboard);
 		processCursorMove(prev, cursor);
-	} else if (event->matches(QKeySequence::Cut)) {
+	} else if (seq == QKeySequence::Cut) {
 		if (m_selection.active) {
 			copySelectionToClipboard(QClipboard::Clipboard);
 			cursor = deleteSelection();
 			processCursorMove(prev, cursor);
 		}
-	} else if (event->matches(QKeySequence::Bold)) {
+	} else if (seq == QKeySequence::Bold) {
 		cursor = applyStyleToSelection("**");
 		processCursorMove(prev, cursor);
 		if (m_selection.active) {
 			m_selection.reset();
 			update();
 		}
-	} else if (event->matches(QKeySequence::Italic)) {
+	} else if (seq == QKeySequence::Italic) {
 		cursor = applyStyleToSelection("*");
 		processCursorMove(prev, cursor);
 		if (m_selection.active) {
 			m_selection.reset();
 			update();
 		}
+	} else if (mouseButton == Qt::MiddleButton) {
+		cursor = pasteFromClipboard(QClipboard::Selection);
+		processCursorMove(prev, cursor);
 	} else if (
 		key == Qt::Key_Tab &&
 		(par->getType() == text::BulletList || par->getType() == text::NumberList)
@@ -481,7 +492,7 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 			line->level = line->level + 1;
 			block->setParagraph(par);
 		}
-	} else if (QString text = event->text(); !text.isEmpty()) {
+	} else if (!text.isEmpty()) {
 		if (m_selection.active) {
 			cursor = deleteSelection();
 			prev = cursor;
@@ -539,27 +550,26 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 		}
 	}
 
-	if (isMovementKey(event)) {
-		if (event->modifiers() & Qt::ShiftModifier) {
+	// Update selection on cursor move.
+	if (isMovementKey(key)) {
+		if (mods & Qt::ShiftModifier) {
 			m_selection.active = true;
 			m_selection.end = m_cursor;
-			// Redraw.
-			update();
 		} else {
 			m_selection.active = false;
 			m_selection.start = m_cursor;
 			m_selection.end = m_cursor;
 		}
-	} else if (
-		!event->matches(QKeySequence::Copy) &&
-		!event->text().isEmpty()
-	) {
+		// Redraw.
+		update();
+	} else if (!(seq == QKeySequence::Copy) && !text.isEmpty()) {
+		// Reset selection on any visible change.
 		m_selection.active = false;
 		m_selection.start = m_cursor;
-		m_selection.start = m_cursor;
+		m_selection.end = m_cursor;
 	}
 
-	if (!isMovementKey(event)) {
+	if (!isMovementKey(key)) {
 		QString newState = m_model.text();
 
 		// Undo stack logic below. Only applies if there were any actual changes
@@ -578,10 +588,7 @@ void MarkdownEditWidget::keyPressEvent(QKeyEvent *event) {
 				m_textStates.replace(m_textStates.length() - 1, state);
 			}
 
-			if (
-				(event->matches(QKeySequence::Cut) ||
-				event->matches(QKeySequence::Paste))
-			) {
+			if ((seq == QKeySequence::Cut) || (seq == QKeySequence::Paste) || mouseButton == Qt::MiddleButton) {
 				if (m_stateDirty) {
 					// If there were "unsaved" changes, save them first into the Undo
 					// stack. This way we can revert to state right before cut/paste.
@@ -1015,6 +1022,10 @@ MarkdownCursor MarkdownEditWidget::pasteFromClipboard(QClipboard::Mode mode) {
 
 	QClipboard *clipboard = QApplication::clipboard();
 	QString text = clipboard->text(mode);
+
+	if (text.isEmpty()) {
+		return m_cursor;
+	}
 
 	return pasteString(text);
 }
@@ -1934,8 +1945,7 @@ MarkdownCursor MarkdownEditWidget::cursorAtPoint(
 	return cursor;
 }
 
-bool MarkdownEditWidget::isMovementKey(QKeyEvent *event) {
-	int key = event->key();
+bool MarkdownEditWidget::isMovementKey(int key) {
 	switch (key) {
 		case Qt::Key_PageUp:
 			return true;
@@ -1956,6 +1966,22 @@ bool MarkdownEditWidget::isMovementKey(QKeyEvent *event) {
 		default:
 			return false;
 	}
+}
+
+QKeySequence MarkdownEditWidget::keySequence(QKeyEvent *event) {
+	if (event->matches(QKeySequence::Copy)) {
+		return QKeySequence::Copy;
+	} else if (event->matches(QKeySequence::Paste)) {
+		return QKeySequence::Paste;
+	} else if (event->matches(QKeySequence::Cut)) {
+		return QKeySequence::Cut;
+	} else if (event->matches(QKeySequence::Bold)) {
+		return QKeySequence::Bold;
+	} else if (event->matches(QKeySequence::Italic)) {
+		return QKeySequence::Italic;
+	}
+
+	return QKeySequence::UnknownKey;
 }
 
 bool MarkdownEditWidget::cursorAfter(
