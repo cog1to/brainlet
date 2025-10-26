@@ -660,7 +660,7 @@ QTextCharFormat MarkdownBlock::qtFormat(
 	QTextCharFormat fmt
 ) {
 	text::BlockFormat format = range.format;
-	double dpi = QGuiApplication::primaryScreen()->physicalDotsPerInch();
+	double dpi = QGuiApplication::primaryScreen()->physicalDotsPerInch() / devicePixelRatio();
 
 	switch (format) {
 		case text::Heading1:
