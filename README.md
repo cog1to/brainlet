@@ -58,6 +58,14 @@ an executable, a desktop entry file and an app icon.
 
 `make install` will copy the files into relevant subdirs in the `PREFIX` path.
 
+### Building for Mac
+
+There is a `make mac` target, but it's hacky. It manually creates a an
+`.app` directory/bundle, and then uses `macdeployqt` to populate the
+Frameworks app inside it. But the tool is either buggy, or I don't know
+how to use it propely, so I run it twice, and after that it seems to
+produce a working bundle.
+
 ### License
 
 MIT License.

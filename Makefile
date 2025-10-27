@@ -143,3 +143,17 @@ install: build/brainlet build/brainlet.desktop build/brainlet.png
 	mkdir -p $(PREFIX)/bin && \
 		cp build/brainlet $(PREFIX)/bin/
 
+# Experimental MacOS target.
+mac: build/brainlet build/brainlet.png
+	mkdir -p build/Brainlet.app/Contents/MacOS
+	cp build/brainlet build/Brainlet.app/Contents/MacOS/brainlet
+	cp resources/mac/Info.plist build/Brainlet.app/Contents/Info.plist
+	mkdir -p build/Brainlet.app/Contents/Resources
+	cp resources/icons/* build/Brainlet.app/Contents/Resources/
+	# Hacky as hell. I have no idea why libpath doesn't work properly,
+	# But we have to execute this command twice to make a somewhat working
+	# build.
+	macdeployqt build/Brainlet.app -libpath=${QTDIR}/lib -libpath=/opt/homebrew/lib \
+		-always-overwrite -no-strip -codesign=${CODESIGN}
+	macdeployqt build/Brainlet.app -libpath=${QTDIR}/lib -libpath=/opt/homebrew/lib \
+		-always-overwrite -no-strip -codesign=${CODESIGN}
