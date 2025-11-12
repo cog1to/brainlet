@@ -408,6 +408,11 @@ void MarkdownEditWidget::handleInput(
 			exists == true
 		) {
 			processCursorMove(prev, cursor);
+		} else if (
+			bool exists = block->endOfBlock(&cursor);
+			exists == true
+		) {
+			processCursorMove(prev, cursor);
 		}
 	} else if (key == Qt::Key_Enter || key == Qt::Key_Return) {
 		bool shiftUsed = (mods & Qt::ShiftModifier);

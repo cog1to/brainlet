@@ -309,6 +309,24 @@ MarkdownCursor MarkdownBlock::lastCursorAtX(qreal x) {
 	return cursor;
 }
 
+bool MarkdownBlock::endOfBlock(MarkdownCursor *cursor) {
+	if (m_layouts.size() == 0)
+		return false;
+
+	QList<text::Line> *lines = m_par->getLines();
+	if (lines->size() == 0)
+		return false;
+
+	Line line = lines->at(lines->size() - 1);
+	int pos = line.text.length();
+
+	cursor->block = this;
+	cursor->line = lines->size() - 1;
+	cursor->position = pos;
+
+	return true;
+}
+
 // Drawing and size.
 
 QSize MarkdownBlock::sizeHint() const {

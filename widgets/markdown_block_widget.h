@@ -33,6 +33,7 @@ public:
 	bool cursorAt(QPoint, MarkdownCursor*);
 	bool cursorBelow(MarkdownCursor, MarkdownCursor*);
 	bool cursorAbove(MarkdownCursor, MarkdownCursor*);
+	bool endOfBlock(MarkdownCursor*);
 	qreal xAtCursor(MarkdownCursor);
 	MarkdownCursor firstCursorAtX(qreal);
 	MarkdownCursor lastCursorAtX(qreal);
