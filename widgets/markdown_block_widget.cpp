@@ -678,31 +678,31 @@ QTextCharFormat MarkdownBlock::qtFormat(
 	QTextCharFormat fmt
 ) {
 	text::BlockFormat format = range.format;
-	double dpi = QGuiApplication::primaryScreen()->physicalDotsPerInch() / devicePixelRatio();
+	double dpi = QGuiApplication::primaryScreen()->physicalDotsPerInch();
 
 	switch (format) {
 		case text::Heading1:
-			fmt.setFontPointSize(pxToPt(style->textEditFont().pixelSize() * 1.6, dpi));
+			fmt.setFontPointSize(pxToPt(style->textEditFont().pixelSize() * devicePixelRatio() * 1.6, dpi));
 			fmt.setFontWeight(QFont::Bold);
 			break;
 		case text::Heading2:
-			fmt.setFontPointSize(pxToPt(style->textEditFont().pixelSize() * 1.5, dpi));
+			fmt.setFontPointSize(pxToPt(style->textEditFont().pixelSize() * devicePixelRatio() * 1.5, dpi));
 			fmt.setFontWeight(QFont::Bold);
 			break;
 		case text::Heading3:
-			fmt.setFontPointSize(pxToPt(style->textEditFont().pixelSize() * 1.4, dpi));
+			fmt.setFontPointSize(pxToPt(style->textEditFont().pixelSize() * devicePixelRatio() * 1.4, dpi));
 			fmt.setFontWeight(QFont::Bold);
 			break;
 		case text::Heading4:
-			fmt.setFontPointSize(pxToPt(style->textEditFont().pixelSize() * 1.3, dpi));
+			fmt.setFontPointSize(pxToPt(style->textEditFont().pixelSize() * devicePixelRatio() * 1.3, dpi));
 			fmt.setFontWeight(QFont::Bold);
 			break;
 		case text::Heading5:
-			fmt.setFontPointSize(pxToPt(style->textEditFont().pixelSize() * 1.2, dpi));
+			fmt.setFontPointSize(pxToPt(style->textEditFont().pixelSize() * devicePixelRatio() * 1.2, dpi));
 			fmt.setFontWeight(QFont::Bold);
 			break;
 		case text::Heading6:
-			fmt.setFontPointSize(pxToPt(style->textEditFont().pixelSize() * 1.1, dpi));
+			fmt.setFontPointSize(pxToPt(style->textEditFont().pixelSize() * devicePixelRatio() * 1.1, dpi));
 			fmt.setFontWeight(QFont::Bold);
 			break;
 		case text::Italic:
