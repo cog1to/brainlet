@@ -14,6 +14,39 @@
 #include "model/thought.h"
 #include "entity/database_brain_repository.h"
 
+/**
+ * Database schema:
+ * 
+ *   +----------------+
+ *   |    thoughts    |
+ *   +----------------+
+ *   |- id (INT) (PK) |
+ *   |- name (TEXT)   |
+ *   +----------------+
+ *           |
+ *          /|\
+ *   +---------------------------+
+ *   |        connections        |
+ *   +---------------------------+
+ *   |- conn_from (INT)          |
+ *   |- conn_to (INT)            |
+ *   |- conn_type (INT)          |
+ *   +---------------------------+
+ *   |- PK: (conn_from, conn_to) |
+ *   +---------------------------+
+ *
+ * For possible values of conn_type, see ConnectionType enum from 
+ * model/thought.h.
+ *
+ * When a new Brain is created, an initial node with ID = 0 is inserted
+ * automatically as a root node. Every other node created from that
+ * would get an ID from a current timestamp in milliseconds.
+ *
+ * The database itself does not ensure that there are no "looping"
+ * connections in the connections table. This must be done on the
+ * business logic side in the repository implementation.
+ */
+
 // Creation.
 
 DatabaseBrainRepository::DatabaseBrainRepository(
