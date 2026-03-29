@@ -4,5 +4,6 @@ bin/
 obj/
 build/
 resources/resources.cpp
+tags
 *.swp
 *~
