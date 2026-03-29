@@ -24,13 +24,13 @@ ifeq ($(UNAME_S),Darwin)
 				 -framework QtSql
 	MOC = ${QTDIR}/share/qt/libexec/moc
 	RCC = ${QTDIR}/share/qt/libexec/rcc
-	INCLUDEDIRS = -I. \
+	INCLUDEDIRS = -I. -F${QTDIR}/lib \
 								-I${QTDIR}/include \
-								-I${QTDIR}/include/QtCore \
-								-I${QTDIR}/include/QtWidgets \
-								-I${QTDIR}/include/QtGui \
-								-I${QTDIR}/include/QtSql \
-								-I${QTDIR}/include/QtDBus
+								-I${QTDIR}/lib/QtCore.framework/Headers \
+								-I${QTDIR}/lib/QtWidgets.framework/Headers \
+								-I${QTDIR}/lib/QtGui.framework/Headers \
+								-I${QTDIR}/lib/QtSql.framework/Headers \
+								-I${QTDIR}/lib/QtDBus.framework/Headers
 	CFLAGS += -DDARWIN=1
 endif
 
@@ -118,6 +118,7 @@ tests: $(TESTS)
 
 # App target
 app: build/brainlet build/brainlet.desktop build/brainlet.png
+	echo "name $(UNAME_S)"
 
 build/brainlet: $(OBJECTS) main.cpp
 	@mkdir -p $(@D)
