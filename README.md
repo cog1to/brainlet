@@ -66,6 +66,19 @@ Frameworks app inside it. But the tool is either buggy, or I don't know
 how to use it propely, so I run it twice, and after that it seems to
 produce a working bundle.
 
+You'll need to provide CODESIGN env to detect your dev account ID.
+
+Also, it seems like older Qt distributions are [broken on new MacOS](
+https://forum.qt.io/topic/164491/qmake-nmake-fails-on-macosx26.4-with-qt-6.11-with-error-implicitly-declaring-library-function-__yield/7). You might manually edit the
+`qyieldcpu.h` file from QtCore framework to fix it
+
+```
++#if __has_builtin(__builtin_arm_yield) // FIX
++    __builtin_arm_yield();
+#elif __has_builtin(__yield)
+    __yield();              // Generic
+```
+
 ### License
 
 MIT License.
