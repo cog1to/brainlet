@@ -734,6 +734,14 @@ QTextCharFormat MarkdownBlock::qtFormat(
 			break;
 		case text::Escape:
 			break;
+		case text::Highlight:
+			fmt.setForeground(style->borderColor());
+			break;
+		case text::Checkbox:
+			fmt.setFont(style->iconFont());
+			fmt.setFontPointSize(pxToPt(style->iconFont().pixelSize() * 1.1, dpi));
+			fmt.setBaselineOffset(-5);
+			break;
 	}
 
 	return fmt;

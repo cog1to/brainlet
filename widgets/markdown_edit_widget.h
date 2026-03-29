@@ -122,6 +122,9 @@ private:
 	bool m_stateDirty = false;
 	// Search.
 	QWidget *m_search = nullptr;
+
+	// State saving helper.
+	void updateState(QString& lastState, MarkdownCursor prev, bool isCopyPaste);
 	// Selection and clipboard.
 	MarkdownCursor deleteSelection();
 	void copySelectionToClipboard(QClipboard::Mode);
@@ -133,6 +136,8 @@ private:
 	// Links handling.
 	void checkForLinksUnderCursor(MarkdownCursor);
 	void onAnchorClicked(QString);
+	// Checkbox handling.
+	bool cursorInsideCheckbox(MarkdownCursor, text::FormatRange*);
 	// Cursor positioning.
 	MarkdownBlock *blockBefore(MarkdownBlock*);
 	MarkdownBlock *blockAfter(MarkdownBlock*);

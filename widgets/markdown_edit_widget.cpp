@@ -134,6 +134,7 @@ void MarkdownEditWidget::resizeEvent(QResizeEvent *event) {
 void MarkdownEditWidget::mousePressEvent(QMouseEvent *event) {
 	bool found = false;
 	MarkdownCursor cursor = cursorAtPoint(event->pos(), &found);
+	text::FormatRange format(0, 0, text::Highlight);
 
 	if (event->button() == Qt::MiddleButton) {
 		handleInput(Qt::Key_unknown, event->button(), event->modifiers(), QKeySequence::UnknownKey, "");
@@ -150,16 +151,24 @@ void MarkdownEditWidget::mousePressEvent(QMouseEvent *event) {
 			m_selection.start = m_cursor;
 			m_selection.end = cursor;
 		} else if (event->button() == Qt::LeftButton) {
-			// Detect link.
 			m_pressPoint = event->pos();
-			checkForLinksUnderCursor(cursor);
-			// Set initial cursor position.
-			MarkdownCursor prev = m_cursor;
-			processCursorMove(prev, cursor);
-			// Reset selection.
-			m_selection.active = false;
-			m_selection.start = m_cursor;
-			m_selection.end = m_cursor;
+
+			// Check for checkboxes.
+			if (cursorInsideCheckbox(cursor, &format) &&
+				(m_cursor.block != cursor.block || m_cursor.line != cursor.line)
+			) {
+				return;
+			} else {
+				// Detect link.
+				checkForLinksUnderCursor(cursor);
+				// Set initial cursor position.
+				MarkdownCursor prev = m_cursor;
+				processCursorMove(prev, cursor);
+				// Reset selection.
+				m_selection.active = false;
+				m_selection.start = m_cursor;
+				m_selection.end = m_cursor;
+			}
 		}
 
 		update();
@@ -200,37 +209,66 @@ void MarkdownEditWidget::mouseMoveEvent(QMouseEvent *event) {
 }
 
 void MarkdownEditWidget::mouseReleaseEvent(QMouseEvent *event) {
-	if (!hasFocus())
-		return;
+	//if (!hasFocus())
+	//	return;
 
 	bool found = false;
 	MarkdownCursor cursor = cursorAtPoint(event->pos(), &found);
+	text::FormatRange range(0, 0, text::Highlight);
 
-	if (!found || (m_selection.start == cursor)) {
+	if (hasFocus() && !found || (m_selection.start == cursor)) {
 		m_selection.active = false;
 	}
 
 	// Copy selection to selection buffer.
-	if (m_selection.active && m_selection.start != m_selection.end) {
+	if (hasFocus() && m_selection.active && m_selection.start != m_selection.end) {
 		copySelectionToClipboard(QClipboard::Selection);
 	}
 
 	if (found) {
 		QPoint pos = event->pos();
 
-		// Check for double-clicks.
-		if (
-			m_lastMouseReleaseTime.isValid() &&
-			std::abs(pos.x() - m_lastMouseReleasePoint.x()) < 5 &&
-			std::abs(pos.y() - m_lastMouseReleasePoint.y()) < 5
+		// Check for checkboxes.
+		if (cursorInsideCheckbox(cursor, &range) &&
+			(m_cursor.block != cursor.block || m_cursor.line != cursor.line)
 		) {
-			QTime now = QTime::currentTime();
-			if (m_lastMouseReleaseTime.msecsTo(now) <= 300) {
-				// Check if still pressing link.
-				if (m_anchor.isEmpty() == false && !(event->modifiers() & Qt::ShiftModifier)) {
-					onAnchorClicked(m_anchor);
-				} else {
-					selectWordUnderCursor();
+			QString lastState = m_model.text();
+
+			text::Paragraph *par = cursor.block->paragraph();
+			text::Line *line = &((*par->getLines())[cursor.line]);
+			text::ParagraphType type = par->getType();
+			QString newText = line->text;
+
+			int position = range.from;
+			if (range.format == text::Checkbox)
+				position += 1;
+
+			if (newText.at(position) == QChar(' ')) {
+				newText.replace(position, 1, "x");
+			} else {
+				newText.replace(position, 1, " ");
+			}
+
+			// Update text.
+			line->setText(newText, par->getType() == text::Code);
+			cursor.block->setParagraph(par);
+			// Update state stack.
+			updateState(lastState, m_cursor, false);
+		} else if (hasFocus()) {
+			// Check for double-clicks.
+			if (
+				m_lastMouseReleaseTime.isValid() &&
+				std::abs(pos.x() - m_lastMouseReleasePoint.x()) < 5 &&
+				std::abs(pos.y() - m_lastMouseReleasePoint.y()) < 5
+			) {
+				QTime now = QTime::currentTime();
+				if (m_lastMouseReleaseTime.msecsTo(now) <= 300) {
+					// Check if still pressing link.
+					if (m_anchor.isEmpty() == false && !(event->modifiers() & Qt::ShiftModifier)) {
+						onAnchorClicked(m_anchor);
+					} else {
+						selectWordUnderCursor();
+					}
 				}
 			}
 		}
@@ -240,7 +278,7 @@ void MarkdownEditWidget::mouseReleaseEvent(QMouseEvent *event) {
 		m_lastMouseReleaseTime = QTime::currentTime();
 		m_lastMouseReleasePoint = pos;
 	}
-
+	
 	update();
 }
 
@@ -258,6 +296,7 @@ void MarkdownEditWidget::handleInput(
 	MarkdownCursor prev = m_cursor;
 	MarkdownCursor cursor = m_cursor;
 	QString lastState = m_model.text();
+	text::FormatRange range(0,0,text::Highlight);
 
 	if (
 		key == Qt::Key_Z && mods & Qt::ControlModifier
@@ -382,7 +421,7 @@ void MarkdownEditWidget::handleInput(
 				cursor.position = 0;
 				processCursorMove(prev, cursor);
 			} else if (m_selection.active) {
-				m_selection.reset();	
+				m_selection.reset();
 			}
 		}
 	} else if (key == Qt::Key_Up) {
@@ -497,6 +536,24 @@ void MarkdownEditWidget::handleInput(
 			line->level = line->level + 1;
 			block->setParagraph(par);
 		}
+	} else if (
+		(key == Qt::Key_Space || key == Qt::Key_X) && 
+		cursorInsideCheckbox(cursor, &range)
+	) {
+		text::Paragraph *par = cursor.block->paragraph();
+		text::Line *line = &((*par->getLines())[cursor.line]);
+		text::ParagraphType type = par->getType();
+		QString newText = line->text;
+
+		if (newText.at(range.from) == QChar(' ')) {
+			newText.replace(range.from, 1, "x");
+		} else {
+			newText.replace(range.from, 1, " ");
+		}
+
+		// Update text.
+		line->setText(newText, par->getType() == text::Code);
+		cursor.block->setParagraph(par);
 	} else if (!text.isEmpty()) {
 		if (m_selection.active) {
 			cursor = deleteSelection();
@@ -515,7 +572,7 @@ void MarkdownEditWidget::handleInput(
 		QString newText = line->text;
 		newText.insert(cursor.position, text);
 		if (newText == "```" && par->getType() != text::Code) {
-			// Transform to code code.
+			// Transform to code.
 			line->setText(empty, true);
 			par->setType(text::Code);
 			block->setParagraph(par);
@@ -575,56 +632,10 @@ void MarkdownEditWidget::handleInput(
 	}
 
 	if (!isMovementKey(key)) {
-		QString newState = m_model.text();
-
-		// Undo stack logic below. Only applies if there were any actual changes
-		// to the data.
-		if (lastState != newState) {
-			if (!m_stateDirty) {
-				// If this is a new state change, update cursor position in last state
-				// to current position. This way undo will restore the cursor to the
-				// position before new changes.
-				TextState state = m_textStates.last();
-				state.cursor = StaticCursor{
-					.block = indexOfBlock(prev.block),
-					.line = prev.line,
-					.position = prev.position
-				};
-				m_textStates.replace(m_textStates.length() - 1, state);
-			}
-
-			if ((seq == QKeySequence::Cut) || (seq == QKeySequence::Paste) || mouseButton == Qt::MiddleButton) {
-				if (m_stateDirty) {
-					// If there were "unsaved" changes, save them first into the Undo
-					// stack. This way we can revert to state right before cut/paste.
-					saveState(
-						lastState,
-						StaticCursor{
-							.block = indexOfBlock(prev.block),
-							.line = prev.line,
-							.position = prev.position
-						}
-					);
-				}
-
-				// Immediately push state after cut or paste onto the stack.
-				// This is usually how Undo stack behaves, from what I remember.
-				saveState(
-					newState,
-					StaticCursor{
-						.block = indexOfBlock(m_cursor.block),
-						.line = m_cursor.line,
-						.position = m_cursor.position
-					}
-				);
-				m_stateDirty = false;
-			} else {
-				m_stateDirty = true;
-			}
-
-			m_isDirty = true;
-			throttleSave();
-		}
+		updateState(
+			lastState, prev, 
+			(seq == QKeySequence::Cut) || (seq == QKeySequence::Paste) || (mouseButton == Qt::MiddleButton)
+		);
 	}
 
 	// I don't like this. Have to wait for widgets to redraw to avoid
@@ -655,6 +666,63 @@ void MarkdownEditWidget::handleInput(
 		QTimer::singleShot(100, this, [this, cursorLine, movedUp]{
 			emit cursorMoved(cursorLine, movedUp);
 		});
+	}
+}
+
+void MarkdownEditWidget::updateState(
+	QString& lastState,
+	MarkdownCursor prev,
+	bool isCopyPaste
+) {
+	QString newState = m_model.text();
+
+	// Undo stack logic below. Only applies if there were any actual changes
+	// to the data.
+	if (lastState != newState) {
+		if (!m_stateDirty) {
+			// If this is a new state change, update cursor position in last state
+			// to current position. This way undo will restore the cursor to the
+			// position before new changes.
+			TextState state = m_textStates.last();
+			state.cursor = StaticCursor{
+				.block = indexOfBlock(prev.block),
+				.line = prev.line,
+				.position = prev.position
+			};
+			m_textStates.replace(m_textStates.length() - 1, state);
+		}
+
+		if (isCopyPaste) {
+			if (m_stateDirty) {
+				// If there were "unsaved" changes, save them first into the Undo
+				// stack. This way we can revert to state right before cut/paste.
+				saveState(
+					lastState,
+					StaticCursor{
+						.block = indexOfBlock(prev.block),
+						.line = prev.line,
+						.position = prev.position
+					}
+				);
+			}
+
+			// Immediately push state after cut or paste onto the stack.
+			// This is usually how Undo stack behaves, from what I remember.
+			saveState(
+				newState,
+				StaticCursor{
+					.block = indexOfBlock(m_cursor.block),
+					.line = m_cursor.line,
+					.position = m_cursor.position
+				}
+			);
+			m_stateDirty = false;
+		} else {
+			m_stateDirty = true;
+		}
+
+		m_isDirty = true;
+		throttleSave();
 	}
 }
 
@@ -2011,6 +2079,39 @@ bool MarkdownEditWidget::cursorAfter(
 		return true;
 
 	return (first.position > second.position);
+}
+
+bool MarkdownEditWidget::cursorInsideCheckbox(
+	MarkdownCursor cur,
+	text::FormatRange *range
+) {
+	text::Line *line = nullptr;
+	int position = cur.position;
+	QList<text::FormatRange> ranges;
+
+	if (cur.line == -1 || cur.line >= cur.block->paragraph()->getLines()->size())
+		return false;
+
+	line = &((*cur.block->paragraph()->getLines())[cur.line]);
+
+	if (m_cursor.block == cur.block && m_cursor.line == cur.line) {
+		ranges = line->formats;
+	} else {
+		ranges = line->foldedFormats;
+	}
+
+	for (auto& fmt: ranges) {
+		if (fmt.format != text::Highlight && fmt.format != text::Checkbox)
+			continue;
+
+		if (!(fmt.from <= position && fmt.to >= position))
+			continue;
+
+		*range = fmt;
+		return true;
+	}
+
+	return false;
 }
 
 void MarkdownEditWidget::checkForLinksUnderCursor(MarkdownCursor cur) {

@@ -29,7 +29,9 @@ namespace text {
 		PlainLink,
 		NodeLink,
 		CodeSpan,
-		Escape
+		Escape,
+		Checkbox,
+		Highlight
 	};
 
 	// Link metadata.
@@ -77,6 +79,7 @@ namespace text {
 	private:
 		void parseLinks(QString*);
 		void parseSimpleLinks(QString*);
+		void parseCheckboxes(QString*);
 		void apply(QString*, BlockFormat, QRegularExpression);
 	};
 

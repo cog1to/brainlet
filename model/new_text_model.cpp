@@ -3,6 +3,7 @@
 #include <QList>
 #include <QFont>
 #include <QTextCharFormat>
+#include <QDebug>
 
 #include "widgets/style.h"
 #include "model/new_text_model.h"
@@ -40,6 +41,10 @@ namespace text_utils {
 				return 0;
 			case text::Escape:
 				return 1;
+			case text::Checkbox:
+				return -1;
+			case text::Highlight:
+				return 0;
 		}
 
 		assert(false); // Should be unreachable.
@@ -69,6 +74,10 @@ namespace text_utils {
 				return -1;
 			case text::NodeLink: // Links are handled separately.
 				return -1;
+			case text::Checkbox: // Checkboxes are handled separately.
+				return -1;
+			case text::Highlight:
+				return 0;
 		}
 
 		assert(false); // Should be unreachable.
@@ -88,6 +97,8 @@ text::FormatRange::FormatRange(
 int text::FormatRange::startOffset() const {
 	if (format == text::Link || format == text::NodeLink) {
 		return 1;
+	} else if (format == text::Checkbox) {
+		return 1;
 	} else {
 		return text_utils::blockStartOffset(format);
 	}
@@ -96,6 +107,8 @@ int text::FormatRange::startOffset() const {
 int text::FormatRange::endOffset() const {
 	if (format == text::Link || format == text::NodeLink) {
 		return 3 + link.target.size();
+	} else if (format == text::Checkbox) {
+		return 1;
 	} else {
 		return text_utils::blockEndOffset(format);
 	}
@@ -193,6 +206,84 @@ void text::Line::parseLinks(QString *input) {
 
 		foldedFormats.push_back(foldedRange);
 
+		match = expr.match(*input, match.capturedEnd());
+	}
+}
+
+void text::Line::parseCheckboxes(QString *input) {
+	QRegularExpression expr("(^| )(\\[[ x]\\])($| )");
+	QRegularExpressionMatch match = expr.match(*input);
+	QString fullCheckbox(QChar(0xf14a));
+	QString emptyCheckbox(QChar(0xf0c8));
+	int offset;
+
+	while (match.hasMatch()) {
+		// Calcualate offset in the folded string by counting offsets applied
+		// from previous folding operations.
+		offset = 0;
+		for (auto& format: foldedFormats) {
+			if (format.from < match.capturedStart())
+				offset += format.startOffset();
+			if (format.to < match.capturedStart())
+				offset += format.endOffset();
+		}
+
+		folded
+			.replace(
+				match.capturedStart() - offset + match.captured(1).size(),
+				match.captured(2).size(),
+				match.captured(2) == "[ ]" ? emptyCheckbox : fullCheckbox
+			);
+
+		// Folded text range.
+		FormatRange foldedRange = FormatRange(
+			match.capturedStart() - offset + match.captured(1).size(),
+			match.capturedStart() - offset + match.captured(1).size() + 1,
+			BlockFormat::Checkbox
+		);
+
+		// Open bracket.
+		formats.push_back(
+			FormatRange(
+				match.capturedStart() + match.captured(1).size(),
+				match.capturedStart() + match.captured(1).size() + 1,
+				text::BlockFormat::Bold
+			)
+		);
+		// Checkbox symbol.
+		formats.push_back(
+			FormatRange(
+				match.capturedStart() + match.captured(1).size() + 1,
+				match.capturedStart() + match.captured(1).size() + 2,
+				text::BlockFormat::Highlight
+			)
+		);
+		// Close bracket.
+		formats.push_back(
+			FormatRange(
+				match.capturedStart() + match.captured(1).size() + 2,
+				match.capturedStart() + match.captured(1).size() + 3,
+				text::BlockFormat::Bold
+			)
+		);
+
+		// Shift other formats.
+		for (auto& format: foldedFormats) {
+			if (format.from > foldedRange.from)
+				format.from -= foldedRange.startOffset();
+			if (format.to > foldedRange.from)
+				format.to -= foldedRange.startOffset();
+			if (format.from > foldedRange.to)
+				format.from -= foldedRange.endOffset();
+			if (format.to > foldedRange.to) {
+				format.to -= foldedRange.endOffset();
+			}
+		}
+
+		// Save current format.
+		foldedFormats.push_back(foldedRange);
+
+		// Find next match.
 		match = expr.match(*input, match.capturedEnd());
 	}
 }
@@ -377,6 +468,9 @@ void text::Line::setText(QString& input, bool preformatted) {
 
 	// Links.
 	parseLinks(&text);
+
+	// Checkboxes.
+	parseCheckboxes(&text);
 }
 
 // Paragraphs.
