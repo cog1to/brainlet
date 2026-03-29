@@ -145,7 +145,6 @@ void ThoughtEditWidget::insertFromMimeData(const QMimeData *source) {
 	int availableLength = maxLength - currentText.length();
 
 	if (availableLength  > 0) {
-		qDebug() << "can paste";
 		QString availableText = text.left(availableLength);
 		QMimeData newData = QMimeData();
 		newData.setText(availableText);

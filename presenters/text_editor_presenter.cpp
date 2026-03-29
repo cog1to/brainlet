@@ -1,4 +1,5 @@
 #include <QString>
+#include <QDebug>
 
 #include "model/model.h"
 #include "presenters/text_editor_presenter.h"

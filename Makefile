@@ -118,7 +118,6 @@ tests: $(TESTS)
 
 # App target
 app: build/brainlet build/brainlet.desktop build/brainlet.png
-	echo "name $(UNAME_S)"
 
 build/brainlet: $(OBJECTS) main.cpp
 	@mkdir -p $(@D)

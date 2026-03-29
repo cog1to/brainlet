@@ -3,7 +3,6 @@
 #include <QList>
 #include <QFont>
 #include <QTextCharFormat>
-#include <QDebug>
 
 #include "widgets/style.h"
 #include "model/new_text_model.h"

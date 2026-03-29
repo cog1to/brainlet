@@ -8,8 +8,6 @@
 #include "widgets/markdown_scroll_widget.h"
 #include "widgets/markdown_edit_widget.h"
 
-#include <QDebug>
-
 MarkdownScrollWidget::MarkdownScrollWidget(
 	QWidget *parent,
 	Style *style

@@ -5,8 +5,6 @@
 
 #include "widgets/anchor_widget.h"
 
-#include <QDebug>
-
 AnchorWidget::AnchorWidget(
 	QWidget *parent,
 	Style *style,
