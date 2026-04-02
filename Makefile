@@ -18,19 +18,19 @@ ifeq ($(UNAME_S),Darwin)
 	CXX = /opt/homebrew/opt/llvm/bin/clang++
 	LIBDIRS = -F${QTDIR}/lib
 	LIBS = -framework QtWidgets \
-				 -framework QtCore \
-				 -framework QtGui \
-				 -framework QtDBus \
-				 -framework QtSql
+		 -framework QtCore \
+		 -framework QtGui \
+		 -framework QtDBus \
+		 -framework QtSql
 	MOC = ${QTDIR}/share/qt/libexec/moc
 	RCC = ${QTDIR}/share/qt/libexec/rcc
 	INCLUDEDIRS = -I. -F${QTDIR}/lib \
-								-I${QTDIR}/include \
-								-I${QTDIR}/lib/QtCore.framework/Headers \
-								-I${QTDIR}/lib/QtWidgets.framework/Headers \
-								-I${QTDIR}/lib/QtGui.framework/Headers \
-								-I${QTDIR}/lib/QtSql.framework/Headers \
-								-I${QTDIR}/lib/QtDBus.framework/Headers
+		-I${QTDIR}/include \
+		-I${QTDIR}/lib/QtCore.framework/Headers \
+		-I${QTDIR}/lib/QtWidgets.framework/Headers \
+		-I${QTDIR}/lib/QtGui.framework/Headers \
+		-I${QTDIR}/lib/QtSql.framework/Headers \
+		-I${QTDIR}/lib/QtDBus.framework/Headers
 	CFLAGS += -DDARWIN=1
 endif
 
@@ -79,6 +79,10 @@ $(RESOURCES_C): $(RESOURCES) $(wildcard resources/icons/*)
 
 # MOCs
 mocs/%widget.moc.cpp: widgets/%widget.h
+	@mkdir -p $(@D)
+	$(MOC) $< -o $@
+
+mocs/%layout.moc.cpp: widgets/%layout.h
 	@mkdir -p $(@D)
 	$(MOC) $< -o $@
 

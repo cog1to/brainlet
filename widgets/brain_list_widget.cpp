@@ -27,11 +27,14 @@ BrainListWidget::BrainListWidget(QWidget *parent, Style *style)
 
 	// Add new brain button.
 	QPushButton *newItemButton = new QPushButton(
-		tr("Create a new Brain"),
+		tr("\nCreate a new Brain\n"),
 		nullptr
 	);
 	newItemButton->setStyleSheet(
-		style->brainListButtonStyle("center", style->brains.foreground)
+		style->brainListButtonStyle(
+			"center",
+			style->brains.foreground
+		)
 	);
 	connect(
 		newItemButton, &QPushButton::clicked,

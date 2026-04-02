@@ -23,7 +23,7 @@ QSize ElidedLabelWidget::sizeHint() const {
 	QMargins margins = contentsMargins();
 
 	return QSize(
-		textSize.width() + margins.left() + margins.right(),
+		textSize.width() + margins.left() + margins.right() + 6,
 		metrics.height() + margins.top() + margins.bottom()
 	);
 }

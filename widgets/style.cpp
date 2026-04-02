@@ -123,6 +123,7 @@ QString Style::brainListButtonStyle(QString align, QColor foreground) {
 			text-align: %10;\
 			border-radius: 10px;\
 			border-style: solid;\
+			width: 194px;\
 		}\
 		QPushButton:hover{\
 			background-color: %9;\
@@ -151,11 +152,11 @@ QString Style::brainItemButtonStyle() {
 			color: %4;\
 			border-width: 1px;\
 			border-color: %5;\
-			padding: 5px;\
-			padding-left: 12px;\
-			padding-right: 12px;\
+			padding: 8px;\
+			padding-left: 9px;\
+			padding-right: 9px;\
 			background-color: %6;\
-			text-align: left;\
+			text-align: center;\
 			border-radius: 10px;\
 			border-style: solid;\
 		}\
@@ -171,7 +172,7 @@ QString Style::brainItemButtonStyle() {
 		}")
 	.arg("normal")
 	.arg(14)
-	.arg(browser.browseFont.family())
+	.arg(fonts.icon.family())
 	.arg(browser.text.name(QColor::HexArgb))
 	.arg(browser.text.darker(200).name(QColor::HexArgb))
 	.arg(browser.background.lighter(110).name(QColor::HexRgb))

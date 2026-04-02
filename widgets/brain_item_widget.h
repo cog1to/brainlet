@@ -29,6 +29,10 @@ public:
 	const QString name() const;
 	void setName(QString);
 	QSize sizeHint() const override;
+	// Metrics.
+	static const int PADDING = 18;
+	static const int SPACING = 18;
+	static const int MAX_WIDTH = 220;
 
 protected:
 	// Event overrides.
@@ -52,13 +56,14 @@ private:
 	QString m_id;
 	QString m_name;
 	// Contents
-	QHBoxLayout m_layout;
+	QVBoxLayout m_layout;
 	ElidedLabelWidget *m_label = nullptr;
 	// TODO: Button idea: hold-to-activate widget that fills with
 	// color left-to-right while pressing it, and sends the signal
 	// when filled completely.
 	QPushButton *m_deleteButton = nullptr;
 	QPushButton *m_renameButton = nullptr;
+	QHBoxLayout *m_buttonsLayout = nullptr;
 	// Helpers.
 	static inline QString getStyle(Style *style, Status status);
 };

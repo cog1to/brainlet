@@ -33,13 +33,13 @@ BrainItemWidget::BrainItemWidget(
 		getStyle(style, StatusNormal)
 	);
 
-	m_deleteButton = new QPushButton(tr("Delete"), nullptr);
+	m_deleteButton = new QPushButton(QChar(0xf1f8), nullptr);
 	m_deleteButton->setStyleSheet(
 		style->brainItemButtonStyle()
 	);
 	m_deleteButton->setVisible(false);
 
-	m_renameButton = new QPushButton(tr("Rename"), nullptr);
+	m_renameButton = new QPushButton(QChar(0xf304), nullptr);
 	m_renameButton->setStyleSheet(
 		style->brainItemButtonStyle()
 	);
@@ -55,11 +55,18 @@ BrainItemWidget::BrainItemWidget(
 		this, &BrainItemWidget::onRenameClick
 	);
 
-	m_label->setContentsMargins(0, 1, 0, 1);
-	m_layout.setContentsMargins(0, 0, 0, 0);
+	m_buttonsLayout = new QHBoxLayout(nullptr);
+	m_buttonsLayout->addStretch();
+	m_buttonsLayout->addWidget(m_renameButton);
+	m_buttonsLayout->addWidget(m_deleteButton);
+	m_buttonsLayout->setContentsMargins(0, 0, 0, 0);
+
+	m_label->setContentsMargins(0, 0, 0, 0);
+	m_layout.setContentsMargins(0, 8, 0, 8);
+	m_layout.setSpacing(8);
 	m_layout.addWidget(m_label);
-	m_layout.addWidget(m_renameButton);
-	m_layout.addWidget(m_deleteButton);
+	m_layout.setAlignment(m_label, Qt::AlignHCenter);
+	m_layout.addLayout(m_buttonsLayout);
 }
 
 const QString BrainItemWidget::id() const {
@@ -81,9 +88,10 @@ void BrainItemWidget::setName(QString name) {
 
 QSize BrainItemWidget::sizeHint() const {
 	QSize labelSize = m_label->sizeHint();
+	QSize buttonSize = m_deleteButton->sizeHint();
 	return QSize(
-		labelSize.width(),
-		labelSize.height() + 18
+		MAX_WIDTH,
+		labelSize.height() + buttonSize.height() + PADDING + SPACING
 	);
 }
 

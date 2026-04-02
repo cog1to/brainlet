@@ -19,6 +19,7 @@
 #include "widgets/style.h"
 #include "widgets/brain_item_widget.h"
 #include "widgets/toast_widget.h"
+#include "widgets/flow_layout.h"
 #include "model/brain.h"
 #include "model/brain_list.h"
 
@@ -52,7 +53,7 @@ private:
 	std::unordered_map<QString, BrainItemWidget*> m_widgets;
 	QScrollArea m_area;
 	QWidget m_container;
-	QVBoxLayout m_layout;
+	FlowLayout m_layout;
 	QLabel m_text;
 	ToastWidget *m_error = nullptr;
 	// Helpers.

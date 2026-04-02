@@ -1,0 +1,3 @@
+--recurse
+--languages=C++
+--exclude=*.moc.cpp
