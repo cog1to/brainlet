@@ -184,8 +184,10 @@ void BrainListWidget::setItems(BrainList list) {
 
 	// Delete missing widgets.
 	for (auto it = idsToDelete.begin(); it != idsToDelete.end(); it++) {
-		if (auto found = m_widgets.find(*it); found != m_widgets.end())
+		if (auto found = m_widgets.find(*it); found != m_widgets.end()) {
 			delete found->second;
+		}
+
 		m_widgets.erase((*it));
 	}
 

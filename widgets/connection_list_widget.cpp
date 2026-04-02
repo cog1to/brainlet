@@ -31,7 +31,7 @@ ConnectionItemWidget::ConnectionItemWidget(
 	setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Maximum);
 
 	// Setup title.
-	ElidedLabelWidget *titleLabel = new ElidedLabelWidget(nullptr, name);
+	ElidedLabelWidget *titleLabel = new ElidedLabelWidget(nullptr, name, false);
 	titleLabel->setStyleSheet(
 		QString("color: %1; font: %2px \"%3\"")
 			.arg(style->editor.text.name(QColor::HexRgb))

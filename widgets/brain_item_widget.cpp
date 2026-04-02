@@ -20,7 +20,7 @@ BrainItemWidget::BrainItemWidget(
 	m_layout(this)
 {
 	setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-	m_label = new ElidedLabelWidget(parent, name);
+	m_label = new ElidedLabelWidget(parent, name, true);
 	m_label->setStyleSheet(
 		QString("background-color: #00000000; font: %1 %2px \"%3\"; color: %4;")
 		.arg("bold")
@@ -103,6 +103,7 @@ void BrainItemWidget::enterEvent(QEnterEvent*) {
 	setStyleSheet(
 		getStyle(m_style, StatusHover)
 	);
+	m_layout.invalidate();
 }
 
 void BrainItemWidget::leaveEvent(QEvent *) {
@@ -111,6 +112,7 @@ void BrainItemWidget::leaveEvent(QEvent *) {
 	setStyleSheet(
 		getStyle(m_style, StatusNormal)
 	);
+	m_layout.invalidate();
 }
 
 void BrainItemWidget::mousePressEvent(QMouseEvent*) {

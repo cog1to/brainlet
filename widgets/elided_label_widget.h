@@ -5,13 +5,16 @@
 #include <QString>
 #include <QMargins>
 #include <QPaintEvent>
+#include <QTextLayout>
 
 class ElidedLabelWidget: public QFrame {
 	Q_OBJECT
 
 public:
-	ElidedLabelWidget(QWidget*, QString);
+	ElidedLabelWidget(QWidget*, QString, bool);
 	QSize sizeHint() const override;
+	int heightForWidth(int) const override;
+	bool hasHeightForWidth() const override;
 	// State.
 	void setText(QString);
 
@@ -20,6 +23,7 @@ protected:
 
 private:
 	QString m_text;
+	bool m_multiline;
 };
 
 #endif
