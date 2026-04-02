@@ -60,8 +60,8 @@ void MarkdownBlock::setParagraph(Paragraph *par) {
 	text::ParagraphType type = par->getType();
 
 	QColor color = type == text::Code
-		? m_style->codeBackground()
-		: m_style->background();
+		? m_style->editor.codeBackground
+		: m_style->editor.background;
 	setStyleSheet(
 		QString("background-color: %1").arg(color.name(QColor::HexRgb))
 	);
@@ -78,9 +78,9 @@ void MarkdownBlock::setParagraph(Paragraph *par) {
 		layout->setCacheEnabled(true);
 
 		if (par->getType() == Code)
-			layout->setFont(m_style->codeFont());
+			layout->setFont(m_style->editor.monoFont);
 		else
-			layout->setFont(m_style->textEditFont());
+			layout->setFont(m_style->editor.textFont);
 
 		Line line = lines->at(i);
 		if (cursor != nullptr && cursor->block == this && cursor->line == i) {
@@ -334,9 +334,9 @@ QSize MarkdownBlock::sizeHint() const {
 	QMargins formatMargins = QMargins(0, 0, 0, 0);
 	text::ParagraphType type = m_par->getType();
 
-	QFontMetrics fontMetrics = QFontMetrics(m_style->textEditFont());
+	QFontMetrics fontMetrics = QFontMetrics(m_style->editor.textFont);
 	if (type == text::Code) {
-		fontMetrics = QFontMetrics(m_style->codeFont());
+		fontMetrics = QFontMetrics(m_style->editor.monoFont);
 		formatMargins = codeMargins;
 	} else if (type == text::BulletList || type == text::NumberList) {
 		formatMargins = listMargins;
@@ -402,16 +402,16 @@ void MarkdownBlock::paintEvent(QPaintEvent *event) {
 
 	QPainter painter(this);
 
-	QFontMetrics fontMetrics = QFontMetrics(m_style->textEditFont());
+	QFontMetrics fontMetrics = QFontMetrics(m_style->editor.textFont);
 	if (type == text::Code) {
-		painter.setFont(m_style->codeFont());
-		fontMetrics = QFontMetrics(m_style->codeFont());
+		painter.setFont(m_style->editor.monoFont);
+		fontMetrics = QFontMetrics(m_style->editor.monoFont);
 		formatMargins = codeMargins;
 	} else if (type == text::BulletList || type == text::NumberList) {
-		painter.setFont(m_style->textEditFont());
+		painter.setFont(m_style->editor.textFont);
 		formatMargins = listMargins;
 	} else {
-		painter.setFont(m_style->textEditFont());
+		painter.setFont(m_style->editor.textFont);
 	}
 
 	if (
@@ -420,7 +420,7 @@ void MarkdownBlock::paintEvent(QPaintEvent *event) {
 		m_provider->isDocumentEmpty()
 	) {
 		// Draw placeholder.
-		QColor placeholderColor = m_style->textEditColor();
+		QColor placeholderColor = m_style->editor.text;
 		placeholderColor.setAlpha(128);
 
 		painter.setPen(placeholderColor);
@@ -431,7 +431,7 @@ void MarkdownBlock::paintEvent(QPaintEvent *event) {
 	}
 
 	painter.setRenderHint(QPainter::Antialiasing, true);
-	painter.setPen(m_style->textEditColor());
+	painter.setPen(m_style->editor.text);
 
 	int lineSpacing = fontMetrics.lineSpacing();
 	int lineWidth = size().width()
@@ -473,7 +473,7 @@ void MarkdownBlock::paintEvent(QPaintEvent *event) {
 			if (hollowPoint)
 				painter.setBrush(Qt::NoBrush);
 			else
-				painter.setBrush(m_style->textEditColor());
+				painter.setBrush(m_style->editor.text);
 
 			painter.drawEllipse(
 				QRectF(
@@ -514,7 +514,7 @@ void MarkdownBlock::paintEvent(QPaintEvent *event) {
 		}
 
 		// Draw the line/paragraph.
-		painter.setBrush(m_style->textEditColor());
+		painter.setBrush(m_style->editor.text);
 		layout->draw(&painter, QPointF(0, 0), selections);
 
 		// Draw cursor.
@@ -567,12 +567,12 @@ QLine MarkdownBlock::lineForCursor(MarkdownCursor cursor) {
 		return QLine(0, 0, 0, 0);
 	}
 
-	QFontMetrics fontMetrics = QFontMetrics(m_style->textEditFont());
+	QFontMetrics fontMetrics = QFontMetrics(m_style->editor.textFont);
 	QMargins margins = contentsMargins();
 
 	QMargins formatMargins = QMargins(0, 0, 0, 0);
 	if (m_par->getType() == text::Code) {
-		fontMetrics = QFontMetrics(m_style->codeFont());
+		fontMetrics = QFontMetrics(m_style->editor.monoFont);
 		formatMargins = codeMargins;
 	} else if (m_par->getType() == text::BulletList || m_par->getType() == text::NumberList) {
 		formatMargins = listMargins;
@@ -641,7 +641,7 @@ QList<QTextLayout::FormatRange> MarkdownBlock::convertRanges(
 	QList<QTextLayout::FormatRange> result;
 
 	QTextCharFormat defaultFormat;
-	defaultFormat.setFont(m_style->textEditFont());
+	defaultFormat.setFont(m_style->editor.textFont);
 
 	for (auto fmt: from) {
 		QTextCharFormat combined = defaultFormat;
@@ -682,27 +682,27 @@ QTextCharFormat MarkdownBlock::qtFormat(
 
 	switch (format) {
 		case text::Heading1:
-			fmt.setFontPointSize(pxToPt(style->textEditFont().pixelSize() * 1.6, dpi));
+			fmt.setFontPointSize(pxToPt(style->editor.textFont.pixelSize() * 1.6, dpi));
 			fmt.setFontWeight(QFont::Bold);
 			break;
 		case text::Heading2:
-			fmt.setFontPointSize(pxToPt(style->textEditFont().pixelSize() * 1.5, dpi));
+			fmt.setFontPointSize(pxToPt(style->editor.textFont.pixelSize() * 1.5, dpi));
 			fmt.setFontWeight(QFont::Bold);
 			break;
 		case text::Heading3:
-			fmt.setFontPointSize(pxToPt(style->textEditFont().pixelSize() * 1.4, dpi));
+			fmt.setFontPointSize(pxToPt(style->editor.textFont.pixelSize() * 1.4, dpi));
 			fmt.setFontWeight(QFont::Bold);
 			break;
 		case text::Heading4:
-			fmt.setFontPointSize(pxToPt(style->textEditFont().pixelSize() * 1.3, dpi));
+			fmt.setFontPointSize(pxToPt(style->editor.textFont.pixelSize() * 1.3, dpi));
 			fmt.setFontWeight(QFont::Bold);
 			break;
 		case text::Heading5:
-			fmt.setFontPointSize(pxToPt(style->textEditFont().pixelSize() * 1.2, dpi));
+			fmt.setFontPointSize(pxToPt(style->editor.textFont.pixelSize() * 1.2, dpi));
 			fmt.setFontWeight(QFont::Bold);
 			break;
 		case text::Heading6:
-			fmt.setFontPointSize(pxToPt(style->textEditFont().pixelSize() * 1.1, dpi));
+			fmt.setFontPointSize(pxToPt(style->editor.textFont.pixelSize() * 1.1, dpi));
 			fmt.setFontWeight(QFont::Bold);
 			break;
 		case text::Italic:
@@ -716,30 +716,30 @@ QTextCharFormat MarkdownBlock::qtFormat(
 			fmt.setFontWeight(QFont::Bold);
 			break;
 		case text::CodeSpan:
-			fmt.setBackground(style->codeBackground());
-			fmt.setFont(style->codeFont());
+			fmt.setBackground(style->editor.codeBackground);
+			fmt.setFont(style->editor.monoFont);
 			break;
 		case text::NodeLink:
 			fmt.setFontUnderline(true);
-			fmt.setForeground(style->borderColor());
+			fmt.setForeground(style->editor.nodeLink);
 			fmt.setAnchor(true);
 			fmt.setAnchorHref(range.link.target);
 			break;
 		case text::Link:
 		case text::PlainLink:
 			fmt.setFontUnderline(true);
-			fmt.setForeground(style->linkColor());
+			fmt.setForeground(style->editor.link);
 			fmt.setAnchor(true);
 			fmt.setAnchorHref(range.link.target);
 			break;
 		case text::Escape:
 			break;
 		case text::Highlight:
-			fmt.setForeground(style->borderColor());
+			fmt.setForeground(style->editor.textHighlight);
 			break;
 		case text::Checkbox:
-			fmt.setFont(style->iconFont());
-			fmt.setFontPointSize(pxToPt(style->iconFont().pixelSize() * 1.1, dpi));
+			fmt.setFont(style->fonts.icon);
+			fmt.setFontPointSize(pxToPt(style->fonts.icon.pixelSize() * 1.1, dpi));
 			fmt.setBaselineOffset(-5);
 			break;
 	}

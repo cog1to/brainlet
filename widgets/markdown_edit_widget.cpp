@@ -27,7 +27,7 @@ MarkdownEditWidget::MarkdownEditWidget(QWidget *widget, Style *style)
 	setSizePolicy(QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
 	setStyleSheet(
 		QString("background-color: %1;")
-			.arg(style->background().name(QColor::HexRgb))
+			.arg(style->editor.background.name(QColor::HexRgb))
 	);
 
 	m_layout = new QVBoxLayout(nullptr);
@@ -891,8 +891,8 @@ QTextLayout::FormatRange MarkdownEditWidget::selectionInLine(
 	}
 
 	QTextCharFormat format = QTextCharFormat();
-	format.setBackground(m_style->selectionBackColor());
-	format.setForeground(m_style->selectionTextColor());
+	format.setBackground(m_style->editor.selectionBackground);
+	format.setForeground(m_style->editor.selectionText);
 	range.format = format;
 
 	return range;
@@ -1339,15 +1339,15 @@ void MarkdownEditWidget::showContextMenu(QMouseEvent *event) {
 			color: %9;\
 			background-color: %5;\
 		}")
-		.arg(m_style->background().name(QColor::HexRgb))
-		.arg(m_style->textColor().name(QColor::HexRgb))
-		.arg(m_style->font().pixelSize())
-		.arg(m_style->font().family())
-		.arg(m_style->background().name(QColor::HexRgb))
-		.arg(m_style->background().lighter(150).name(QColor::HexRgb))
-		.arg(m_style->background().lighter(200).name(QColor::HexRgb))
-		.arg(m_style->textColor().darker(150).name(QColor::HexRgb))
-		.arg(m_style->textColor().darker(300).name(QColor::HexRgb))
+		.arg(m_style->editor.background.name(QColor::HexRgb))
+		.arg(m_style->editor.text.name(QColor::HexRgb))
+		.arg(m_style->editor.textFont.pixelSize())
+		.arg(m_style->editor.textFont.family())
+		.arg(m_style->editor.background.name(QColor::HexRgb))
+		.arg(m_style->editor.background.lighter(150).name(QColor::HexRgb))
+		.arg(m_style->editor.background.lighter(200).name(QColor::HexRgb))
+		.arg(m_style->editor.text.darker(150).name(QColor::HexRgb))
+		.arg(m_style->editor.text.darker(300).name(QColor::HexRgb))
 	);
 
 	// Custom node link action.

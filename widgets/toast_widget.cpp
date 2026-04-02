@@ -29,8 +29,8 @@ ToastWidget::ToastWidget(Style *style, QString text)
 			}"
 		)
 		.arg("#ffffff")
-		.arg(style->textEditFont().pixelSize())
-		.arg(style->textEditFont().family())
+		.arg(style->editor.textFont.pixelSize())
+		.arg(style->editor.textFont.family())
 	);
 	m_label.setWordWrap(true);
 	m_label.setAlignment(Qt::AlignCenter | Qt::AlignCenter);
@@ -55,7 +55,7 @@ void ToastWidget::show(QWidget *parent) {
 
 	setParent(parent);
 	QFrame::show();
-	
+
 	// Hide timer.
 	QTimer::singleShot(5000, this, &ToastWidget::hide);
 }

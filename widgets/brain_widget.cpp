@@ -14,7 +14,7 @@ BrainWidget::BrainWidget(
 {
 	setStyleSheet(
 		QString("background-color: %1").arg(
-			style->background().name(QColor::HexRgb)
+			style->brains.background.name(QColor::HexRgb)
 		)
 	);
 
@@ -22,7 +22,7 @@ BrainWidget::BrainWidget(
 	separator->setMinimumSize(1, 1);
 	separator->setStyleSheet(
 		QString("background-color: %1")
-			.arg(style->textEditColor().name(QColor::HexRgb))
+			.arg(style->brains.text.name(QColor::HexRgb))
 	);
 	separator->setSizePolicy(
 		QSizePolicy(QSizePolicy::Maximum, QSizePolicy::Expanding)

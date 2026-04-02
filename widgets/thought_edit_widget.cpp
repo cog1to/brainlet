@@ -36,10 +36,10 @@ ThoughtEditWidget::ThoughtEditWidget(
 
 	QString stylesheet = QString(
 		"background-color: #00000000; padding: 0; color: %1; font: %2 %3px \"%4\";"
-	).arg(style->textColor().name(QColor::HexRgb))
-		.arg(style->font().bold() ? "bold" : "")
-		.arg(style->font().pixelSize())
-		.arg(style->font().family());
+	).arg(style->browser.text.name(QColor::HexRgb))
+		.arg(style->browser.browseFont.bold() ? "bold" : "")
+		.arg(style->browser.browseFont.pixelSize())
+		.arg(style->browser.browseFont.family());
 	setStyleSheet(stylesheet);
 
 	document()->setDocumentMargin(0);

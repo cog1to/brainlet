@@ -34,9 +34,9 @@ ConnectionItemWidget::ConnectionItemWidget(
 	ElidedLabelWidget *titleLabel = new ElidedLabelWidget(nullptr, name);
 	titleLabel->setStyleSheet(
 		QString("color: %1; font: %2px \"%3\"")
-			.arg(style->textColor().name(QColor::HexRgb))
-			.arg(style->font().pixelSize())
-			.arg(style->font().family())
+			.arg(style->editor.text.name(QColor::HexRgb))
+			.arg(style->editor.textFont.pixelSize())
+			.arg(style->editor.textFont.family())
 	);
 	titleLabel->setMinimumWidth(40);
 	titleLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
@@ -62,7 +62,7 @@ ConnectionItemWidget::ConnectionItemWidget(
 QPushButton *ConnectionItemWidget::makeButton(Style *style, QString title) {
 	LinkButtonWidget *button = new LinkButtonWidget(nullptr, style);
 
-	QFontMetrics metrics(style->font());
+	QFontMetrics metrics(style->editor.textFont);
 	button->setMaximumHeight(metrics.height());
 	button->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
 	button->setText(title);
@@ -242,7 +242,7 @@ QWidget *ConnectionListWidget::makeSeparator() {
 	separator->setMaximumHeight(1);
 	separator->setStyleSheet(
 		QString("background-color: %1")
-			.arg(m_style->textEditColor().name(QColor::HexRgb))
+			.arg(m_style->editor.text.name(QColor::HexRgb))
 	);
 	separator->setSizePolicy(
 		QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum)
@@ -255,7 +255,7 @@ QSize ConnectionListWidget::sizeHint() const {
 	int maxWidth = 0;
 	int maxHeight = 0;
 
-	QFontMetrics metrics(m_style->font());
+	QFontMetrics metrics(m_style->editor.textFont);
 	for (auto idx = 0; idx < m_items.size(); idx++) {
 		QRect bounds = metrics.boundingRect(m_items[idx].name);
 		QSize textSize = bounds.size();

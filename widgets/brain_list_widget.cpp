@@ -31,7 +31,7 @@ BrainListWidget::BrainListWidget(QWidget *parent, Style *style)
 		nullptr
 	);
 	newItemButton->setStyleSheet(
-		style->brainListButtonStyle("center", style->hoverBorderColor())
+		style->brainListButtonStyle("center", style->brains.foreground)
 	);
 	connect(
 		newItemButton, &QPushButton::clicked,
@@ -42,7 +42,7 @@ BrainListWidget::BrainListWidget(QWidget *parent, Style *style)
 	// Set welcome text.
 	m_text.setStyleSheet(
 		QString("font-size: 16px; color: %1")
-		.arg(style->textEditColor().name(QColor::HexArgb))
+		.arg(style->brains.text.name(QColor::HexArgb))
 	);
 	QString textPattern = QString("<h2>Welcome!</h2>");
 	m_text.setTextFormat(Qt::RichText);

@@ -22,7 +22,7 @@ TabsWidget::TabsWidget(
 {
 	setStyleSheet(
 		QString("TabsWidget { background-color: %1; }")
-		.arg(style->background().darker(150).name(QColor::HexRgb))
+		.arg(style->browser.background.darker(150).name(QColor::HexRgb))
 	);
 
 	setFocusPolicy(Qt::NoFocus);
@@ -75,16 +75,16 @@ TabsWidget::TabsWidget(
 				padding-top: 4px;\
 			}"
 		)
-		.arg(style->font().pixelSize())
-		.arg(style->font().family())
-		.arg(style->textEditColor().name(QColor::HexRgb))
-		.arg(style->background().name(QColor::HexRgb))
-		.arg(style->background().name(QColor::HexRgb))
-		.arg(style->background().darker(130).name(QColor::HexRgb))
-		.arg(style->textColor().darker(120).name(QColor::HexRgb))
-		.arg(style->background().darker(130).name(QColor::HexRgb))
-		.arg(style->background().darker(140).name(QColor::HexRgb))
-		.arg(style->background().lighter(120).name(QColor::HexRgb))
+		.arg(style->editor.textFont.pixelSize())
+		.arg(style->editor.textFont.family())
+		.arg(style->editor.text.name(QColor::HexRgb))
+		.arg(style->browser.background.name(QColor::HexRgb))
+		.arg(style->browser.background.name(QColor::HexRgb))
+		.arg(style->browser.background.darker(130).name(QColor::HexRgb))
+		.arg(style->editor.text.darker(120).name(QColor::HexRgb))
+		.arg(style->browser.background.darker(130).name(QColor::HexRgb))
+		.arg(style->browser.background.darker(140).name(QColor::HexRgb))
+		.arg(style->browser.background.lighter(120).name(QColor::HexRgb))
 	);
 	// TODO: Customize/subclass QTabBar. Looks out of place on Mac.
 

@@ -33,7 +33,7 @@ void ScrollAreaWidget::wheelEvent(QWheelEvent *event) {
 
 void ScrollAreaWidget::resizeEvent(QResizeEvent *event) {
 	QWidget::resizeEvent(event);
-	const int width = m_style->scrollWidth();
+	const int width = m_style->browser.scrollWidth;
 
 	// Layout bar.
 	switch (m_pos) {

@@ -24,7 +24,7 @@ HistoryWidget::~HistoryWidget() {
 }
 
 QSize HistoryWidget::sizeHint() const {
-	QFontMetrics metrics = QFontMetrics(m_style->historyFont());
+	QFontMetrics metrics = QFontMetrics(m_style->browser.historyFont);
 	return QSize(100, metrics.height() + 8);
 }
 
@@ -128,7 +128,7 @@ HistoryItem::HistoryItem(
 }
 
 QSize HistoryItem::sizeHint() const {
-	QFontMetrics metrics = QFontMetrics(m_style->historyFont());
+	QFontMetrics metrics = QFontMetrics(m_style->browser.historyFont);
 	QRect textRect = metrics.boundingRect(m_name);
 	QMargins margins = contentsMargins();
 
@@ -141,14 +141,14 @@ QSize HistoryItem::sizeHint() const {
 void HistoryItem::paintEvent(QPaintEvent *event) {
 	QFrame::paintEvent(event);
 
-	QFontMetrics metrics = QFontMetrics(m_style->historyFont());
+	QFontMetrics metrics = QFontMetrics(m_style->browser.historyFont);
 	QMargins margins = contentsMargins();
 	QSize cur = size();
 	int availableWidth = cur.width() - margins.left() - margins.right();
 
 	QPainter painter(this);
-	painter.setFont(m_style->historyFont());
-	painter.setPen(m_style->textColor());
+	painter.setFont(m_style->browser.historyFont);
+	painter.setPen(m_style->browser.text);
 
 	QRect textRect = metrics.boundingRect(m_name);
 	QString text = m_name;

@@ -41,7 +41,7 @@ DismissableModule MemoryFactory::makeBrainsModule() {
 
 	widget->setStyleSheet(
 		QString("background-color: %1")
-		.arg(m_style->background().name(QColor::HexArgb))
+		.arg(m_style->browser.background.name(QColor::HexArgb))
 	);
 
 

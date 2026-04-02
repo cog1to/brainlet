@@ -27,8 +27,8 @@ void ScrollBarWidget::paintEvent(QPaintEvent *) {
 	QSize cur = size();
 	float width, offset;
 
-	QColor background = m_style->background().darker();
-	QColor foreground = m_style->background().lighter(200);
+	QColor background = m_style->browser.background.darker();
+	QColor foreground = m_style->browser.background.lighter(200);
 	int margin = (float)(std::min(size().width(), size().height())) / 2.0;
 
 	QPen backgroundPen(background, margin, Qt::SolidLine, Qt::RoundCap);

@@ -23,9 +23,9 @@ MarkdownConnectionsWidget::MarkdownConnectionsWidget(
 			font: normal %2px \"%3\";\
 			padding: %4px;\
 		}")
-		.arg(style->textEditColor().name(QColor::HexRgb))
-		.arg(style->textEditFont().pixelSize())
-		.arg(style->textEditFont().family())
+		.arg(style->editor.text.name(QColor::HexRgb))
+		.arg(style->editor.textFont.pixelSize())
+		.arg(style->editor.textFont.family())
 		.arg(Padding)
 	);
 
@@ -41,7 +41,7 @@ MarkdownConnectionsWidget::MarkdownConnectionsWidget(
 			"p{margin:0px;}"
 			"h4{margin:0px}"
 			"a{color: %1; text-decoration: none;}"
-		).arg(style->borderColor().name(QColor::HexRgb))
+		).arg(style->browser.border.name(QColor::HexRgb))
 	);
 
 	setHidden(true);
@@ -87,13 +87,13 @@ void MarkdownConnectionsWidget::setConnections(
 		lines.push_back("<hr/>");
 		addLines(lines, parents, QString("↑"));
 	}
-	
+
 	// Links.
 	if (links.size() > 0) {
 		lines.push_back("<hr/>");
 		addLines(lines, links, QString("←"));
 	}
-	
+
 	// Children.
 	if (children.size() > 0) {
 		lines.push_back("<hr/>");

@@ -6,51 +6,15 @@
 #include "widgets/style.h"
 
 Style::Style(
-	QColor background,
-	QColor nodeBackground,
-	float borderWidth,
-	QColor borderColor,
-	float hoverBorderWidth,
-	QColor hoverBorderColor,
-	QFont font,
-	QColor activeAnchorColor,
-	QColor textColor,
-	QColor hoverBackground,
-	int scrollWidth,
-	QColor anchorHighlight,
-	QFont textEditFont,
-	QColor textEditColor,
-	QFont codeFont,
-	QColor codeBackground,
-	QColor linkColor,
-	QFont iconFont,
-	QColor selectionBackColor,
-	QColor selectionTextColor,
-	QColor focusedColor,
-	QFont historyFont
+	Fonts _fonts,
+	BrowserStyle _browser,
+	EditorStyle _editor,
+	BrainListStyle _brains
 ) {
-	m_background = background;
-	m_nodeBackground = nodeBackground;
-	m_borderWidth = borderWidth;
-	m_borderColor = borderColor;
-	m_hoverBorderWidth = hoverBorderWidth;
-	m_hoverBorderColor = hoverBorderColor;
-	m_font = font;
-	m_activeAnchorColor = activeAnchorColor;
-	m_textColor = textColor;
-	m_hoverBackground = hoverBackground;
-	m_scrollWidth = scrollWidth;
-	m_anchorHighlight = anchorHighlight;
-	m_textEditFont = textEditFont;
-	m_textEditColor = textEditColor;
-	m_codeFont = codeFont;
-	m_codeBackground = codeBackground;
-	m_linkColor = linkColor;
-	m_iconFont = iconFont;
-	m_selectionBackColor = selectionBackColor;
-	m_selectionTextColor = selectionTextColor;
-	m_focusedColor = focusedColor;
-	m_historyFont = historyFont;
+	fonts = _fonts;
+	browser = _browser;
+	editor = _editor;
+	brains = _brains;
 }
 
 Style& Style::defaultStyle() {
@@ -73,185 +37,53 @@ Style& Style::defaultStyle() {
 	static QFont historyFont = QFont("Noto Sans Mono");
 	historyFont.setPixelSize(12);
 
+	static Fonts fonts = { .icon = iconFont };
+
+	static BrowserStyle browser = {
+		.browseFont = font,
+		.historyFont = historyFont,
+		.text = QColor(215, 221, 232, 255),
+		.background = QColor(23, 43, 52, 255),
+		.node = QColor(16, 31, 38, 128),
+		.nodeHover = QColor(0, 0, 0, 192),
+		.nodeFocused = QColor(255, 255, 255),
+		.border = QColor(248, 144, 87, 255),
+		.borderHover = QColor (248, 144, 87, 255),
+		.anchorActive = QColor(228, 83, 75, 255),
+		.anchorHighlight = QColor(255, 255, 255, 255),
+		.borderWidth = 1.0,
+		.hoverBorderWidth = 2.0,
+		.scrollWidth = 12
+	};
+
+	static EditorStyle editor = {
+		.textFont = textFont,
+		.monoFont = codeFont,
+		.text = QColor(215, 221, 232, 255),
+		.background = QColor(23, 43, 52, 255),
+		.codeBackground = QColor(43, 63, 72, 255),
+		.selectionText = QColor(49, 79, 120),
+		.selectionBackground = QColor(255, 255, 255),
+		.link = QColor(162, 187, 219),
+		.nodeLink = QColor(16, 31, 38, 128),
+		.textHighlight = QColor(16, 31, 38, 128)
+	};
+
+	static BrainListStyle brains = {
+		.textFont = textFont,
+		.text = QColor(215, 221, 232, 255),
+		.background = QColor(23, 43, 52, 255),
+		.foreground = QColor (248, 144, 87, 255)
+	};
+
 	static Style style(
-		QColor(23, 43, 52, 255),
-		QColor(16, 31, 38, 128),
-		1.0,
-		QColor(248, 144, 87, 255),
-		2.0,
-		QColor(248, 144, 87, 255),
-		font,
-		QColor(228, 83, 75, 255),
-		QColor(215, 221, 232, 255),
-		QColor(0, 0, 0, 192),
-		12,
-		QColor(255, 255, 255, 255),
-		textFont,
-		QColor(185, 195, 195, 255),
-		codeFont,
-		QColor(43, 63, 72, 255),
-		QColor(162, 187, 219),
-		iconFont,
-		QColor(49, 79, 120),
-		QColor(255, 255, 255),
-		QColor(255, 255, 255),
-		historyFont
+		fonts,
+		browser,
+		editor,
+		brains
 	);
 
 	return style;
-}
-
-const QColor Style::background() const {
-	return m_background;
-}
-
-void Style::setBackground(QColor color) {
-	m_background = color;
-	emit styleChanged(this);
-}
-
-const QColor Style::nodeBackground() const {
-	return m_nodeBackground;
-}
-
-void Style::setNodeBackground(QColor color) {
-	m_nodeBackground = color;
-	emit styleChanged(this);
-}
-
-const float Style::borderWidth() const {
-	return m_borderWidth;
-}
-
-void Style::setBorderWidth(float width) {
-	m_borderWidth = width;
-	emit styleChanged(this);
-}
-
-const QColor Style::borderColor() const {
-	return m_borderColor;
-}
-
-void Style::setBorderColor(QColor color) {
-	m_borderColor = color;
-	emit styleChanged(this);
-}
-
-const float Style::hoverBorderWidth() const {
-	return m_hoverBorderWidth;
-}
-
-void Style::setHoverBorderWidth(float width) {
-	m_hoverBorderWidth = width;
-	emit styleChanged(this);
-}
-
-const QColor Style::hoverBorderColor() const {
-	return m_hoverBorderColor;
-}
-
-void Style::setHoverBorderColor(QColor color) {
-	m_hoverBorderColor = color;
-	emit styleChanged(this);
-}
-
-const QFont Style::font() const {
-	return m_font;
-}
-
-void Style::setFont(QFont font) {
-	m_font = font;
-	emit styleChanged(this);
-}
-
-const QColor Style::activeAnchorColor() const {
-	return m_activeAnchorColor;
-}
-
-void Style::setActiveAnchorColor(QColor color) {
-	m_activeAnchorColor = color;
-	emit styleChanged(this);
-}
-
-const QColor Style::textColor() const {
-	return m_textColor;
-}
-
-void Style::setTextColor(QColor color) {
-	m_textColor = color;
-	emit styleChanged(this);
-}
-
-const QColor Style::hoverBackground() const {
-	return m_hoverBackground;
-}
-
-void Style::setHoverBackground(QColor color) {
-	m_hoverBackground = color;
-	emit styleChanged(this);
-}
-
-const int Style::scrollWidth() const {
-	return m_scrollWidth;
-}
-
-void Style::setScrollWidth(int value) {
-	m_scrollWidth = value;
-	emit styleChanged(this);
-}
-
-const QColor Style::anchorHighlight() const {
-	return m_anchorHighlight;
-}
-
-void Style::setAnchorHighlight(QColor value) {
-	m_anchorHighlight = value;
-	emit styleChanged(this);
-}
-
-const QFont Style::textEditFont() const {
-	return m_textEditFont;
-}
-
-void Style::setTextEditFont(QFont font) {
-	m_textEditFont = font;
-	emit styleChanged(this);
-}
-
-const QColor Style::textEditColor() const {
-	return m_textEditColor;
-}
-
-void Style::setTextEditColor(QColor value) {
-	m_textEditColor = value;
-	emit styleChanged(this);
-}
-
-const QFont Style::codeFont() const {
-	return m_codeFont;
-}
-
-void Style::setCodeFont(QFont font) {
-	m_codeFont = font;
-	emit styleChanged(this);
-}
-
-const QColor Style::codeBackground() const {
-	return m_codeBackground;
-}
-
-void Style::setCodeBackground(QColor color) {
-	m_codeBackground = color;
-	emit styleChanged(this);
-}
-
-const QColor Style::linkColor() const {
-	return m_linkColor;
-}
-
-void Style::setLinkColor(QColor color) {
-	m_linkColor = color;
-	emit styleChanged(this);
 }
 
 QString Style::menuStyle() {
@@ -269,10 +101,10 @@ QString Style::menuStyle() {
 		QMenu::item:selected {\
 			color: #ffffff;\
 		}"
-	).arg(m_textColor.name(QColor::HexRgb))
-	.arg(m_font.bold() ? "bold" : "")
-	.arg(m_font.pixelSize())
-	.arg(m_font.family());
+	).arg(browser.text.name(QColor::HexRgb))
+	.arg(browser.browseFont.bold() ? "bold" : "")
+	.arg(browser.browseFont.pixelSize())
+	.arg(browser.browseFont.family());
 
 	return stylesheet;
 }
@@ -301,13 +133,13 @@ QString Style::brainListButtonStyle(QString align, QColor foreground) {
 		}")
 		.arg("bold")
 		.arg(18)
-		.arg(m_font.family())
+		.arg(browser.browseFont.family())
 		.arg(foreground.name(QColor::HexArgb))
 		.arg(foreground.darker(200).name(QColor::HexArgb))
-		.arg(m_background.lighter(110).name(QColor::HexRgb))
+		.arg(browser.background.lighter(110).name(QColor::HexRgb))
 		.arg(foreground.darker(300).name(QColor::HexArgb))
-		.arg(m_background.darker(110).name(QColor::HexRgb))
-		.arg(m_background.lighter(130).name(QColor::HexRgb))
+		.arg(browser.background.darker(110).name(QColor::HexRgb))
+		.arg(browser.background.lighter(130).name(QColor::HexRgb))
 		.arg(align);
 
 	return stylesheet;
@@ -339,59 +171,15 @@ QString Style::brainItemButtonStyle() {
 		}")
 	.arg("normal")
 	.arg(14)
-	.arg(font().family())
-	.arg(textColor().name(QColor::HexArgb))
-	.arg(textColor().darker(200).name(QColor::HexArgb))
-	.arg(background().lighter(110).name(QColor::HexRgb))
-	.arg(activeAnchorColor().name(QColor::HexRgb))
-	.arg(activeAnchorColor().darker(150).name(QColor::HexRgb))
-	.arg(background().lighter(120).name(QColor::HexRgb))
-	.arg(activeAnchorColor().darker(150).name(QColor::HexRgb))
-	.arg(activeAnchorColor().darker(200).name(QColor::HexArgb))
-	.arg(background().darker(110).name(QColor::HexRgb));
-}
-
-const QFont Style::iconFont() const {
-	return m_iconFont;
-}
-
-void Style::setIconFont(QFont font) {
-	m_iconFont = font;
-	emit styleChanged(this);
-}
-
-const QColor Style::selectionBackColor() const {
-	return m_selectionBackColor;
-}
-
-void Style::setSelectionBackColor(QColor color) {
-	m_selectionBackColor = color;
-	emit styleChanged(this);
-}
-
-const QColor Style::selectionTextColor() const {
-	return m_selectionTextColor;
-}
-
-void Style::setSelectionTextColor(QColor color) {
-	m_selectionTextColor = color;
-	emit styleChanged(this);
-}
-
-const QColor Style::focusedColor() const {
-	return m_focusedColor;
-}
-
-void Style::setFocusedColor(QColor color) {
-	m_focusedColor = color;
-}
-
-const QFont Style::historyFont() const {
-	return m_historyFont;
-}
-
-void Style::setHistoryFont(QFont font) {
-	m_historyFont = font;
-	emit styleChanged(this);
+	.arg(browser.browseFont.family())
+	.arg(browser.text.name(QColor::HexArgb))
+	.arg(browser.text.darker(200).name(QColor::HexArgb))
+	.arg(browser.background.lighter(110).name(QColor::HexRgb))
+	.arg(browser.anchorActive.name(QColor::HexRgb))
+	.arg(browser.anchorActive.darker(150).name(QColor::HexRgb))
+	.arg(browser.background.lighter(120).name(QColor::HexRgb))
+	.arg(browser.anchorActive.darker(150).name(QColor::HexRgb))
+	.arg(browser.anchorActive.darker(200).name(QColor::HexArgb))
+	.arg(browser.background.darker(110).name(QColor::HexRgb));
 }
 

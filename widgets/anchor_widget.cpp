@@ -107,10 +107,10 @@ void AnchorWidget::keyPressEvent(QKeyEvent *event) {
 }
 
 void AnchorWidget::paintEvent(QPaintEvent *) {
-	float borderWidth = m_style->borderWidth();
-	QColor background = m_style->background();
-	QColor active = m_style->activeAnchorColor();
-	QColor border = m_style->borderColor();
+	float borderWidth = m_style->browser.borderWidth;
+	QColor background = m_style->browser.background;
+	QColor active = m_style->browser.anchorActive;
+	QColor border = m_style->browser.border;
 	QSize cur = size();
 	QBrush brush = QBrush(background);
 	QPen pen(border, borderWidth);

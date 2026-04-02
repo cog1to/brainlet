@@ -299,7 +299,7 @@ AnchorPoint ThoughtWidget::getAnchorTo(ConnectionType type) {
 QSize ThoughtWidget::sizeHint() const {
 	const QSize anchorSize = AnchorWidget::defaultSize;
 
-	QFont font = m_style->font();
+	QFont font = m_style->browser.browseFont;
 	QFontMetrics metrics(font);
 
 	// Calculate bounding rect for the text.
@@ -317,11 +317,11 @@ QSize ThoughtWidget::sizeHint() const {
 	QSize result(
 		textSize.width() +
 			padding.width() * 2 +
-			m_style->hoverBorderWidth() * 2 +
+			m_style->browser.hoverBorderWidth * 2 +
 			anchorSize.width(),
 		textSize.height() +
 			padding.height() * 2 +
-			m_style->hoverBorderWidth() * 2 +
+			m_style->browser.hoverBorderWidth * 2 +
 			anchorSize.height()
 	);
 
@@ -333,13 +333,13 @@ QSize ThoughtWidget::sizeForWidth(int width) const {
 
 	const int textPadding = anchorSize.width() +
 		padding.width() * 2 +
-		m_style->hoverBorderWidth() * 2 +
+		m_style->browser.hoverBorderWidth * 2 +
 		1;
 	const int verticalPadding = anchorSize.height() +
 		padding.height() * 2 +
-		m_style->hoverBorderWidth() * 2;
+		m_style->browser.hoverBorderWidth * 2;
 
-	QFont font = m_style->font();
+	QFont font = m_style->browser.browseFont;
 	QFontMetrics metrics(font);
 
 	QRect bounds = metrics.boundingRect(
@@ -460,12 +460,12 @@ void ThoughtWidget::onAnchorCanceled(AnchorWidget* widget) {
 void ThoughtWidget::paintEvent(QPaintEvent *event) {
 	const QSize anchorSize = AnchorWidget::defaultSize;
 
-	float borderWidth = m_style->borderWidth();
+	float borderWidth = m_style->browser.borderWidth;
 	QColor borderColor = m_focused
-		? m_style->focusedColor()
-		: m_style->borderColor();
-	QColor hoverColor = m_style->hoverBorderColor();
-	float hoverWidth = m_style->hoverBorderWidth();
+		? m_style->browser.nodeFocused
+		: m_style->browser.border;
+	QColor hoverColor = m_style->browser.borderHover;
+	float hoverWidth = m_style->browser.hoverBorderWidth;
 	QSize cur = size();
 	QPen pen(borderColor, borderWidth);
 
@@ -473,10 +473,10 @@ void ThoughtWidget::paintEvent(QPaintEvent *event) {
 
 	if (m_highlight || m_hover || m_textEdit.hasFocus()) {
 		pen.setWidth(hoverWidth);
-		QBrush brush(m_style->hoverBackground());
+		QBrush brush(m_style->browser.nodeHover);
 		painter.setBrush(brush);
 	} else {
-		QBrush brush(m_style->nodeBackground());
+		QBrush brush(m_style->browser.node);
 		painter.setBrush(brush);
 	}
 
@@ -521,7 +521,7 @@ void ThoughtWidget::updateLayout(QSize size) {
 
 	QRect child(
 		(int)((float)size.width() * childLeftOffset),
-		size.height() - anchorSize.width() + m_style->hoverBorderWidth() / 2.0,
+		size.height() - anchorSize.width() + m_style->browser.hoverBorderWidth / 2.0,
 		anchorSize.width(), anchorSize.height());
 	m_anchorChild.setGeometry(child);
 
@@ -534,17 +534,17 @@ void ThoughtWidget::updateLayout(QSize size) {
 
 	QRect textRect(
 		anchorSize.width() / 2 +
-			m_style->hoverBorderWidth() / 2 +
+			m_style->browser.hoverBorderWidth / 2 +
 			padding.width(),
 		anchorSize.height() / 2 +
-			m_style->hoverBorderWidth() / 2 +
+			m_style->browser.hoverBorderWidth / 2 +
 			padding.height(),
 		size.width() - anchorSize.width() -
-			m_style->hoverBorderWidth() * 2 -
+			m_style->browser.hoverBorderWidth * 2 -
 			padding.width() * 2 +
 			1, // 1px for cursor.
 		size.height() - anchorSize.height() -
-			m_style->hoverBorderWidth() -
+			m_style->browser.hoverBorderWidth -
 			padding.height() * 2
 	);
 	m_textEdit.setGeometry(textRect);
@@ -558,13 +558,13 @@ void ThoughtWidget::updateText() {
 	const QSize anchorSize = AnchorWidget::defaultSize;
 	const int textPadding = anchorSize.width() +
 		padding.width() * 2 +
-		m_style->hoverBorderWidth() * 2;
+		m_style->browser.hoverBorderWidth * 2;
 	const int verticalPadding = anchorSize.height() +
 		padding.height() * 2 +
-		m_style->hoverBorderWidth();
+		m_style->browser.hoverBorderWidth;
 	const int availableWidth = size().width() - textPadding;
 
-	QFont font = m_style->font();
+	QFont font = m_style->browser.browseFont;
 	QFontMetrics metrics(font);
 
 	QRect bounds = metrics.boundingRect(

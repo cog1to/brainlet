@@ -19,10 +19,10 @@ LinkButtonWidget::LinkButtonWidget(QWidget *parent, Style *style)
 			border-style: solid;\
 			padding: 2px; padding-left: 8px; padding-right: 8px;"
 		)
-		.arg(m_style->textColor().name(QColor::HexRgb))
-		.arg(m_style->font().pixelSize() - 2)
-		.arg(m_style->font().family())
-		.arg(m_style->textColor().darker().name(QColor::HexRgb))
+		.arg(m_style->browser.text.name(QColor::HexRgb))
+		.arg(m_style->browser.browseFont.pixelSize() - 2)
+		.arg(m_style->browser.browseFont.family())
+		.arg(m_style->browser.text.darker().name(QColor::HexRgb))
 	);
 
 	setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
@@ -40,11 +40,11 @@ void LinkButtonWidget::enterEvent(QEnterEvent *) {
 			border-style: solid;\
 			padding: 2px; padding-left: 8px; padding-right: 8px;"
 		)
-		.arg(m_style->textColor().name(QColor::HexRgb))
-		.arg(m_style->background().name(QColor::HexRgb))
-		.arg(m_style->font().pixelSize() - 2)
-		.arg(m_style->font().family())
-		.arg(m_style->textColor().name(QColor::HexRgb))
+		.arg(m_style->browser.text.name(QColor::HexRgb))
+		.arg(m_style->browser.background.name(QColor::HexRgb))
+		.arg(m_style->browser.browseFont.pixelSize() - 2)
+		.arg(m_style->browser.browseFont.family())
+		.arg(m_style->browser.text.name(QColor::HexRgb))
 	);
 }
 
@@ -59,10 +59,10 @@ void LinkButtonWidget::leaveEvent(QEvent *) {
 			border-style: solid;\
 			padding: 3px; padding-left: 8px; padding-right: 8px;"
 		)
-		.arg(m_style->textColor().name(QColor::HexRgb))
-		.arg(m_style->font().pixelSize() - 2)
-		.arg(m_style->font().family())
-		.arg(m_style->textColor().darker().name(QColor::HexRgb))
+		.arg(m_style->browser.text.name(QColor::HexRgb))
+		.arg(m_style->browser.browseFont.pixelSize() - 2)
+		.arg(m_style->browser.browseFont.family())
+		.arg(m_style->browser.text.darker().name(QColor::HexRgb))
 	);
 }
 
@@ -77,11 +77,11 @@ void LinkButtonWidget::mousePressEvent(QMouseEvent *event) {
 			border-style: solid;\
 			padding: 0px; padding-left: 7px; padding-right: 7px;"
 		)
-		.arg(m_style->textColor().darker(105).name(QColor::HexRgb))
-		.arg(m_style->background().darker().name(QColor::HexRgb))
-		.arg(m_style->font().pixelSize() - 2)
-		.arg(m_style->font().family())
-		.arg(m_style->background().lighter().name(QColor::HexRgb))
+		.arg(m_style->browser.text.darker(105).name(QColor::HexRgb))
+		.arg(m_style->browser.background.darker().name(QColor::HexRgb))
+		.arg(m_style->browser.browseFont.pixelSize() - 2)
+		.arg(m_style->browser.browseFont.family())
+		.arg(m_style->browser.background.lighter().name(QColor::HexRgb))
 	);
 
 	QPushButton::mousePressEvent(event);
@@ -98,11 +98,11 @@ void LinkButtonWidget::mouseReleaseEvent(QMouseEvent *event) {
 			border-style: solid;\
 			padding: 2px; padding-left: 8px; padding-right: 8px;"
 		)
-		.arg(m_style->textColor().name(QColor::HexRgb))
-		.arg(m_style->background().name(QColor::HexRgb))
-		.arg(m_style->font().pixelSize() - 2)
-		.arg(m_style->font().family())
-		.arg(m_style->textColor().name(QColor::HexRgb))
+		.arg(m_style->browser.text.name(QColor::HexRgb))
+		.arg(m_style->browser.background.name(QColor::HexRgb))
+		.arg(m_style->browser.browseFont.pixelSize() - 2)
+		.arg(m_style->browser.browseFont.family())
+		.arg(m_style->browser.text.name(QColor::HexRgb))
 	);
 
 	QPushButton::mouseReleaseEvent(event);

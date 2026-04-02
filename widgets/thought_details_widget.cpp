@@ -18,15 +18,15 @@ ThoughtDetailsWidget::ThoughtDetailsWidget(
 
 	setStyleSheet(
 		QString("background-color: %1").arg(
-			style->background().name(QColor::HexRgb)
+			style->editor.background.name(QColor::HexRgb)
 		)
 	);
 
 	m_title->setStyleSheet(
 		QString("color: %1; font: bold %2px \"%3\"")
-			.arg(style->textEditColor().name(QColor::HexRgb))
-			.arg(style->textEditFont().pixelSize() * 2.0)
-			.arg(style->textEditFont().family())
+			.arg(style->editor.text.name(QColor::HexRgb))
+			.arg(style->editor.textFont.pixelSize() * 2.0)
+			.arg(style->editor.textFont.family())
 	);
 	m_title->setWordWrap(true);
 	m_title->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Minimum);
@@ -34,7 +34,7 @@ ThoughtDetailsWidget::ThoughtDetailsWidget(
 	m_separator->setMinimumSize(1, 1);
 	m_separator->setStyleSheet(
 		QString("background-color: %1")
-			.arg(style->textEditColor().name(QColor::HexRgb))
+			.arg(style->editor.text.name(QColor::HexRgb))
 	);
 	m_separator->setSizePolicy(
 		QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum)

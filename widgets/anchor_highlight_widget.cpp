@@ -24,7 +24,7 @@ void AnchorHighlightWidget::resizeEvent(QResizeEvent *event) {
 }
 
 void AnchorHighlightWidget::paintEvent(QPaintEvent*) {
-	QColor color = m_style->anchorHighlight();
+	QColor color = m_style->browser.anchorHighlight;
 	QSize current = size();
 
 	QPainter painter(this);

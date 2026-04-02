@@ -24,7 +24,7 @@ SearchWidget::SearchWidget(
 	m_separator.setMinimumSize(1, 1);
 	m_separator.setStyleSheet(
 		QString("background-color: %1; border-radius: 10px;")
-			.arg(m_style->textEditColor().name(QColor::HexRgb))
+			.arg(m_style->browser.text.name(QColor::HexRgb))
 	);
 	m_separator.setSizePolicy(
 		QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum)
@@ -33,7 +33,7 @@ SearchWidget::SearchWidget(
 
 	// Edit styling.
 	m_edit = new ThoughtEditWidget(nullptr, style, false, "");
-	QFontMetrics metrics(m_style->font());
+	QFontMetrics metrics(m_style->browser.browseFont);
 	m_edit->setMinimumHeight(metrics.height() + 4);
 	m_edit->setMaximumHeight(metrics.height() + 4);
 	m_edit->setAlignment(Qt::AlignLeft);
@@ -44,13 +44,13 @@ SearchWidget::SearchWidget(
 	// Setup icon.
 	m_icon = new QLabel(nullptr);
 
-	QColor iconColor = style->textColor();
+	QColor iconColor = style->browser.text;
 	iconColor.setAlpha(128);
 
 	m_icon->setStyleSheet(
 		QString("background: #00000000; font: %1px \"%2\"; color: %3")
-			.arg(style->iconFont().pixelSize())
-			.arg(style->iconFont().family())
+			.arg(style->fonts.icon.pixelSize())
+			.arg(style->fonts.icon.family())
 			.arg(iconColor.name(QColor::HexArgb))
 	);
 	m_icon->setIndent(2);
@@ -260,14 +260,14 @@ void SearchWidget::restyleIcon(bool hasText) {
 	if (m_style == nullptr)
 		return;
 
-	QColor iconColor = m_style->textColor();
+	QColor iconColor = m_style->browser.text;
 	if (!hasText)
 		iconColor.setAlpha(128);
 
 	m_icon->setStyleSheet(
 		QString("background: #00000000; font: %1px \"%2\"; color: %3")
-			.arg(m_style->iconFont().pixelSize())
-			.arg(m_style->iconFont().family())
+			.arg(m_style->fonts.icon.pixelSize())
+			.arg(m_style->fonts.icon.family())
 			.arg(iconColor.name(QColor::HexArgb))
 	);
 }

@@ -25,8 +25,8 @@ BrainItemWidget::BrainItemWidget(
 		QString("background-color: #00000000; font: %1 %2px \"%3\"; color: %4;")
 		.arg("bold")
 		.arg(18)
-		.arg(style->font().family())
-		.arg(style->textColor().name(QColor::HexRgb))
+		.arg(style->brains.textFont.family())
+		.arg(style->brains.text.name(QColor::HexRgb))
 	);
 
 	setStyleSheet(
@@ -169,8 +169,8 @@ inline QString BrainItemWidget::getStyle(Style *style, Status status) {
 		border-radius: 10px;\
 		border-style: solid;\
 	}")
-	.arg(style->textEditColor().name(QColor::HexRgb))
-	.arg(style->textEditColor().darker(borderTint).name(QColor::HexRgb))
-	.arg(style->background().lighter(backTint).name(QColor::HexRgb));
+	.arg(style->brains.text.name(QColor::HexRgb))
+	.arg(style->brains.text.darker(borderTint).name(QColor::HexRgb))
+	.arg(style->brains.background.lighter(backTint).name(QColor::HexRgb));
 }
 

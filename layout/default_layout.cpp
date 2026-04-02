@@ -12,7 +12,7 @@ DefaultLayout::DefaultLayout(Style* style)
 	m_widgetHeight = size.height();
 	m_verticalWidgetWidth = size.width();
 	m_widgetSpacing = size.height() / 2;
-	m_sidePadding = style->scrollWidth();
+	m_sidePadding = style->browser.scrollWidth;
 }
 
 DefaultLayout::~DefaultLayout() {}
@@ -318,7 +318,7 @@ void DefaultLayout::layoutVerticalSide(
 
 	// We have items left outside, add scroll area.
 	if (maxCount < sorted.size()) {
-		int scrollWidth = m_style->scrollWidth();
+		int scrollWidth = m_style->browser.scrollWidth;
 		float barWidth = (float)maxCount / (float)sorted.size();
 		float relativeOffset = maxCount != 0 ? ((float)offset / (float)sorted.size()) : 0;
 
@@ -437,7 +437,7 @@ void DefaultLayout::layoutHorizontalSide(
 
 	// We have items left outside, add scroll area.
 	if (columnCount < requiredColumnCount) {
-		int scrollWidth = m_style->scrollWidth();
+		int scrollWidth = m_style->browser.scrollWidth;
 		float barWidth = (float)columnCount / (float)requiredColumnCount;
 		float relativeOffset = requiredColumnCount != 0
 			? ((float)offset / (float)requiredColumnCount)

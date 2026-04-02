@@ -33,7 +33,7 @@ CanvasWidget::CanvasWidget(
 
 	setStyleSheet(
 		QString("background-color: %1").arg(
-			style->background().name(QColor::HexRgb)
+			style->browser.background.name(QColor::HexRgb)
 		)
 	);
 
@@ -164,7 +164,7 @@ void CanvasWidget::mouseMoveEvent(QMouseEvent *event) {
 		)
 	{
 		// TODO: take closest.
-		QPen pen(m_style->anchorHighlight(), 1, Qt::DashLine);
+		QPen pen(m_style->browser.anchorHighlight, 1, Qt::DashLine);
 		m_pathHighlight = Path(intersects[0].from, intersects[0].to, pen, intersects[0].path);
 		update();
 	}
@@ -251,7 +251,7 @@ void CanvasWidget::drawAnchorConnection(QPainter& painter) {
 		.dy = -incoming.dy,
 	};
 
-	QPen pen(m_style->anchorHighlight(), 1, Qt::DashLine);
+	QPen pen(m_style->browser.anchorHighlight, 1, Qt::DashLine);
 	Path path = makePath(m_anchorSource->widget, nullptr, outgoing, incoming, pen);
 
 	drawConnection(
@@ -275,7 +275,7 @@ void CanvasWidget::drawNewThoughtConnection(QPainter& painter) {
 		m_anchorSource->type
 	);
 
-	QPen pen(m_style->anchorHighlight(), 1, Qt::DashLine);
+	QPen pen(m_style->browser.anchorHighlight, 1, Qt::DashLine);
 	Path path = makePath(m_anchorSource->widget, m_newThought, outgoing, incoming, pen);
 
 	drawConnection(
@@ -299,7 +299,7 @@ void CanvasWidget::drawOverThoughtConnection(QPainter& painter) {
 		m_anchorSource->type
 	);
 
-	QPen pen(m_style->anchorHighlight(), 1, Qt::DashLine);
+	QPen pen(m_style->browser.anchorHighlight, 1, Qt::DashLine);
 	Path path = makePath(m_anchorSource->widget, m_overThought, outgoing, incoming, pen);
 
 	drawConnection(
@@ -484,7 +484,7 @@ void CanvasWidget::updatePaths() {
 	// Clear old paths.
 	m_paths.clear();
 
-	QColor color = m_style->activeAnchorColor();
+	QColor color = m_style->browser.anchorActive;
 	QPen pen = QPen(color, 1);
 
 	for (auto& connection: *connections) {
