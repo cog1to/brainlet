@@ -44,10 +44,11 @@ ListBrainsResult FolderBrainsRepository::listBrains() {
 		uint64_t timestamp = lastModified.toSecsSinceEpoch();
 
 		// Get size.
-		size += getSize(file);
+		uint64_t brain_size = getSize(file);
+		size += brain_size;
 
 		// Save to the list.
-		brains.push_back(Brain(name, name, timestamp));
+		brains.push_back(Brain(name, name, timestamp, brain_size));
 	}
 
 	return ListBrainsResult(
@@ -65,7 +66,7 @@ CreateBrainResult FolderBrainsRepository::createBrain(
 	if (!m_dir->mkdir(dirName)) {
 		return CreateBrainResult(
 			BrainRepositoryErrorIO,
-			Brain("", "", 0)
+			Brain("", "", 0, 0)
 		);
 	}
 
@@ -74,7 +75,7 @@ CreateBrainResult FolderBrainsRepository::createBrain(
 	if (!m_dir->mkdir(docsDirName)) {
 		return CreateBrainResult(
 			BrainRepositoryErrorIO,
-			Brain("", "", 0)
+			Brain("", "", 0, 0)
 		);
 	}
 
@@ -82,7 +83,7 @@ CreateBrainResult FolderBrainsRepository::createBrain(
 	if (!m_dir->mkdir(assetsDirName)) {
 		return CreateBrainResult(
 			BrainRepositoryErrorIO,
-			Brain("", "", 0)
+			Brain("", "", 0, 0)
 		);
 	}
 
@@ -91,9 +92,11 @@ CreateBrainResult FolderBrainsRepository::createBrain(
 	QDateTime lastModified = file.lastModified();
 	uint64_t timestamp = lastModified.toSecsSinceEpoch();
 
+	uint64_t size = getSize(file);
+
 	return CreateBrainResult(
 		BrainRepositoryErrorNone,
-		Brain(dirName, dirName, timestamp)
+		Brain(dirName, dirName, timestamp, size)
 	);
 }
 

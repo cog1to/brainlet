@@ -9,6 +9,7 @@
 #include <QEnterEvent>
 #include <QMouseEvent>
 #include <QHBoxLayout>
+#include <QLabel>
 
 #include "widgets/style.h"
 #include "widgets/base_widget.h"
@@ -24,14 +25,16 @@ class BrainItemWidget: public QFrame {
 	};
 
 public:
-	BrainItemWidget(QWidget*, Style*, QString, QString);
+	BrainItemWidget(QWidget*, Style*, QString, QString, uint64_t);
 	const QString id() const;
 	const QString name() const;
 	void setName(QString);
+	const uint64_t brainSize() const;
+	void setBrainSize(uint64_t);
 	QSize sizeHint() const override;
 	// Metrics.
-	static const int PADDING = 18;
-	static const int SPACING = 18;
+	static const int PADDING = 8;
+	static const int SPACING = 8;
 	static const int MAX_WIDTH = 220;
 
 protected:
@@ -55,9 +58,11 @@ private:
 	Style *m_style;
 	QString m_id;
 	QString m_name;
+	uint64_t m_size;
 	// Contents
 	QVBoxLayout m_layout;
 	ElidedLabelWidget *m_label = nullptr;
+	QLabel *m_infoLabel;
 	// TODO: Button idea: hold-to-activate widget that fills with
 	// color left-to-right while pressing it, and sends the signal
 	// when filled completely.
@@ -66,6 +71,7 @@ private:
 	QHBoxLayout *m_buttonsLayout = nullptr;
 	// Helpers.
 	static inline QString getStyle(Style *style, Status status);
+	static inline QString humanReadableSize(uint64_t size);
 };
 
 #endif

@@ -11,12 +11,14 @@ BrainItemWidget::BrainItemWidget(
 	QWidget *parent,
 	Style *style,
 	QString id,
-	QString name
+	QString name,
+	uint64_t size
 )
 	: QFrame(parent),
 	m_style(style),
 	m_id(id),
 	m_name(name),
+	m_size(size),
 	m_layout(this)
 {
 	setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
@@ -32,6 +34,20 @@ BrainItemWidget::BrainItemWidget(
 	setStyleSheet(
 		getStyle(style, StatusNormal)
 	);
+
+	// Info.
+	
+	m_infoLabel = new QLabel(nullptr);
+	m_infoLabel->setText(humanReadableSize(size));
+	m_infoLabel->setStyleSheet(
+		QString("background-color: #00000000; font: %1 %2px \"%3\"; color: %4;")
+		.arg("normal")
+		.arg(14)
+		.arg(style->brains.textFont.family())
+		.arg(style->brains.text.darker(150).name(QColor::HexRgb))
+	);
+
+	// Buttons.
 
 	m_deleteButton = new QPushButton(QChar(0xf1f8), nullptr);
 	m_deleteButton->setStyleSheet(
@@ -57,13 +73,14 @@ BrainItemWidget::BrainItemWidget(
 
 	m_buttonsLayout = new QHBoxLayout(nullptr);
 	m_buttonsLayout->addStretch();
+	m_buttonsLayout->addWidget(m_infoLabel);
 	m_buttonsLayout->addWidget(m_renameButton);
 	m_buttonsLayout->addWidget(m_deleteButton);
 	m_buttonsLayout->setContentsMargins(0, 0, 0, 0);
 
 	m_label->setContentsMargins(0, 0, 0, 0);
-	m_layout.setContentsMargins(0, 8, 0, 8);
-	m_layout.setSpacing(8);
+	m_layout.setContentsMargins(0, PADDING, 0, PADDING);
+	m_layout.setSpacing(SPACING);
 	m_layout.addWidget(m_label);
 	m_layout.setAlignment(m_label, Qt::AlignHCenter);
 	m_layout.addLayout(m_buttonsLayout);
@@ -84,6 +101,18 @@ void BrainItemWidget::setName(QString name) {
 		m_label->setText(name);
 }
 
+const uint64_t BrainItemWidget::brainSize() const {
+	return m_size;
+}
+
+void BrainItemWidget::setBrainSize(uint64_t size) {
+	m_size = size;
+
+	if (m_infoLabel != nullptr) {
+		m_infoLabel->setText(humanReadableSize(size));
+	}
+}
+
 // Sizing
 
 QSize BrainItemWidget::sizeHint() const {
@@ -91,7 +120,7 @@ QSize BrainItemWidget::sizeHint() const {
 	QSize buttonSize = m_deleteButton->sizeHint();
 	return QSize(
 		MAX_WIDTH,
-		labelSize.height() + buttonSize.height() + PADDING + SPACING
+		labelSize.height() + buttonSize.height() + PADDING * 2 + SPACING + 14
 	);
 }
 
@@ -184,3 +213,16 @@ inline QString BrainItemWidget::getStyle(Style *style, Status status) {
 	.arg(style->brains.background.lighter(backTint).name(QColor::HexRgb));
 }
 
+inline QString BrainItemWidget::humanReadableSize(uint64_t size) {
+	static const char* sizes[] = { "B", "KB", "MB", "GB", "TB" };
+
+	float visibleSize = size;
+	int groupIdx = 0;
+	while (visibleSize >= 1024) {
+		visibleSize /= 1024.0;
+		groupIdx += 1;
+	}
+
+	QString formatted = QString::asprintf("%.2f%s", visibleSize, sizes[groupIdx]);
+	return formatted;
+}

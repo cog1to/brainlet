@@ -12,7 +12,8 @@ public:
 	Brain(
 		QString id,
 		QString name,
-		uint64_t timestamp
+		uint64_t timestamp,
+		uint64_t size
 	);
 	~Brain();
 	// Name.
@@ -23,11 +24,15 @@ public:
 	const QString* idPtr() const { return &m_id; }
 	// Timestamp.
 	const uint64_t timestamp() const { return m_timestamp; }
+	// Size.
+	const uint64_t size() const { return m_size; }
+	uint64_t& size() { return m_size; }
 
 private:
 	QString m_name;
 	QString m_id;
 	uint64_t m_timestamp;
+	uint64_t m_size;
 };
 
 #endif

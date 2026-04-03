@@ -364,7 +364,7 @@ ListBrainsResult MemoryRepository::listBrains() {
 
 	for (auto it = m_brains.begin(); it != m_brains.end(); it++) {
 		result.push_back(
-			Brain((*it).id, (*it).name, (*it).timestamp)
+			Brain((*it).id, (*it).name, (*it).timestamp, 0)
 		);
 		size += ((*it).id.length() + (*it).name.length());
 	}
@@ -392,7 +392,7 @@ CreateBrainResult MemoryRepository::createBrain(QString name) {
 	if (found) {
 		return CreateBrainResult(
 			BrainRepositoryErrorDuplicate,
-			Brain("", "", timestamp)
+			Brain("", "", timestamp, 0)
 		);
 	}
 
@@ -401,7 +401,7 @@ CreateBrainResult MemoryRepository::createBrain(QString name) {
 
 	CreateBrainResult result = CreateBrainResult(
 		BrainRepositoryErrorNone,
-		Brain(name, name, timestamp)
+		Brain(name, name, timestamp, 0)
 	);
 
 	return result;

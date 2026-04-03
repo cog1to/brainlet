@@ -54,7 +54,6 @@ private:
 	QScrollArea m_area;
 	QWidget m_container;
 	FlowLayout m_layout;
-	QLabel m_text;
 	ToastWidget *m_error = nullptr;
 	// Helpers.
 	bool findInItems(const std::vector<Brain>&, QString);

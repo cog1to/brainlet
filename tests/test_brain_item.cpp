@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
 		.arg(style.background().name(QColor::HexRgb))
 	);
 
-	BrainItemWidget item = BrainItemWidget(&parent, &style, "id", "My Brain");
+	BrainItemWidget item = BrainItemWidget(&parent, &style, "id", "My Brain", 0);
 
 	QSize sizeHint = item.sizeHint();
 	item.setGeometry(

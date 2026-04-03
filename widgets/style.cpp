@@ -114,7 +114,7 @@ QString Style::brainListButtonStyle(QString align, QColor foreground) {
 		"QPushButton{\
 			font: %1 %2px \"%3\";\
 			color: %4;\
-			border-width: 1px;\
+			border-width: 2px;\
 			border-color: %5;\
 			padding: 8px;\
 			padding-left: 12px;\
