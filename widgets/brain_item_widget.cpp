@@ -182,7 +182,7 @@ void BrainItemWidget::onRenameClick() {
 // Helpers
 
 inline QString BrainItemWidget::getStyle(Style *style, Status status) {
-	int backTint = 110;
+	int backTint = 140;
 	int borderTint = 120;
 
 	switch (status) {
@@ -209,7 +209,7 @@ inline QString BrainItemWidget::getStyle(Style *style, Status status) {
 		border-style: solid;\
 	}")
 	.arg(style->brains.text.name(QColor::HexRgb))
-	.arg(style->brains.text.darker(borderTint).name(QColor::HexRgb))
+	.arg(style->brains.background.lighter(backTint).name(QColor::HexRgb))
 	.arg(style->brains.background.lighter(backTint).name(QColor::HexRgb));
 }
 

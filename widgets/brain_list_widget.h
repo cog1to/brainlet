@@ -58,7 +58,6 @@ private:
 	// Helpers.
 	bool findInItems(const std::vector<Brain>&, QString);
 	void layoutContainer();
-	QString formatSize(uint64_t);
 };
 
 #endif

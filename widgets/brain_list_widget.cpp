@@ -257,22 +257,3 @@ void BrainListWidget::onItemRenameClicked(BrainItemWidget *widget) {
 	}
 }
 
-// Helpers
-
-QString BrainListWidget::formatSize(uint64_t sizeInBytes) {
-	static const char* prefixes[] = { "B", "KB", "MB", "GB", "TB" };
-
-	int idx = 0;
-	double sizeDouble = sizeInBytes;
-	while (sizeDouble > 1024.0) {
-		idx += 1;
-		sizeDouble /= 1024.0;
-	}
-
-	char buffer[256] = {0};
-	snprintf(buffer, 255, "%.2f %s", sizeDouble, prefixes[idx]);
-
-	QString result = QString(buffer);
-	return result;
-}
-
