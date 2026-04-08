@@ -29,9 +29,10 @@ QString SystemResourceProvider::configFolderPath() {
 
 QString SystemResourceProvider::documentsFolderPath() {
 #if defined(Q_OS_LINUX)
-	return QStandardPaths::writableLocation(
-		QStandardPaths::AppConfigLocation
+	QString docsPath = QStandardPaths::writableLocation(
+		QStandardPaths::GenericConfigLocation
 	);
+	return QString("%1/brainlet").arg(docsPath);
 #elif defined(Q_OS_DARWIN)
 	QString docsPath = QStandardPaths::writableLocation(
 		QStandardPaths::DocumentsLocation
