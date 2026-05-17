@@ -384,7 +384,6 @@ void MarkdownEditWidget::handleInput(
 				int prevLineIdx = lineIdx - 1;
 				prevLineIdx >= 0
 			) {
-
 				cursor.line = prevLineIdx;
 				cursor.position = par->getLines()->at(prevLineIdx).folded.length();
 				processCursorMove(prev, cursor);
@@ -395,7 +394,7 @@ void MarkdownEditWidget::handleInput(
 				QList<text::Line> *prevLines = prevBlock->paragraph()->getLines();
 				cursor.block = prevBlock;
 				cursor.line = prevLines->size() - 1;
-				cursor.position = par->getLines()->at(cursor.line).folded.length();
+				cursor.position = prevLines->at(cursor.line).folded.length();
 				processCursorMove(prev, cursor);
 			}
 		}
