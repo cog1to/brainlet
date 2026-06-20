@@ -66,7 +66,7 @@ Style& Style::defaultStyle() {
 		.selectionBackground = QColor(255, 255, 255),
 		.link = QColor(162, 187, 219),
 		.nodeLink = QColor(248, 144, 87, 255),
-		.textHighlight = QColor(16, 31, 38, 128)
+		.textHighlight = QColor(248, 144, 87, 255)
 	};
 
 	static BrainListStyle brains = {

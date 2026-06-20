@@ -113,7 +113,6 @@ int text::FormatRange::endOffset() const {
 	}
 }
 
-
 // Line parsing.
 
 text::Line::Line(QString& input, bool preformatted, int lvl) : level(lvl) {

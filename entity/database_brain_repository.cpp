@@ -761,8 +761,8 @@ bool DatabaseBrainRepository::listContains(
 
 QString DatabaseBrainRepository::stripMetadata(QString& text, QString& title) {
 	QString headerExpString = QString(
-		"^%1(\\n|\\r\\n)==+(\\n|\\r\\n)+"
-	).arg(QRegularExpression::escape(title));
+		"^.+(\\n|\\r\\n)==+(\\n|\\r\\n)+"
+	);
 
 	QRegularExpression headerExp(
 		headerExpString
