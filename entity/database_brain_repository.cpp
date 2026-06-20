@@ -435,7 +435,11 @@ GetResult DatabaseBrainRepository::getText(ThoughtId id) {
 	QString content = in.readAll();
 	file.close();
 
-	return GetResult(TextRepositoryErrorNone, content);
+	// Get rid of the header and/or other metadata.
+	QString name = QString::fromStdString(thought.name);
+	QString curedContent = stripMetadata(content, name);
+
+	return GetResult(TextRepositoryErrorNone, curedContent);
 }
 
 SaveResult DatabaseBrainRepository::saveText(
@@ -457,7 +461,12 @@ SaveResult DatabaseBrainRepository::saveText(
 	}
 
 	QTextStream out(&file);
-	out << text;
+
+	// Add a header and metadata.
+	QString name = QString::fromStdString(thought.name);
+	QString enrichedContent = addMetadata(text, name);
+
+	out << enrichedContent;
 	file.close();
 
 	return SaveResult(TextRepositoryErrorNone);
@@ -748,5 +757,30 @@ bool DatabaseBrainRepository::listContains(
 		if (node == id)
 			return true;
 	return false;
+}
+
+QString DatabaseBrainRepository::stripMetadata(QString& text, QString& title) {
+	QString headerExpString = QString(
+		"^%1(\\n|\\r\\n)==+(\\n|\\r\\n)+"
+	).arg(QRegularExpression::escape(title));
+
+	QRegularExpression headerExp(
+		headerExpString
+	);
+
+	QRegularExpressionMatch match = headerExp.match(text);
+	if (match.hasMatch() && match.capturedStart() == 0) {
+		QString stripped = text.remove(match.capturedStart(), match.capturedLength());
+		return stripped;
+	} else {
+		return text;
+	}
+}
+
+QString DatabaseBrainRepository::addMetadata(QString& text, QString& title) {
+	QString result = QString(
+		"%1\n========================================\n\n%2"
+	).arg(title).arg(text);
+	return result;
 }
 

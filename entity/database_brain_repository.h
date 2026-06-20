@@ -70,6 +70,8 @@ protected:
 	bool loadState(ThoughtId);
 	QString filePathFromThought(ThoughtEntity&);
 	QString filePathFromName(QString&, ThoughtId id);
+	QString stripMetadata(QString&, QString&);
+	QString addMetadata(QString&, QString&);
 
 private:
 	// Database.
