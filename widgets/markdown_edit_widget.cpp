@@ -583,7 +583,8 @@ void MarkdownEditWidget::handleInput(
 			m.hasMatch() && type == text::Text
 		) {
 			// Transform to numbered list.
-			line->setText(empty, false);
+			auto truncated = newText.last(newText.size() - m.capturedEnd());
+			line->setText(truncated, false);
 			par->setType(text::NumberList);
 			block->setParagraph(par);
 
@@ -594,7 +595,8 @@ void MarkdownEditWidget::handleInput(
 			m.hasMatch() && type == text::Text
 		) {
 			// Transform to bullet list.
-			line->setText(empty, false);
+			auto truncated = newText.last(newText.size() - m.capturedEnd());
+			line->setText(truncated, false);
 			par->setType(text::BulletList);
 			block->setParagraph(par);
 
