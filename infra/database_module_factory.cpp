@@ -69,6 +69,7 @@ DismissableModule DatabaseModuleFactory::makeBrainModule(QString id) {
 	TextEditorPresenter *markdownPresenter = new TextEditorPresenter(
 		repo,
 		repo,
+		repo,
 		scroll
 	);
 

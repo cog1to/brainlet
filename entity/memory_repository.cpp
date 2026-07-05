@@ -356,6 +356,11 @@ SaveResult MemoryRepository::saveText(ThoughtId id, QString text) {
 	return SaveResult(TextRepositoryErrorNone);
 }
 
+AssetSaveResult MemoryRepository::saveAsset(QString &filePath) {
+	qDebug() << "Asset saving not implemented.";
+	return AssetSaveResult(AssetsRepositoryErrorIO, "Not implemented");
+}
+
 // BrainRepository
 
 ListBrainsResult MemoryRepository::listBrains() {

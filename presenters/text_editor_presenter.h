@@ -8,6 +8,7 @@
 #include "entity/text_repository.h"
 #include "entity/search_repository.h"
 #include "entity/graph_repository.h"
+#include "entity/assets_repository.h"
 #include "widgets/markdown_edit_widget.h"
 #include "widgets/markdown_scroll_widget.h"
 #include "presenters/search_presenter.h"
@@ -20,6 +21,7 @@ public:
 	TextEditorPresenter(
 		TextRepository*,
 		SearchRepository*,
+		AssetsRepository*,
 		MarkdownScrollWidget*
 	);
 	void setThought(ThoughtId);
@@ -35,6 +37,7 @@ public slots:
 private slots:
 	void onTextChanged(QString&);
 	void onNodeInsertion(QPoint);
+	void onImageInsertion();
 	void onSearchCanceled();
 	void onConnectionSelected(ThoughtId, QString, ConnectionType, bool);
 	void onThoughtSelected(ThoughtId, QString);
@@ -48,6 +51,8 @@ private:
 	// Search.
 	SearchRepository *m_searchRepository = nullptr;
 	SearchPresenter *m_search = nullptr;
+	// Assets.
+	AssetsRepository *m_assetsRepository = nullptr;
 };
 
 #endif

@@ -81,6 +81,7 @@ signals:
 	void onCursorMove(MarkdownCursor, MarkdownCursor);
 	void cursorMoved(QLine, bool);
 	void nodeInsertionActivated(QPoint);
+	void imageInsertionActivated();
 	void textChanged(QString&);
 	void nodeLinkSelected(ThoughtId);
 
@@ -96,6 +97,7 @@ protected:
 protected slots:
 	void saveText();
 	void onInsertNodeLink();
+	void onInsertImage();
 	void onMenuUndo();
 	void onMenuRedo();
 

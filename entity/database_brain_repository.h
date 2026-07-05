@@ -15,12 +15,14 @@
 #include "entity/graph_repository.h"
 #include "entity/search_repository.h"
 #include "entity/text_repository.h"
+#include "entity/assets_repository.h"
 
 class DatabaseBrainRepository
 	: public BaseRepository, 
 	public GraphRepository,
 	public SearchRepository,
-	public TextRepository
+	public TextRepository,
+	public AssetsRepository
 {
 public:
 	// Constructor.
@@ -48,6 +50,8 @@ public:
 	// Text repository.
 	GetResult getText(ThoughtId) override;
 	SaveResult saveText(ThoughtId, QString) override;
+	// Assets repository.
+	AssetSaveResult saveAsset(QString &filePath) override;
 
 protected:
 	DatabaseBrainRepository(QDir, QSqlDatabase);
@@ -70,6 +74,7 @@ protected:
 	bool loadState(ThoughtId);
 	QString filePathFromThought(ThoughtEntity&);
 	QString filePathFromName(QString&, ThoughtId id);
+	QString assetPathFromFileName(QString& path);
 	QString stripMetadata(QString&, QString&);
 	QString addMetadata(QString&, QString&);
 

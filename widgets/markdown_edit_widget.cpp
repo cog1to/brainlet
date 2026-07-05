@@ -1360,6 +1360,15 @@ void MarkdownEditWidget::showContextMenu(QMouseEvent *event) {
 	);
 	menu->insertAction(nullptr, connectAction);
 
+	// Insert image link action.
+	QString imageMenu = tr("Insert image...");
+	QAction *imageAction = new QAction(imageMenu, this);
+	connect(
+		imageAction, SIGNAL(triggered()),
+		this, SLOT(onInsertImage())
+	);
+	menu->insertAction(nullptr, imageAction);
+
 	// Undo.
 	QString undoMenu = tr("Undo");
 	QAction *undoAction = new QAction(undoMenu, this);
@@ -1400,6 +1409,15 @@ void MarkdownEditWidget::onInsertNodeLink() {
 
 	QLine cursorLine = m_cursor.block->lineForCursor(m_cursor);
 	emit nodeInsertionActivated(cursorLine.p2());
+}
+
+void MarkdownEditWidget::onInsertImage() {
+	if (m_lastCursor.block != nullptr) {
+		m_cursor = m_lastCursor;
+	}
+
+	QLine cursorLine = m_cursor.block->lineForCursor(m_cursor);
+	emit imageInsertionActivated();
 }
 
 void MarkdownEditWidget::onMenuUndo() {

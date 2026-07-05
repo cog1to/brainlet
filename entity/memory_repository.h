@@ -53,6 +53,8 @@ public:
 	CreateBrainResult createBrain(QString) override;
 	BrainRepositoryError deleteBrain(QString) override;
 	BrainRepositoryError renameBrain(QString, QString) override;
+	// AssetsRepository.
+	AssetSaveResult saveAsset(QString &filePath) override;
 	// Helpers
 	QString getBrainName(QString);
 

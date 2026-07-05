@@ -1,4 +1,6 @@
 #include <QString>
+#include <QFileDialog>
+#include <QStandardPaths>
 #include <QDebug>
 
 #include "model/model.h"
@@ -9,10 +11,12 @@
 TextEditorPresenter::TextEditorPresenter(
 	TextRepository *repo,
 	SearchRepository *search,
+	AssetsRepository *assets,
 	MarkdownScrollWidget *view
 )
 	: m_repository(repo),
 	m_searchRepository(search),
+	m_assetsRepository(assets),
 	m_view(view)
 {
 	m_editView = view->markdownWidget();
@@ -35,6 +39,11 @@ TextEditorPresenter::TextEditorPresenter(
 	connect(
 		m_editView, SIGNAL(nodeInsertionActivated(QPoint)),
 		this, SLOT(onNodeInsertion(QPoint))
+	);
+
+	connect(
+		m_editView, SIGNAL(imageInsertionActivated()),
+		this, SLOT(onImageInsertion())
 	);
 }
 
@@ -124,6 +133,28 @@ void TextEditorPresenter::onNodeInsertion(QPoint point) {
 	);
 
 	m_editView->showSearchWidget(widget, point);
+}
+
+void TextEditorPresenter::onImageInsertion() {
+	QFileDialog dialog(m_view);
+
+	QStringList locations = QStandardPaths::standardLocations(QStandardPaths::HomeLocation);
+	if (locations.size() > 0) {
+		dialog.setDirectory(locations[0]);
+	}
+
+	dialog.setNameFilter(tr("Images (*.png *.apng *.jpg *.jpeg *.bmp *.gif *.tiff *.webp *.tif *.jfif *.jfi)"));
+
+	if (dialog.exec()) {
+		QStringList fileNames = dialog.selectedFiles();
+		if (fileNames.size() == 0) {
+			return;
+		}
+
+		QString &fileName = fileNames[0];
+		// Copy file to assets and signal the editor.
+		AssetSaveResult result = m_assetsRepository->saveAsset(fileName);
+	}
 }
 
 void TextEditorPresenter::onSearchCanceled() {

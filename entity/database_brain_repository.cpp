@@ -472,6 +472,40 @@ SaveResult DatabaseBrainRepository::saveText(
 	return SaveResult(TextRepositoryErrorNone);
 }
 
+// Assets repository.
+
+AssetSaveResult DatabaseBrainRepository::saveAsset(QString &filePath) {
+	QFileInfo fileInfo = QFileInfo(filePath);
+	if (fileInfo.exists() == false) {
+		return AssetSaveResult(AssetsRepositoryErrorIO, "File doesn't exist");
+	}
+
+	QString fileName = fileInfo.fileName();
+	QString assetPath = assetPathFromFileName(fileName);
+
+	QFileInfo assetInfo = QFileInfo(assetPath);
+	QString path = assetInfo.path();
+	QString baseName = assetInfo.completeBaseName();
+	QString suffix = assetInfo.completeSuffix();
+
+	int idx = 0;
+	while (assetInfo.exists()) {
+		assetPath = QString("%1/%2_%3.%4").arg(path).arg(baseName).arg(idx).arg(suffix);
+		assetInfo = QFileInfo(assetPath);
+		idx += 1;
+	}
+
+	qDebug() << assetPath;
+	QFile origFile = QFile(filePath);
+	bool result = origFile.copy(assetPath);
+	if (result) {
+		QString uri = QString("asset://%1").arg(assetInfo.fileName());
+		return AssetSaveResult(AssetsRepositoryErrorNone, uri);
+	} else {
+		return AssetSaveResult(AssetsRepositoryErrorIO, "Failed to copy file");
+	}
+}
+
 // Helpers.
 
 QString DatabaseBrainRepository::filePathFromThought(
@@ -491,6 +525,12 @@ QString DatabaseBrainRepository::filePathFromName(
 
 	return m_root.filePath(
 		QString("documents/%1_%2.md").arg(sanitized).arg(id)
+	);
+}
+
+QString DatabaseBrainRepository::assetPathFromFileName(QString& path) {
+	return m_root.filePath(
+		QString("assets/%1").arg(path)
 	);
 }
 
