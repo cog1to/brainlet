@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QString>
+#include <QPixmap>
 
 #include "model/thought.h"
 #include "entity/text_repository.h"
@@ -13,8 +14,9 @@
 #include "widgets/markdown_scroll_widget.h"
 #include "presenters/search_presenter.h"
 #include "presenters/dismissable_presenter.h"
+#include "common/image_asset_provider.h"
 
-class TextEditorPresenter: public DismissablePresenter {
+class TextEditorPresenter: public DismissablePresenter, public ImageAssetProvider {
 	Q_OBJECT
 
 public:
@@ -25,6 +27,7 @@ public:
 		MarkdownScrollWidget*
 	);
 	void setThought(ThoughtId);
+	QPixmap *pixmapForAsset(QString& assetName) override;
 
 signals:
 	void textError(MarkdownScrollError);

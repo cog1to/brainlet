@@ -20,7 +20,8 @@ public:
 
 class AssetsRepository {
 public:
-	virtual AssetSaveResult saveAsset(QString &filePath) = 0;
+	virtual AssetSaveResult saveAsset(QString& filePath) = 0;
+	virtual QString getAssetPath(QString& assetName) = 0;
 };
 
 #endif

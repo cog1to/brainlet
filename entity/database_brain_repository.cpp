@@ -35,7 +35,7 @@
  *   |- PK: (conn_from, conn_to) |
  *   +---------------------------+
  *
- * For possible values of conn_type, see ConnectionType enum from 
+ * For possible values of conn_type, see ConnectionType enum from
  * model/thought.h.
  *
  * When a new Brain is created, an initial node with ID = 0 is inserted
@@ -495,7 +495,6 @@ AssetSaveResult DatabaseBrainRepository::saveAsset(QString &filePath) {
 		idx += 1;
 	}
 
-	qDebug() << assetPath;
 	QFile origFile = QFile(filePath);
 	bool result = origFile.copy(assetPath);
 	if (result) {
@@ -504,6 +503,11 @@ AssetSaveResult DatabaseBrainRepository::saveAsset(QString &filePath) {
 	} else {
 		return AssetSaveResult(AssetsRepositoryErrorIO, "Failed to copy file");
 	}
+}
+
+QString DatabaseBrainRepository::getAssetPath(QString& assetName) {
+	QString assetPath = assetPathFromFileName(assetName);
+	return assetPath;
 }
 
 // Helpers.
@@ -801,7 +805,7 @@ bool DatabaseBrainRepository::listContains(
 
 QString DatabaseBrainRepository::stripMetadata(QString& text, QString& title) {
 	QString headerExpString = QString(
-		"^.+(\\n|\\r\\n)==+(\\n|\\r\\n)+"
+		"^.+(\\r\\n|\\n)==+(\\r\\n|\\n)+"
 	);
 
 	QRegularExpression headerExp(

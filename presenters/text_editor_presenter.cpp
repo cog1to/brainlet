@@ -1,3 +1,4 @@
+#include <iostream>
 #include <QString>
 #include <QFileDialog>
 #include <QStandardPaths>
@@ -20,6 +21,7 @@ TextEditorPresenter::TextEditorPresenter(
 	m_view(view)
 {
 	m_editView = view->markdownWidget();
+	m_editView->setImageAssetProvider(this);
 
 	connect(
 		m_editView, SIGNAL(textChanged(QString&)),
@@ -217,3 +219,27 @@ void TextEditorPresenter::onDismiss() {
 	}
 }
 
+// Image asset provider.
+
+QPixmap *TextEditorPresenter::pixmapForAsset(QString& assetName) {
+	if (m_assetsRepository == nullptr) {
+		return nullptr;
+	}
+
+	QString filePath = m_assetsRepository->getAssetPath(assetName);
+	if (filePath.isNull()) {
+		return nullptr;
+	}
+
+	std::string p = filePath.toStdString();
+	std::cout << p << "\n";
+
+	QPixmap *pixmap = new QPixmap(filePath);
+	if (pixmap->isNull()) {
+		std::cout << "is null\n";
+		delete pixmap;
+		return nullptr;
+	}
+
+	return pixmap;
+}

@@ -13,12 +13,14 @@
 #include <QFocusEvent>
 #include <QMenu>
 #include <QClipboard>
+#include <QPixmap>
 
 #include "model/thought.h"
 #include "widgets/style.h"
 #include "widgets/base_widget.h"
 #include "widgets/markdown_block_widget.h"
 #include "model/new_text_model.h"
+#include "common/image_asset_provider.h"
 
 struct StaticCursor {
 	int block;
@@ -50,7 +52,7 @@ public:
 };
 
 class MarkdownEditWidget
-	: public BaseWidget, public MarkdownCursorProvider
+	: public BaseWidget, public MarkdownCursorProvider, public ImageAssetProvider
 {
 	Q_OBJECT
 
@@ -76,6 +78,9 @@ public:
 	QString text();
 	// Style.
 	Style *style();
+	// Assets.
+	void setImageAssetProvider(ImageAssetProvider*);
+	QPixmap *pixmapForAsset(QString& assetName) override;
 
 signals:
 	void onCursorMove(MarkdownCursor, MarkdownCursor);
@@ -124,6 +129,8 @@ private:
 	bool m_stateDirty = false;
 	// Search.
 	QWidget *m_search = nullptr;
+	// Assets.
+	ImageAssetProvider *m_assets = nullptr;
 
 	// State saving helper.
 	void updateState(QString& lastState, MarkdownCursor prev, bool isCopyPaste);

@@ -1,3 +1,4 @@
+#include <iostream>
 #include <QFrame>
 #include <QString>
 #include <QTextLayout>
@@ -10,6 +11,7 @@
 #include "model/new_text_model.h"
 #include "widgets/style.h"
 #include "widgets/markdown_block_widget.h"
+#include "common/image_asset_provider.h"
 
 using namespace text;
 
@@ -22,9 +24,10 @@ MarkdownCursor::MarkdownCursor(
 MarkdownBlock::MarkdownBlock(
 	QWidget *widget,
 	Style *style,
-	MarkdownCursorProvider *provider
+	MarkdownCursorProvider *provider,
+	ImageAssetProvider *assets
 )
-	: QFrame(widget), m_style(style), m_provider(provider)
+	: QFrame(widget), m_style(style), m_provider(provider), m_assets(assets)
 {
 	setContentsMargins(0, 0, 0, 0);
 
@@ -36,6 +39,8 @@ MarkdownBlock::MarkdownBlock(
 MarkdownBlock::~MarkdownBlock() {
 	for (auto *layout: m_layouts)
 		delete layout;
+	if (m_pixmap != nullptr)
+		delete m_pixmap;
 }
 
 text::Paragraph *MarkdownBlock::paragraph() {
@@ -71,6 +76,16 @@ void MarkdownBlock::setParagraph(Paragraph *par) {
 
 	QList<Line> *lines = par->getLines();
 	assert(lines->size() > 0);
+
+	// Load image/asset if possible.
+	if (par->isImage() && m_assets != nullptr) {
+		QString assetName = par->assetName();
+		if (!assetName.isNull() && assetName != m_assetName) {
+			m_assetName = assetName;
+			m_pixmap = m_assets->pixmapForAsset(assetName);
+			std::cout << "pixmap is set\n";
+		}
+	}
 
 	for (qsizetype i = 0; i < lines->size(); ++i) {
 		QTextLayout *layout = new QTextLayout();
@@ -113,14 +128,6 @@ void MarkdownBlock::setPlaceholder(QString placeholder) {
 // Cursor.
 
 bool MarkdownBlock::cursorAt(QPoint point, MarkdownCursor *out) {
-	QMargins formatMargins = QMargins(0, 0, 0, 0);
-	text::ParagraphType type = m_par->getType();
-	if (type == text::Code) {
-		formatMargins = codeMargins;
-	} else if (type == text::BulletList || type == text::NumberList) {
-		formatMargins = listMargins;
-	}
-
 	for (int idx = 0; idx < m_layouts.size(); idx++) {
 		QTextLayout *layout = m_layouts[idx];
 		text::Line *parLine = &((*m_par->getLines())[idx]);
@@ -348,8 +355,22 @@ QSize MarkdownBlock::sizeHint() const {
 	qreal height = margins.top() + formatMargins.top();
 	qreal start = margins.left() + formatMargins.left();
 
+	if (m_par->isImage()) {
+		if (m_pixmap != nullptr && m_pixmap->isNull() == false) {
+			qreal pwidth = m_pixmap->width();
+			if (lineWidth < m_pixmap->width()) {
+				qreal scaledHeight = m_pixmap->height() * lineWidth / m_pixmap->width();
+				height += scaledHeight;
+			} else {
+				qreal imageHeight = (qreal)m_pixmap->height();
+				height += imageHeight;
+			}
+		}
+	}
+
 	for (qsizetype i = 0; i < m_layouts.size(); i++) {
-		qreal lineY = 0, offset = 0;
+		qreal lineY = 0;
+		qreal offset = 0;
 		const QTextLayout *item = m_layouts.at(i);
 
 		text::Line *parLine = &((*m_par->getLines())[i]);
@@ -431,6 +452,7 @@ void MarkdownBlock::paintEvent(QPaintEvent *event) {
 	}
 
 	painter.setRenderHint(QPainter::Antialiasing, true);
+	painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
 	painter.setPen(m_style->editor.text);
 
 	int lineSpacing = fontMetrics.lineSpacing();
@@ -438,6 +460,28 @@ void MarkdownBlock::paintEvent(QPaintEvent *event) {
 		- margins.left() - margins.right()
 		- formatMargins.left() - formatMargins.right();
 	qreal y = margins.top() + formatMargins.top();
+
+	if (m_par->isImage()) {
+		if (m_pixmap != nullptr && m_pixmap->isNull() == false) {
+			qreal scaledWidth = 0;
+			if (lineWidth < m_pixmap->width()) {
+				scaledWidth = lineWidth * devicePixelRatio();
+			} else {
+				scaledWidth = m_pixmap->width() * devicePixelRatio();
+			}
+
+			QPixmap scaled = m_pixmap->scaledToWidth(scaledWidth, Qt::SmoothTransformation);
+			QRectF target(
+				margins.left() + formatMargins.left(),
+				margins.top() + formatMargins.top(),
+				scaled.width() / devicePixelRatio(),
+				scaled.height() / devicePixelRatio()
+			);
+			QRectF source(0, 0, scaled.width(), scaled.height());
+			painter.drawPixmap(target, scaled, source);
+			y += scaled.height();
+		}
+	}
 
 	// List enumeration by level. We need this to maintain enumeration on the
 	// same level.
@@ -719,6 +763,7 @@ QTextCharFormat MarkdownBlock::qtFormat(
 			fmt.setBackground(style->editor.codeBackground);
 			fmt.setFont(style->editor.monoFont);
 			break;
+		case text::ImageLink:
 		case text::NodeLink:
 			fmt.setFontUnderline(true);
 			fmt.setForeground(style->editor.nodeLink);

@@ -18,7 +18,7 @@
 #include "entity/assets_repository.h"
 
 class DatabaseBrainRepository
-	: public BaseRepository, 
+	: public BaseRepository,
 	public GraphRepository,
 	public SearchRepository,
 	public TextRepository,
@@ -52,6 +52,7 @@ public:
 	SaveResult saveText(ThoughtId, QString) override;
 	// Assets repository.
 	AssetSaveResult saveAsset(QString &filePath) override;
+	QString getAssetPath(QString& assetName) override;
 
 protected:
 	DatabaseBrainRepository(QDir, QSqlDatabase);

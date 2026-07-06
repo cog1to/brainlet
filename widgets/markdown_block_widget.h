@@ -12,6 +12,7 @@
 #include <QLine>
 
 #include "widgets/style.h"
+#include "common/image_asset_provider.h"
 #include "model/new_text_model.h"
 
 // Forward declaration to avoid circula reference compilation errors.
@@ -22,7 +23,7 @@ class MarkdownBlock: public QFrame {
 	Q_OBJECT
 
 public:
-	MarkdownBlock(QWidget*, Style*, MarkdownCursorProvider*);
+	MarkdownBlock(QWidget*, Style*, MarkdownCursorProvider*, ImageAssetProvider*);
 	~MarkdownBlock();
 	// Model.
 	void setParagraph(text::Paragraph*);
@@ -54,7 +55,10 @@ private:
 	text::Paragraph *m_par = nullptr;
 	Style *m_style = nullptr;
 	MarkdownCursorProvider *m_provider = nullptr;
+	ImageAssetProvider *m_assets = nullptr;
 	QString m_placeholder = "";
+	QString m_assetName = QString();
+	QPixmap *m_pixmap = nullptr;
 	// Helpers.
 	QList<QTextLayout::FormatRange> convertRanges(
 		QList<text::FormatRange>

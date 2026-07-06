@@ -10,6 +10,7 @@
 #include "entity/base_repository.h"
 #include "entity/brain_repository.h"
 #include "entity/brains_repository.h"
+#include "entity/assets_repository.h"
 #include "entity/thought_entity.h"
 #include "entity/connection_entity.h"
 #include "entity/brain_entity.h"
@@ -55,6 +56,7 @@ public:
 	BrainRepositoryError renameBrain(QString, QString) override;
 	// AssetsRepository.
 	AssetSaveResult saveAsset(QString &filePath) override;
+	QString getAssetPath(QString& assetName) override;
 	// Helpers
 	QString getBrainName(QString);
 

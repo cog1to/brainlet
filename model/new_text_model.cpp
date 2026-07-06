@@ -44,6 +44,8 @@ namespace text_utils {
 				return -1;
 			case text::Highlight:
 				return 0;
+			case text::ImageLink:
+				return -1;
 		}
 
 		assert(false); // Should be unreachable.
@@ -77,6 +79,8 @@ namespace text_utils {
 				return -1;
 			case text::Highlight:
 				return 0;
+			case text::ImageLink:
+				return -1;
 		}
 
 		assert(false); // Should be unreachable.
@@ -96,6 +100,8 @@ text::FormatRange::FormatRange(
 int text::FormatRange::startOffset() const {
 	if (format == text::Link || format == text::NodeLink) {
 		return 1;
+	} else if (format == text::ImageLink) {
+		return 2;
 	} else if (format == text::Checkbox) {
 		return 1;
 	} else {
@@ -105,6 +111,8 @@ int text::FormatRange::startOffset() const {
 
 int text::FormatRange::endOffset() const {
 	if (format == text::Link || format == text::NodeLink) {
+		return 3 + link.target.size();
+	} else if (format == text::ImageLink) {
 		return 3 + link.target.size();
 	} else if (format == text::Checkbox) {
 		return 1;
@@ -120,9 +128,9 @@ text::Line::Line(QString& input, bool preformatted, int lvl) : level(lvl) {
 }
 
 void text::Line::parseLinks(QString *input) {
-	QRegularExpression expr("\\[(.+?)\\]\\(((.+?)://(.+?))\\)");
+	QRegularExpression expr("\\!?\\[(.+?)\\]\\(((.+?)://(.+?))\\)");
 	QRegularExpressionMatch match = expr.match(*input);
-	int offset;
+	int offset, extraLength;
 
 	while (match.hasMatch()) {
 		// Calcualate offset in the folded string by counting offsets applied
@@ -135,19 +143,27 @@ void text::Line::parseLinks(QString *input) {
 				offset += format.endOffset();
 		}
 
+		extraLength = 0;
+		if (match.captured().startsWith("!")) {
+			extraLength = 1;
+		}
+
 		folded
-			.remove(match.capturedStart() - offset, 1)
+			.remove(match.capturedStart() - offset, 1 + extraLength)
 			.remove(
-				match.capturedEnd()
-					- offset
-					- 4
-					- match.captured(2).size(),
+				match.capturedEnd() // Last symbol position in captured "[abc](xyz)"
+					- offset // Current diff between folded and unfolded strings.
+					- 4 - extraLength // Square and round brackets + exclamation mark.
+					- match.captured(2).size(), // Link target text.
 				match.captured(2).size() + 3
 			);
 
 		text::BlockFormat linkType = BlockFormat::Link;
-		if (match.captured(3) == "node")
+		if (match.captured(3) == "node") {
 			linkType = BlockFormat::NodeLink;
+		} else if (match.captured().startsWith("!")) {
+			linkType = BlockFormat::ImageLink;
+		}
 
 		// Folded text highlights the link title.
 		FormatRange foldedRange = FormatRange(
@@ -160,7 +176,7 @@ void text::Line::parseLinks(QString *input) {
 		// Unfolded text highlights the link target and title brackets.
 		formats.push_back(
 			FormatRange(
-				match.capturedStart() + 3 + match.captured(1).size(),
+				match.capturedStart() + 3 + match.captured(1).size() + extraLength,
 				match.capturedEnd() - 1,
 				linkType,
 				text::LinkFormat(match.captured(2))
@@ -170,14 +186,14 @@ void text::Line::parseLinks(QString *input) {
 		formats.push_back(
 			FormatRange(
 				match.capturedStart(),
-				match.capturedStart() + 1,
+				match.capturedStart() + 1 + extraLength,
 				text::BlockFormat::Bold
 			)
 		);
 		formats.push_back(
 			FormatRange(
-				match.capturedStart() + 1 + match.captured(1).size(),
-				match.capturedStart() + 1 + match.captured(1).size() + 2,
+				match.capturedStart() + 1 + extraLength + match.captured(1).size(),
+				match.capturedStart() + 1 + extraLength + match.captured(1).size() + 2,
 				text::BlockFormat::Bold
 			)
 		);
@@ -509,6 +525,28 @@ int text::Paragraph::indexOfLine(text::Line* line) {
 	}
 
 	return -1;
+}
+
+bool text::Paragraph::isImage() {
+	if (m_lines.size() > 1)
+		return false;
+
+	QRegularExpression regex = QRegularExpression("^\\!\\[.+\\]\\(.+://.+\\)$");
+	return m_lines[0].text.contains(regex);
+}
+
+QString text::Paragraph::assetName() {
+	if (!isImage()) {
+		return QString();
+	}
+
+	QRegularExpression regex = QRegularExpression("^\\!\\[.+\\]\\(asset://(.+)\\)$");
+	QRegularExpressionMatch match = regex.match(m_lines[0].text);
+	if (!match.hasMatch()) {
+		return QString();
+	}
+
+	return match.captured(1);
 }
 
 // Text model.

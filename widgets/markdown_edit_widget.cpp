@@ -52,7 +52,7 @@ void MarkdownEditWidget::load(QString data) {
 
 void MarkdownEditWidget::loadInternal(QString& data, bool clearHistory) {
 	QRegularExpression splitExp(
-		"(\\n|\r\\n)", QRegularExpression::MultilineOption
+		"(\r\\n|\\n)", QRegularExpression::MultilineOption
 	);
 	QStringList lines = data.split(splitExp);
 	m_model = text::TextModel(lines);
@@ -86,7 +86,7 @@ void MarkdownEditWidget::loadInternal(QString& data, bool clearHistory) {
 		text::Paragraph *p = &((*list)[i]);
 		QList<text::Line> *lines = p->getLines();
 
-		MarkdownBlock *block = new MarkdownBlock(nullptr, m_style, this);
+		MarkdownBlock *block = new MarkdownBlock(nullptr, m_style, this, this);
 		connect(
 			this, &MarkdownEditWidget::onCursorMove,
 			block, &MarkdownBlock::onCursorMove
@@ -1730,7 +1730,7 @@ inline text::Paragraph *MarkdownEditWidget::insertParagraph(
 ) {
 	m_model.insert(index, par);
 
-	MarkdownBlock *block = new MarkdownBlock(nullptr, m_style, this);
+	MarkdownBlock *block = new MarkdownBlock(nullptr, m_style, this, this);
 	connect(
 		this, &MarkdownEditWidget::onCursorMove,
 		block, &MarkdownBlock::onCursorMove
@@ -2266,3 +2266,14 @@ void MarkdownEditWidget::restoreCursor(StaticCursor cursor) {
 	emit onCursorMove(MarkdownCursor::empty(), mcursor);
 }
 
+// Assets.
+
+void MarkdownEditWidget::setImageAssetProvider(ImageAssetProvider *provider) {
+	m_assets = provider;
+}
+
+QPixmap *MarkdownEditWidget::pixmapForAsset(QString& assetName) {
+	if (m_assets == nullptr)
+		return nullptr;
+	return m_assets->pixmapForAsset(assetName);
+}

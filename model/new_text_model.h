@@ -11,7 +11,7 @@ namespace text {
 		Text,
 		Code,
 		BulletList,
-		NumberList
+		NumberList,
 	};
 
 	// Block formats.
@@ -31,7 +31,8 @@ namespace text {
 		CodeSpan,
 		Escape,
 		Checkbox,
-		Highlight
+		Highlight,
+		ImageLink
 	};
 
 	// Link metadata.
@@ -95,6 +96,8 @@ namespace text {
 		void setLine(int, Line);
 		void setLines(QList<Line>);
 		int indexOfLine(Line*);
+		bool isImage();
+		QString assetName();
 	private:
 		ParagraphType m_type = Text;
 		QList<Line> m_lines;
