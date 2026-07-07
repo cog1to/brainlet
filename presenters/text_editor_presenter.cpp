@@ -231,9 +231,6 @@ QPixmap *TextEditorPresenter::pixmapForAsset(QString& assetName) {
 		return nullptr;
 	}
 
-	std::string p = filePath.toStdString();
-	std::cout << p << "\n";
-
 	QPixmap *pixmap = new QPixmap(filePath);
 	if (pixmap->isNull()) {
 		std::cout << "is null\n";

@@ -1,4 +1,3 @@
-#include <iostream>
 #include <QFrame>
 #include <QString>
 #include <QTextLayout>
@@ -39,8 +38,9 @@ MarkdownBlock::MarkdownBlock(
 MarkdownBlock::~MarkdownBlock() {
 	for (auto *layout: m_layouts)
 		delete layout;
-	if (m_pixmap != nullptr)
+	if (m_pixmap != nullptr) {
 		delete m_pixmap;
+	}
 }
 
 text::Paragraph *MarkdownBlock::paragraph() {
@@ -50,17 +50,8 @@ text::Paragraph *MarkdownBlock::paragraph() {
 void MarkdownBlock::setParagraph(Paragraph *par) {
 	m_par = par;
 
-	// Clear previous layouts.
-	for (auto layout: m_layouts)
-		delete layout;
-	m_layouts.clear();
-
 	if (m_par == nullptr)
 		return;
-
-	MarkdownCursor *cursor = nullptr;
-	if (m_provider != nullptr)
-		cursor = m_provider->currentCursor();
 
 	text::ParagraphType type = par->getType();
 
@@ -71,47 +62,22 @@ void MarkdownBlock::setParagraph(Paragraph *par) {
 		QString("background-color: %1").arg(color.name(QColor::HexRgb))
 	);
 
-	QTextOption opt = QTextOption();
-	opt.setWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
-
-	QList<Line> *lines = par->getLines();
-	assert(lines->size() > 0);
-
 	// Load image/asset if possible.
 	if (par->isImage() && m_assets != nullptr) {
 		QString assetName = par->assetName();
 		if (!assetName.isNull() && assetName != m_assetName) {
 			m_assetName = assetName;
 			m_pixmap = m_assets->pixmapForAsset(assetName);
-			std::cout << "pixmap is set\n";
+		}
+	} else {
+		if (m_pixmap != nullptr) {
+			delete m_pixmap;
+			m_pixmap = nullptr;
 		}
 	}
 
-	for (qsizetype i = 0; i < lines->size(); ++i) {
-		QTextLayout *layout = new QTextLayout();
-		layout->setTextOption(opt);
-		layout->setCacheEnabled(true);
-
-		if (par->getType() == Code)
-			layout->setFont(m_style->editor.monoFont);
-		else
-			layout->setFont(m_style->editor.textFont);
-
-		Line line = lines->at(i);
-		if (cursor != nullptr && cursor->block == this && cursor->line == i) {
-			QList<QTextLayout::FormatRange> formats = convertRanges(line.formats);
-			layout->setText(line.text);
-			layout->setFormats(formats);
-		} else {
-			QList<QTextLayout::FormatRange> formats = convertRanges(line.foldedFormats);
-			layout->setText(line.folded);
-			layout->setFormats(formats);
-		}
-
-		m_layouts.push_back(layout);
-	}
-
-	update();
+	updateLayouts();
+	updateGeometry();
 }
 
 void MarkdownBlock::updateParagraphWithoutReload(
@@ -336,7 +302,16 @@ bool MarkdownBlock::endOfBlock(MarkdownCursor *cursor) {
 
 // Drawing and size.
 
-QSize MarkdownBlock::sizeHint() const {
+bool MarkdownBlock::hasHeightForWidth() const {
+	return true;
+}
+
+int MarkdownBlock::heightForWidth(int width) const {
+	if (m_par == nullptr)
+		return 0;
+	if (width == 0)
+		return 0;
+
 	QMargins margins = contentsMargins();
 	QMargins formatMargins = QMargins(0, 0, 0, 0);
 	text::ParagraphType type = m_par->getType();
@@ -349,25 +324,167 @@ QSize MarkdownBlock::sizeHint() const {
 		formatMargins = listMargins;
 	}
 
-	int lineWidth = size().width()
-		- margins.left() - margins.right()
-		- formatMargins.left() - formatMargins.right();
 	qreal height = margins.top() + formatMargins.top();
 	qreal start = margins.left() + formatMargins.left();
 
-	if (m_par->isImage()) {
-		if (m_pixmap != nullptr && m_pixmap->isNull() == false) {
-			qreal pwidth = m_pixmap->width();
-			if (lineWidth < m_pixmap->width()) {
-				qreal scaledHeight = m_pixmap->height() * lineWidth / m_pixmap->width();
-				height += scaledHeight;
-			} else {
-				qreal imageHeight = (qreal)m_pixmap->height();
-				height += imageHeight;
-			}
+	MarkdownCursor *cursor = nullptr;
+	if (m_provider != nullptr)
+		cursor = m_provider->currentCursor();
+
+	int lineWidth = width
+		- margins.left() - margins.right()
+		- formatMargins.left() - formatMargins.right();
+
+	if (m_pixmap != nullptr && m_pixmap->isNull() == false) {
+		if (lineWidth < m_pixmap->width()) {
+			qreal imageHeight = m_pixmap->height();
+			qreal scaledHeight = imageHeight * lineWidth / m_pixmap->width();
+			height += scaledHeight;
+		} else {
+			qreal imageHeight = (qreal)m_pixmap->height();
+			height += imageHeight;
 		}
 	}
 
+	lineWidth = lineWidth
+		- margins.left() - margins.right()
+		- formatMargins.left() - formatMargins.right();
+
+	QList<Line> *lines = m_par->getLines();
+	assert(lines->size() > 0);
+
+	QTextOption opt = QTextOption();
+	opt.setWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
+
+	QList<QTextLayout*> layouts;
+	for (qsizetype i = 0; i < lines->size(); ++i) {
+		QTextLayout *layout = new QTextLayout();
+		layout->setTextOption(opt);
+		layout->setCacheEnabled(false);
+
+		if (m_par->getType() == Code)
+			layout->setFont(m_style->editor.monoFont);
+		else
+			layout->setFont(m_style->editor.textFont);
+
+		text::Line line = lines->at(i);
+		if (cursor != nullptr && cursor->block == this && cursor->line == i) {
+			QList<QTextLayout::FormatRange> formats = convertRanges(line.formats);
+			layout->setText(line.text);
+			layout->setFormats(formats);
+		} else {
+			QList<QTextLayout::FormatRange> formats = convertRanges(line.foldedFormats);
+			layout->setText(line.folded);
+			layout->setFormats(formats);
+		}
+
+		layouts.push_back(layout);
+	}
+
+	for (qsizetype i = 0; i < layouts.size(); i++) {
+		qreal lineY = 0;
+		qreal offset = 0;
+		const QTextLayout *item = layouts.at(i);
+
+		text::Line *parLine = &((*m_par->getLines())[i]);
+		if ((type == text::BulletList || type == text::NumberList) && parLine->level > 0) {
+			offset += parLine->level * listLevelOffset;
+		}
+
+		QTextLayout *layout = (QTextLayout*)item;
+		layout->setPosition(QPoint(start + offset, height));
+		layout->beginLayout();
+
+		while (true) {
+			QTextLine line = layout->createLine();
+			if (!line.isValid())
+				break;
+
+			line.setLineWidth(lineWidth - offset);
+			line.setPosition(QPointF(0, lineY));
+			height += line.height();
+			lineY += line.height();
+		}
+
+		layout->endLayout();
+	}
+
+	for (auto *layout: layouts)
+		delete layout;
+
+	return height + margins.bottom() + formatMargins.bottom();
+}
+
+void MarkdownBlock::updateLayouts() {
+	QMargins margins = contentsMargins();
+	QMargins formatMargins = QMargins(0, 0, 0, 0);
+	text::ParagraphType type = m_par->getType();
+
+	QFontMetrics fontMetrics = QFontMetrics(m_style->editor.textFont);
+	if (type == text::Code) {
+		fontMetrics = QFontMetrics(m_style->editor.monoFont);
+		formatMargins = codeMargins;
+	} else if (type == text::BulletList || type == text::NumberList) {
+		formatMargins = listMargins;
+	}
+
+	qreal height = margins.top() + formatMargins.top();
+
+	int lineWidth = size().width()
+		- margins.left() - margins.right()
+		- formatMargins.left() - formatMargins.right();
+
+	if (m_pixmap != nullptr && m_pixmap->isNull() == false) {
+		if (lineWidth < m_pixmap->width()) {
+			qreal imageHeight = m_pixmap->height();
+			qreal scaledHeight = imageHeight * lineWidth / m_pixmap->width();
+			height += scaledHeight;
+		} else {
+			qreal imageHeight = (qreal)m_pixmap->height();
+			height += imageHeight;
+		}
+	}
+
+	// Clear previous layouts.
+	for (auto layout: m_layouts)
+		delete layout;
+	m_layouts.clear();
+
+	MarkdownCursor *cursor = nullptr;
+	if (m_provider != nullptr)
+		cursor = m_provider->currentCursor();
+
+	QTextOption opt = QTextOption();
+	opt.setWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
+
+	QList<Line> *lines = m_par->getLines();
+	assert(lines->size() > 0);
+
+	for (qsizetype i = 0; i < lines->size(); ++i) {
+		QTextLayout *layout = new QTextLayout();
+		layout->setTextOption(opt);
+		layout->setCacheEnabled(true);
+
+		if (m_par->getType() == Code)
+			layout->setFont(m_style->editor.monoFont);
+		else
+			layout->setFont(m_style->editor.textFont);
+
+		Line line = lines->at(i);
+		if (cursor != nullptr && cursor->block == this && cursor->line == i) {
+			QList<QTextLayout::FormatRange> formats = convertRanges(line.formats);
+			layout->setText(line.text);
+			layout->setFormats(formats);
+		} else {
+			QList<QTextLayout::FormatRange> formats = convertRanges(line.foldedFormats);
+			layout->setText(line.folded);
+			layout->setFormats(formats);
+		}
+
+		m_layouts.push_back(layout);
+	}
+
+	qreal start = margins.left() + formatMargins.left();
 	for (qsizetype i = 0; i < m_layouts.size(); i++) {
 		qreal lineY = 0;
 		qreal offset = 0;
@@ -395,17 +512,11 @@ QSize MarkdownBlock::sizeHint() const {
 
 		layout->endLayout();
 	}
-
-	return QSize(
-		lineWidth + margins.left() + margins.right()
-			+ formatMargins.left() + formatMargins.right(),
-		height + margins.bottom() + formatMargins.bottom()
-	);
 }
 
 void MarkdownBlock::resizeEvent(QResizeEvent *event) {
 	QFrame::resizeEvent(event);
-	updateGeometry();
+	updateLayouts();
 }
 
 void MarkdownBlock::paintEvent(QPaintEvent *event) {
@@ -461,26 +572,24 @@ void MarkdownBlock::paintEvent(QPaintEvent *event) {
 		- formatMargins.left() - formatMargins.right();
 	qreal y = margins.top() + formatMargins.top();
 
-	if (m_par->isImage()) {
-		if (m_pixmap != nullptr && m_pixmap->isNull() == false) {
-			qreal scaledWidth = 0;
-			if (lineWidth < m_pixmap->width()) {
-				scaledWidth = lineWidth * devicePixelRatio();
-			} else {
-				scaledWidth = m_pixmap->width() * devicePixelRatio();
-			}
-
-			QPixmap scaled = m_pixmap->scaledToWidth(scaledWidth, Qt::SmoothTransformation);
-			QRectF target(
-				margins.left() + formatMargins.left(),
-				margins.top() + formatMargins.top(),
-				scaled.width() / devicePixelRatio(),
-				scaled.height() / devicePixelRatio()
-			);
-			QRectF source(0, 0, scaled.width(), scaled.height());
-			painter.drawPixmap(target, scaled, source);
-			y += scaled.height();
+	if (m_pixmap != nullptr && m_pixmap->isNull() == false) {
+		qreal scaledWidth = 0;
+		if (lineWidth < m_pixmap->width()) {
+			scaledWidth = lineWidth * devicePixelRatio();
+		} else {
+			scaledWidth = m_pixmap->width() * devicePixelRatio();
 		}
+
+		QPixmap scaled = m_pixmap->scaledToWidth(scaledWidth, Qt::SmoothTransformation);
+		QRectF target(
+			margins.left() + formatMargins.left(),
+			margins.top() + formatMargins.top(),
+			scaled.width() / devicePixelRatio(),
+			scaled.height() / devicePixelRatio()
+		);
+		QRectF source(0, 0, scaled.width(), scaled.height());
+		painter.drawPixmap(target, scaled, source);
+		y += scaled.height() / devicePixelRatio();
 	}
 
 	// List enumeration by level. We need this to maintain enumeration on the
@@ -681,7 +790,7 @@ QPoint MarkdownBlock::pointAtCursor(MarkdownCursor cursor) {
 
 QList<QTextLayout::FormatRange> MarkdownBlock::convertRanges(
 	QList<FormatRange> from
-) {
+) const {
 	QList<QTextLayout::FormatRange> result;
 
 	QTextCharFormat defaultFormat;
@@ -720,7 +829,7 @@ QTextCharFormat MarkdownBlock::qtFormat(
 	text::FormatRange range,
 	Style *style,
 	QTextCharFormat fmt
-) {
+) const {
 	text::BlockFormat format = range.format;
 	double dpi = QGuiApplication::primaryScreen()->physicalDotsPerInch() / devicePixelRatio();
 

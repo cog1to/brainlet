@@ -44,7 +44,9 @@ public:
 	void paintEvent(QPaintEvent*) override;
 	void resizeEvent(QResizeEvent*) override;
 	// Geometry.
-	QSize sizeHint() const override;
+	//QSize sizeHint() const override;
+	bool hasHeightForWidth() const override;
+	int heightForWidth(int w) const override;
 
 public slots:
 	void onCursorMove(MarkdownCursor, MarkdownCursor);
@@ -62,13 +64,14 @@ private:
 	// Helpers.
 	QList<QTextLayout::FormatRange> convertRanges(
 		QList<text::FormatRange>
-	);
+	) const;
 	QTextCharFormat qtFormat(
 		text::FormatRange,
 		Style*,
 		QTextCharFormat
-	);
+	) const;
 	inline int indexOfLine(text::Line*);
+	void updateLayouts();
 	// Layout constants.
 	static constexpr QMargins codeMargins = QMargins(10, 10, 10, 10);
 	static constexpr QMargins listMargins = QMargins(40, 0, 0, 0);
