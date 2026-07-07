@@ -12,7 +12,8 @@
 #include "widgets/toast_widget.h"
 
 enum MarkdownScrollError {
-	MarkdownScrollIOError
+	MarkdownScrollIOError,
+	MarkdownScrollAssetIOError,
 };
 
 class MarkdownScrollWidget

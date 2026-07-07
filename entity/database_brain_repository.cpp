@@ -498,8 +498,7 @@ AssetSaveResult DatabaseBrainRepository::saveAsset(QString &filePath) {
 	QFile origFile = QFile(filePath);
 	bool result = origFile.copy(assetPath);
 	if (result) {
-		QString uri = QString("asset://%1").arg(assetInfo.fileName());
-		return AssetSaveResult(AssetsRepositoryErrorNone, uri);
+		return AssetSaveResult(AssetsRepositoryErrorNone, assetInfo.fileName());
 	} else {
 		return AssetSaveResult(AssetsRepositoryErrorIO, "Failed to copy file");
 	}

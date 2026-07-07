@@ -44,6 +44,8 @@ private slots:
 	void onSearchCanceled();
 	void onConnectionSelected(ThoughtId, QString, ConnectionType, bool);
 	void onThoughtSelected(ThoughtId, QString);
+	void onAssetLinkSelected(QString);
+	void onUrlSelected(QString);
 
 private:
 	ThoughtId m_id = InvalidThoughtId;

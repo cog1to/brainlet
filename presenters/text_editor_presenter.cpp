@@ -1,7 +1,7 @@
-#include <iostream>
 #include <QString>
 #include <QFileDialog>
 #include <QStandardPaths>
+#include <QDesktopServices>
 #include <QDebug>
 
 #include "model/model.h"
@@ -36,6 +36,16 @@ TextEditorPresenter::TextEditorPresenter(
 	connect(
 		m_editView, SIGNAL(nodeLinkSelected(ThoughtId)),
 		this, SIGNAL(nodeLinkSelected(ThoughtId))
+	);
+
+	connect(
+		m_editView, SIGNAL(assetLinkSelected(QString)),
+		this, SLOT(onAssetLinkSelected(QString))
+	);
+
+	connect(
+		m_editView, SIGNAL(urlLinkSelected(QString)),
+		this, SLOT(onUrlSelected(QString))
 	);
 
 	connect(
@@ -156,6 +166,13 @@ void TextEditorPresenter::onImageInsertion() {
 		QString &fileName = fileNames[0];
 		// Copy file to assets and signal the editor.
 		AssetSaveResult result = m_assetsRepository->saveAsset(fileName);
+
+		if (result.error == AssetsRepositoryErrorNone) {
+			m_editView->insertAssetLink(result.assetPath);
+			m_editView->setFocus();
+		} else {
+			m_view->onError(MarkdownScrollAssetIOError);
+		}
 	}
 }
 
@@ -219,6 +236,21 @@ void TextEditorPresenter::onDismiss() {
 	}
 }
 
+void TextEditorPresenter::onAssetLinkSelected(QString assetName) {
+	QString filePath = m_assetsRepository->getAssetPath(assetName);
+	if (filePath.isNull()) {
+		return;
+	}
+
+	QFileInfo info = QFileInfo(filePath);
+	QString path = QString("file://%1").arg(info.absolutePath());
+	QDesktopServices::openUrl(QUrl(path));
+}
+
+void TextEditorPresenter::onUrlSelected(QString path) {
+	QDesktopServices::openUrl(QUrl(path));
+}
+
 // Image asset provider.
 
 QPixmap *TextEditorPresenter::pixmapForAsset(QString& assetName) {
@@ -233,7 +265,6 @@ QPixmap *TextEditorPresenter::pixmapForAsset(QString& assetName) {
 
 	QPixmap *pixmap = new QPixmap(filePath);
 	if (pixmap->isNull()) {
-		std::cout << "is null\n";
 		delete pixmap;
 		return nullptr;
 	}

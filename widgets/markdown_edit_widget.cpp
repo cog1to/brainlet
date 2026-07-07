@@ -10,7 +10,6 @@
 #include <QMimeData>
 #include <QTimer>
 #include <QMenu>
-#include <QDesktopServices>
 #include <QTime>
 
 #include "model/thought.h"
@@ -1308,6 +1307,51 @@ void MarkdownEditWidget::insertNodeLink(ThoughtId id, QString title) {
 	throttleSave();
 }
 
+void MarkdownEditWidget::insertAssetLink(QString asset) {
+	QString linkName = asset;
+
+	// If we have a selection, put it as a link title.
+	if (m_selection.active) {
+		// But only if the selection is within single block.
+		if (m_selection.start.line == m_selection.end.line) {
+			text::Line line = m_selection.start.block
+				->paragraph()
+				->getLines()
+				->at(m_selection.start.line);
+
+			// Handle reversed selection.
+			int start = m_selection.start.position, end = m_selection.end.position;
+			if (start > end) {
+				std::swap(start, end);
+			}
+
+			linkName = line.text.mid(start, end - start);
+		}
+	}
+
+	// If we have active selection, we need to delete text first, and then update
+	// last known cursor position (which is saved at the moment we lost focus).
+	if (m_selection.active) {
+		m_lastCursor = deleteSelection();
+	}
+
+	// Refocus. Focus is usually lost because context menu was presented.
+	if (m_lastCursor.block != nullptr) {
+		m_cursor = m_lastCursor;
+		setFocus();
+	}
+
+	QString data = QString("![%1](asset://%2)")
+		.arg(linkName)
+		.arg(asset);
+	MarkdownCursor cursor = pasteString(data);
+
+	processCursorMove(m_cursor, cursor);
+
+	m_isDirty = true;
+	throttleSave();
+}
+
 // Context menu.
 
 void MarkdownEditWidget::showContextMenu(QMouseEvent *event) {
@@ -1361,7 +1405,7 @@ void MarkdownEditWidget::showContextMenu(QMouseEvent *event) {
 	menu->insertAction(nullptr, connectAction);
 
 	// Insert image link action.
-	QString imageMenu = tr("Insert image...");
+	QString imageMenu = tr("Insert asset or image link");
 	QAction *imageAction = new QAction(imageMenu, this);
 	connect(
 		imageAction, SIGNAL(triggered()),
@@ -2157,7 +2201,8 @@ void MarkdownEditWidget::checkForLinksUnderCursor(MarkdownCursor cur) {
 		if (
 			fmt.format != text::Link &&
 			fmt.format != text::PlainLink &&
-			fmt.format != text::NodeLink
+			fmt.format != text::NodeLink &&
+			fmt.format != text::ImageLink
 		) {
 			continue;
 		}
@@ -2191,8 +2236,11 @@ void MarkdownEditWidget::onAnchorClicked(QString anchor) {
 				if (success) {
 					emit nodeLinkSelected(thoughtId);
 				}
+			} else if (scheme == "asset") {
+				QString value = match.captured(2);
+				emit assetLinkSelected(value);
 			} else {
-				QDesktopServices::openUrl(QUrl(anchor));
+				emit urlLinkSelected(anchor);
 			}
 		}
 	}

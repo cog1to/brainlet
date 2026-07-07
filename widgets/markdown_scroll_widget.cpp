@@ -86,6 +86,9 @@ void MarkdownScrollWidget::onError(MarkdownScrollError error) {
 	if (error == MarkdownScrollIOError) {
 		m_error = new ToastWidget(m_style, tr("Failed to access file system"));
 		m_error->show(this);
+	} else if (error == MarkdownScrollAssetIOError) {
+		m_error = new ToastWidget(m_style, tr("Failed to copy asset file"));
+		m_error->show(this);
 	}
 }
 

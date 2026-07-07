@@ -79,6 +79,7 @@ public:
 	// Style.
 	Style *style();
 	// Assets.
+	void insertAssetLink(QString);
 	void setImageAssetProvider(ImageAssetProvider*);
 	QPixmap *pixmapForAsset(QString& assetName) override;
 
@@ -89,6 +90,8 @@ signals:
 	void imageInsertionActivated();
 	void textChanged(QString&);
 	void nodeLinkSelected(ThoughtId);
+	void assetLinkSelected(QString);
+	void urlLinkSelected(QString);
 
 protected:
 	void resizeEvent(QResizeEvent*) override;
