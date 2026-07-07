@@ -48,6 +48,7 @@ text::Paragraph *MarkdownBlock::paragraph() {
 }
 
 void MarkdownBlock::setParagraph(Paragraph *par) {
+	qDebug() << "set par\n";
 	m_par = par;
 
 	if (m_par == nullptr)
@@ -73,6 +74,7 @@ void MarkdownBlock::setParagraph(Paragraph *par) {
 		if (m_pixmap != nullptr) {
 			delete m_pixmap;
 			m_pixmap = nullptr;
+			m_assetName = QString();
 		}
 	}
 
