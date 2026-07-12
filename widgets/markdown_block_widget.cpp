@@ -48,7 +48,6 @@ text::Paragraph *MarkdownBlock::paragraph() {
 }
 
 void MarkdownBlock::setParagraph(Paragraph *par) {
-	qDebug() << "set par\n";
 	m_par = par;
 
 	if (m_par == nullptr)
