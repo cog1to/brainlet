@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
 
 	widget.setStyleSheet(
 		QString("background-color: %1").arg(
-			style.background().name(QColor::HexRgb)
+			style.brains.background.name(QColor::HexRgb)
 		)
 	);
 

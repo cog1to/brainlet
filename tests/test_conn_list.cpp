@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
 	Style& style = Style::defaultStyle();
 	widget.setStyleSheet(
 		QString("background-color: %1;")
-			.arg(style.background().name(QColor::HexRgb))
+			.arg(style.brains.background.name(QColor::HexRgb))
 	);
 
 	// Add connections.

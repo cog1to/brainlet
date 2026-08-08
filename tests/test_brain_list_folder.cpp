@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
 
 	widget.setStyleSheet(
 		QString("background-color: %1")
-		.arg(style.background().name(QColor::HexArgb))
+		.arg(style.brains.background.name(QColor::HexArgb))
 	);
 	widget.resize(600, 600);
 	widget.show();

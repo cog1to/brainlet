@@ -9,6 +9,7 @@ So far there are only two types of top-level tabs/modules defined: Brain List
 and Brain Details. Both have corresponding Widgets in `widgets` directory and
 Presenters in `presenters` directory.
 
+```
  ┌─────────────┐                 shows in tabs
  │ TabsWidget  ├──────────────────────────────────────────┐
  └─────┬───────┘                                          │
@@ -23,6 +24,7 @@ Presenters in `presenters` directory.
                                  │┌───────────┐*          │
                                  └┤BrainModule├───────────┘
                                   └───────────┘
+```
 
 ## Modules
 
@@ -34,6 +36,7 @@ They consist of:
 from other sources.
 - A Repository class, which provides and manipulates the data.
 
+```
  ┌─────────────┐ sends input >   ┌────────────┐   < data >   ┌────────────┐
  │   Widget    ├─────────────────┤ Presenter  ├──────────────┤ Repository │
  └─────┬───────┘ < sends updates └─────┬──────┘              └────────────┘
@@ -46,6 +49,7 @@ from other sources.
  ┌─────┴───────┐*
  │   .......   │
  └─────────────┘
+```
 
 To get a feel of how it is organized, start with `widgets/brain_list_widget.h`
 and `presenters/brain_list_presenter.h`. Any other big component follows that

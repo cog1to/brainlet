@@ -17,13 +17,13 @@ int main(int argc, char **argv) {
 	parent.resize(600, 600);
 	parent.setStyleSheet(
 		QString("background-color: %1")
-		.arg(style.background().name(QColor::HexRgb))
+		.arg(style.brains.background.name(QColor::HexRgb))
 	);
 
 	std::vector<Brain> items = {
-		Brain("b1", "My Brain", 1),
-		Brain("b2", "Brain with long name", 2),
-		Brain("b3", "Brain with very long name lorem ipsum dolor sit amet", 3)
+		Brain("b1", "My Brain", 1, 1000),
+		Brain("b2", "Brain with long name", 2, 2000),
+		Brain("b3", "Brain with very long name lorem ipsum dolor sit amet", 3, 3000)
 	};
 	
 	BrainListWidget listWidget(nullptr, &style);

@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
 	QWidget parent = QWidget(nullptr);
 	parent.setStyleSheet(
 		QString("background-color: %1")
-		.arg(style.background().name(QColor::HexRgb))
+		.arg(style.brains.background.name(QColor::HexRgb))
 	);
 
 	BrainItemWidget item = BrainItemWidget(&parent, &style, "id", "My Brain", 0);

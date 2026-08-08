@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
 	scroll.resize(600, 600);
 
 	// Make presenter.
-	TextEditorPresenter presenter(repo, repo, &scroll);
+	TextEditorPresenter presenter(repo, repo, repo, &scroll);
 
 	// Show window.
 	scroll.show();

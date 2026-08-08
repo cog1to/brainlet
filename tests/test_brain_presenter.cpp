@@ -58,6 +58,7 @@ int main(int argc, char *argv[]) {
 	TextEditorPresenter *markdownPresenter = new TextEditorPresenter(
 		&repo,
 		&repo,
+		&repo,
 		scroll
 	);
 
