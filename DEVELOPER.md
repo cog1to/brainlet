@@ -28,7 +28,7 @@ Presenters in `presenters` directory.
 
 ## Modules
 
-These modules share the structure with any other complex widget in the app.
+Top "modules" share the structure with any other complex widget in the app.
 They consist of:
 
 - A Widget class, which defines the UI.
@@ -57,7 +57,7 @@ structure more or less.
 
 ## Data storage
 
-Brain catalogue is organized as a simple config folder. So, on linux you'd
+Brain catalogue is organized as a simple config folder. E.g., on Linux you'd
 have `~/.config/brainlet/brains` folder with a separate directory for each
 brain.
 
@@ -66,7 +66,7 @@ Each brain constists of 3 main parts:
 - `brain.sqlite` DB file that tracks nodes and connections inside the Brain
 - `documents` folder that hold the text context of each node
 - `assets` folder that contains binary files that you've added in the text
-of any node through `insert image/asset` menu option.
+of any node through `insert image/asset` menu option
 
 The brain list is managed by `FolderBrainsRepository`, and each brain is
 managed by `DatabaseBrainRepository`.
@@ -86,15 +86,13 @@ and you can add a connection from the editor, and it will update the canvas.
 
 Th canvas widget works with a Layout abstraction, which I initially planned as
 an abstraction over how exactly the individual nodes/thoughts are arranged on
-the screen. But right now it only has a single `DefaultLayout` implementation.
+the screen. But right now it has only one `DefaultLayout` implementation.
 Look into `layout/` folder for the details.
 
-In terms of model, each node is represented by a `Thought` class described in
-`model/thought.h`.
+In terms of model, each node in the canvas is represented by a `Thought` class
+described in `model/thought.h`.
 
 ## Text editor
-
-By far the most complex part of the app.
 
 #### Text model
 
@@ -112,22 +110,28 @@ and rendering. It manages global editor state, like cursor position, undo
 stack, text selection, etc.
 - `MarkdownBlock` displays individual paragraphs of the text in the text
 editor, including cursor tracker and text selection.
-- `MarkdownScrollWidget` widget catches cursor moves and tries to always keep
-it visible in the text area.
+- `MarkdownScrollWidget` widget is a wrapper around editing widget. It catches
+cursor moves and tries to always keep it visible in the text area.
 - `MarkdownConnectionWidget` is a block after the text that renders links from
-current thought/node to all other connected nodes.
+current thought/node to other nodes.
 
 #### Text editing logic - folding
 
 I decided to go for manual text editing model because I wanted to make fancy
 fold/unfold mechanic when the cursor enters and leaves a paragraph. Thus a
 LOT of code was written to handle all of the layout and all of the input and
-outout, including standard actions like copy, paste, undo, redo, arrow
+output, including standard actions like copy, paste, undo, redo, arrow
 movement, etc.
 
 `MarkdownEditWidget` is massive, although the logic itself is not that
 complicated. Beware that there are probably still some crashes/bugs that I
 wasn't able to reproduce or catch in this behemoth.
+
+The most complex part is probably adjusting the current paragraph layout
+depending on the input. Like, when you type dash and space, the layout should
+switch to a list representation; and vice versa, when you backspace at the
+beginning of a list item, it should switch back to normal text. Stuff like that
+is not trivial to handle just by the volume of possible inputs and transitions.
 
 #### Metadata parsing
 
@@ -143,4 +147,7 @@ unit tests, they're more like mini-apps to test individual widgets. I used
 them extensively during initial development phase, but now I mostly just test
 with the final app build. Still, if you want to isolate some small piece of UI
 or logic and test it, feel free to create a new one there.
+
+For this purpose there are "im-memory" implementations of some Repository
+classes and other "stub"-like components in the repo.
 
