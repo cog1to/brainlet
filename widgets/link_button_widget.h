@@ -9,6 +9,9 @@
 
 #include "widgets/style.h"
 
+/**
+ * A button with specific mouse enter/leave/press behaviour.
+ */
 class LinkButtonWidget: public QPushButton {
 	Q_OBJECT
 

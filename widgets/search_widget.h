@@ -19,6 +19,9 @@
 #include "widgets/connection_list_widget.h"
 #include "widgets/thought_edit_widget.h"
 
+/**
+ * A container for an input field with a suggestions list.
+ */
 class SearchWidget: public QFrame {
 	Q_OBJECT
 

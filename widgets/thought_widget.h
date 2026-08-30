@@ -18,6 +18,11 @@ typedef struct {
 	qreal dx, dy;
 } AnchorPoint;
 
+/**
+ * Represents a single node in the node graph of a Brain. Displays node's name,
+ * and various connection points it may have. Allows editing by embedding
+ * ThoughtEditWidget.
+ */
 class ThoughtWidget: public BaseWidget {
 	Q_OBJECT
 

@@ -13,6 +13,9 @@
 #include "model/thought.h"
 #include "widgets/style.h"
 
+/**
+ * Represents a single visited node.
+ */
 class HistoryItem: public QFrame {
 	Q_OBJECT
 
@@ -35,6 +38,9 @@ private:
 	ThoughtId m_id;
 };
 
+/**
+ * List of all nodes visited since the particular Brain was opened.
+ */
 class HistoryWidget: public QFrame {
 	Q_OBJECT
 

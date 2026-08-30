@@ -16,6 +16,10 @@ enum MarkdownScrollError {
 	MarkdownScrollAssetIOError,
 };
 
+/**
+ * Wrapper for text editor and connections list widgets. Also has an ability to
+ * display error toasts.
+ */
 class MarkdownScrollWidget
 	: public QScrollArea, public MarkdownEditPresenter
 {

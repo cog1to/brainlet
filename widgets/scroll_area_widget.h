@@ -10,6 +10,10 @@
 #include "widgets/base_widget.h"
 #include "widgets/scroll_bar_widget.h"
 
+/**
+ * A helper widget for areas of CanvasWidget that should respond to scroll
+ * events.
+ */
 class ScrollAreaWidget: public BaseWidget {
 	Q_OBJECT
 

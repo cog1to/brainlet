@@ -12,6 +12,14 @@
 #include "widgets/search_widget.h"
 #include "widgets/history_widget.h"
 
+/**
+ * TODO: Rename to something less generic.
+ *
+ * This widget is a wrapper around main Brain canvas. It holds the CanvasWidget,
+ * which draws the nodes, SearchWidget, which is a input field with suggestions
+ * at the top of the canvas, and HistoryWidget, which is a list of visited
+ * nodes.
+ */
 class ContainerWidget: public BaseWidget {
 	Q_OBJECT
 

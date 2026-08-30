@@ -15,10 +15,14 @@
 #include "common/image_asset_provider.h"
 #include "model/new_text_model.h"
 
-// Forward declaration to avoid circula reference compilation errors.
+// Forward declaration to avoid circular reference compilation errors.
 class MarkdownCursorProvider;
 class MarkdownCursor;
 
+/**
+ * Represents a block of a markdown text. This widget is responsible for
+ * rendering and formatting the text properly.
+ */
 class MarkdownBlock: public QFrame {
 	Q_OBJECT
 
@@ -44,7 +48,6 @@ public:
 	void paintEvent(QPaintEvent*) override;
 	void resizeEvent(QResizeEvent*) override;
 	// Geometry.
-	//QSize sizeHint() const override;
 	bool hasHeightForWidth() const override;
 	int heightForWidth(int w) const override;
 
@@ -100,6 +103,10 @@ public:
 	int position;
 };
 
+/**
+ * Cursor provider interface for the MarkdownBlock widget to query current
+ * cursor position.
+ */
 class MarkdownCursorProvider {
 public:
 	virtual MarkdownCursor *currentCursor() = 0;

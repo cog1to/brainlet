@@ -23,12 +23,17 @@
 #include "model/brain.h"
 #include "model/brain_list.h"
 
+/**
+ * This is a list/container for all Brains that the app finds in your Brain
+ * repository. Each Brain is represented as a BrainItemWidget inside the
+ * `m_container` widget. These items are layed out using `m_layout` Layout
+ * object.
+ */
 class BrainListWidget: public BaseWidget {
 	Q_OBJECT
 
 public:
 	BrainListWidget(QWidget*, Style*);
-	// Model.
 	void setItems(BrainList);
 	void showError(QString);
 

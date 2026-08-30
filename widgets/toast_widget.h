@@ -12,6 +12,9 @@
 
 #include "widgets/style.h"
 
+/**
+ * Displays text inside a "floating bubble" container.
+ */
 class ToastWidget: public QFrame {
 	Q_OBJECT
 

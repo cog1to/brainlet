@@ -10,6 +10,9 @@
 #include "widgets/base_widget.h"
 #include "widgets/markdown_scroll_widget.h"
 
+/**
+ * Displays Thought title content.
+ */
 class ThoughtDetailsWidget: public BaseWidget {
 	Q_OBJECT
 

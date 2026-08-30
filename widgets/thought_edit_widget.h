@@ -13,6 +13,11 @@
 
 #include "widgets/style.h"
 
+/**
+ * Subclass of the text editing field with some additional signals exposed, and
+ * a specific behavior regarding mouse and cursor entering and leaving the
+ * widget.
+ */
 class ThoughtEditWidget: public QTextEdit {
 	Q_OBJECT
 

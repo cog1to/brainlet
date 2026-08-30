@@ -6,6 +6,10 @@
 #include <QWidgetItem>
 #include <QStyle>
 
+/**
+ * QLayout that displays items in a text-like fashion, i.e. line by line with
+ * wrap-around functionality.
+ */
 class FlowLayout : public QLayout {
 public:
 	FlowLayout(QWidget *parent, int margin = -1, int hSpacing = -1, int vSpacing = -1);

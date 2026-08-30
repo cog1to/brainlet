@@ -51,6 +51,16 @@ public:
 	MarkdownCursor end = MarkdownCursor(nullptr, -1, 0);
 };
 
+/**
+ * Displays markdown text, divided into individual blocks of text. Each block
+ * is represented by MarkdownBlock widget. It also tracks current cursor
+ * position, handles keyboard and mouse input, handles undo/redo and other
+ * keyboard shortcuts, and communicates with a presenter for saving and loading
+ * the text.
+ *
+ * This widget is embedded into MarkdownScrollWidget, which main function is to
+ * keep the editing cursor visible at all times.
+ */
 class MarkdownEditWidget
 	: public BaseWidget, public MarkdownCursorProvider, public ImageAssetProvider
 {

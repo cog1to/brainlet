@@ -68,8 +68,11 @@ private:
 	QPushButton *makeButton(Style *style, QString title);
 };
 
-// List widget.
-
+/**
+ * Renders list of thoughts with their names, and provides callbacks for
+ * clicking on individual items. Each item is represented by a
+ * ConnectionItemWidget.
+ */
 class ConnectionListWidget: public BaseWidget {
 	Q_OBJECT
 

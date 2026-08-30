@@ -12,6 +12,10 @@
 
 enum AnchorType { AnchorLink, AnchorParent, AnchorChild };
 
+/**
+ * A small dot on the side on a ThoughtWidget that represents a connection
+ * point.
+ */
 class AnchorWidget: public BaseWidget {
 	Q_OBJECT
 

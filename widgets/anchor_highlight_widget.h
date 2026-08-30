@@ -8,6 +8,9 @@
 #include "widgets/base_widget.h"
 #include "widgets/anchor_widget.h"
 
+/**
+ * An outline around an anchor point widget.
+ */
 class AnchorHighlightWidget: public BaseWidget {
 	Q_OBJECT
 

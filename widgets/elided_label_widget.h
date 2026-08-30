@@ -7,6 +7,10 @@
 #include <QPaintEvent>
 #include <QTextLayout>
 
+/**
+ * A generic text widget that can ellipsize the text based on the size it is
+ * given.
+ */
 class ElidedLabelWidget: public QFrame {
 	Q_OBJECT
 

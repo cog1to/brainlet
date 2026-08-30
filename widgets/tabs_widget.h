@@ -15,6 +15,12 @@
 #include "widgets/style.h"
 #include "widgets/base_widget.h"
 
+/**
+ * Tabs is the root widget, or "main window" widget for the app.
+ * Upon launch, it contains a BrainListWidget as an unclosable first tab,
+ * and every Brain you open will be opened in a separater tab inside this
+ * widget.
+ */
 class TabsWidget: public BaseWidget {
 	Q_OBJECT
 

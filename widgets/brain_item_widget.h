@@ -15,6 +15,10 @@
 #include "widgets/base_widget.h"
 #include "widgets/elided_label_widget.h"
 
+/**
+ * Represents an individual Brain repository. These widgets are instantiated
+ * and owned by the BrainListWidget.
+ */
 class BrainItemWidget: public QFrame {
 	Q_OBJECT
 
@@ -59,13 +63,13 @@ private:
 	QString m_id;
 	QString m_name;
 	uint64_t m_size;
-	// Contents
+	// Contents.
 	QVBoxLayout m_layout;
 	ElidedLabelWidget *m_label = nullptr;
 	QLabel *m_infoLabel;
-	// TODO: Button idea: hold-to-activate widget that fills with
-	// color left-to-right while pressing it, and sends the signal
-	// when filled completely.
+	// NOTE: Button idea. hold-to-activate widget that fills with color
+	// left-to-right while pressing it, and sends the signal when filled
+	// completely.
 	QPushButton *m_deleteButton = nullptr;
 	QPushButton *m_renameButton = nullptr;
 	QHBoxLayout *m_buttonsLayout = nullptr;
