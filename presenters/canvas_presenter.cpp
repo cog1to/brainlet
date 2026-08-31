@@ -48,7 +48,7 @@ CanvasPresenter::CanvasPresenter(
 
 	connect(
 		view, SIGNAL(newThoughtTextChanged(QString)),
-		this, SLOT(onNewThoughtTextChanged(QString))	
+		this, SLOT(onNewThoughtTextChanged(QString))
 	);
 }
 
@@ -163,6 +163,11 @@ void CanvasPresenter::onNewThoughtTextChanged(QString text) {
 	const State *state = m_repo->getState();
 	if (state == nullptr)
 		return;
+
+	const Thought* center = state->centralThought();
+	if (center == nullptr)
+		return;
+
 	const std::unordered_map<ThoughtId, Thought*>* thoughts = state->thoughts();
 
 	std::string term = text.toStdString();
@@ -182,9 +187,17 @@ void CanvasPresenter::onNewThoughtTextChanged(QString text) {
 		for (auto it = result.items.begin(); it != result.items.end(); it++) {
 			// Don't show currently visible items in suggestions.
 			// Can potentially change later if we'll make "full graph" layout.
+			// NOTE: Disabling this for now. Cool idea, but seems to be more trouble
+			// than usefulness. Let's filter out only the current node for now.
+			#if 0
 			if (auto found = thoughts->find((*it).id); found != thoughts->end()) {
 				continue;
 			}
+			#else
+			if ((*it).id == center->id()) {
+				continue;
+			}
+			#endif
 
 			ConnectionItem item = {
 				.id = (*it).id,
