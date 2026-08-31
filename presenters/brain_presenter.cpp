@@ -132,6 +132,10 @@ void BrainPresenter::onSearchItemSelected(ThoughtId id, QString title) {
 	if (m_search != nullptr) {
 		m_search->reset();
 	}
+
+	if (m_history != nullptr) {
+		m_history->onThoughtSelected(id, title);
+	}
 }
 
 void BrainPresenter::onThoughtLinkSelected(ThoughtId id) {
