@@ -32,16 +32,23 @@ int main(int argc, char *argv[]) {
 	// Make widget.
 	MarkdownEditWidget *markdownWidget = new MarkdownEditWidget(nullptr, &style);
 
-	MarkdownScrollWidget scroll = MarkdownScrollWidget(nullptr, &style);
-	scroll.setMarkdownWidgets(markdownWidget, nullptr);
-	scroll.setWidgetResizable(true);
-	scroll.resize(600, 600);
+	MarkdownScrollWidget *scroll = new MarkdownScrollWidget(nullptr, &style);
+	scroll->setMarkdownWidgets(markdownWidget, nullptr);
+	scroll->setWidgetResizable(true);
+	scroll->resize(600, 600);
+
+	// Make thought details widget.
+	ThoughtDetailsWidget *details = new ThoughtDetailsWidget(
+		nullptr,
+		&style,
+		scroll
+	);
 
 	// Make presenter.
-	TextEditorPresenter presenter(repo, repo, repo, &scroll);
+	TextEditorPresenter presenter(repo, repo, repo, repo, scroll, details);
 
 	// Show window.
-	scroll.show();
+	details->show();
 
 	// Load thought.
 	presenter.setThought(0);

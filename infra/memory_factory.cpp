@@ -79,18 +79,20 @@ DismissableModule MemoryFactory::makeBrainModule(QString id) {
 	scroll->setMarkdownWidgets(markdownWidget, connWidget);
 	scroll->setWidgetResizable(true);
 
-	TextEditorPresenter *markdownPresenter = new TextEditorPresenter(
-		repo,
-		repo,
-		repo,
-		scroll
-	);
-
 	// Thought details widget for editing individual thoughts.
 	ThoughtDetailsWidget *detailsWidget = new ThoughtDetailsWidget(
 		nullptr,
 		m_style,
 		scroll
+	);
+
+	TextEditorPresenter *markdownPresenter = new TextEditorPresenter(
+		repo,
+		repo,
+		repo,
+		repo,
+		scroll,
+		detailsWidget
 	);
 
 	// Canvas widget to draw connection graph.

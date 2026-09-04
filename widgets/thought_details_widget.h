@@ -9,6 +9,7 @@
 #include "widgets/style.h"
 #include "widgets/base_widget.h"
 #include "widgets/markdown_scroll_widget.h"
+#include "widgets/wrapping_text_edit_widget.h"
 
 /**
  * Displays Thought title content.
@@ -21,8 +22,14 @@ public:
 	~ThoughtDetailsWidget();
 	void setTitle(QString title);
 
+signals:
+	void titleEditConfirmed(QString, std::function<void(bool)>);
+
+protected slots:
+	void onTitleEditConfirmed(QString&, std::function<void(bool)>);
+
 private:
-	QLabel *m_title;
+	WrappingTextEditWidget *m_title;
 	QWidget *m_separator;
 	QVBoxLayout *m_layout;
 	MarkdownScrollWidget *m_markdown;

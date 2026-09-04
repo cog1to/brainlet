@@ -26,7 +26,7 @@ BrainPresenter::BrainPresenter(
 		);
 		connect(
 			canvas, SIGNAL(thoughtRenamed(ThoughtId, QString)),
-			this, SLOT(onThoughtRenamed(ThoughtId, QString))
+			this, SLOT(onCanvasThoughtRenamed(ThoughtId, QString))
 		);
 	}
 
@@ -48,6 +48,10 @@ BrainPresenter::BrainPresenter(
 		connect(
 			editor, SIGNAL(connectionCreated()),
 			canvas,	SLOT(reload())
+		);
+		connect(
+			editor, SIGNAL(thoughtRenamed(ThoughtId, QString)),
+			this, SLOT(onEditorThoughtRenamed(ThoughtId, QString))
 		);
 	}
 
@@ -109,11 +113,18 @@ void BrainPresenter::onItemSelected(ThoughtId id, QString& title) {
 	onThoughtSelected(id, title);
 }
 
-void BrainPresenter::onThoughtRenamed(ThoughtId id, QString title) {
+void BrainPresenter::onCanvasThoughtRenamed(ThoughtId id, QString title) {
 	if (m_view == nullptr)
 		return;
 
 	m_view->details()->setTitle(title);
+}
+
+void BrainPresenter::onEditorThoughtRenamed(ThoughtId id, QString title) {
+	if (m_canvas == nullptr)
+		return;
+
+	m_canvas->setThought(id);
 }
 
 void BrainPresenter::onSearchItemSelected(ThoughtId id, QString title) {

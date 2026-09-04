@@ -55,18 +55,20 @@ int main(int argc, char *argv[]) {
 	scroll->setMarkdownWidgets(markdownWidget, connWidget);
 	scroll->setWidgetResizable(true);
 
-	TextEditorPresenter *markdownPresenter = new TextEditorPresenter(
-		&repo,
-		&repo,
-		&repo,
-		scroll
-	);
-
 	// Make thought details widget.
 	ThoughtDetailsWidget *detailsWidget = new ThoughtDetailsWidget(
 		nullptr,
 		&style,
 		scroll
+	);
+
+	TextEditorPresenter *markdownPresenter = new TextEditorPresenter(
+		&repo,
+		&repo,
+		&repo,
+		&repo,
+		scroll,
+		detailsWidget
 	);
 
 	// Make canvas widget.

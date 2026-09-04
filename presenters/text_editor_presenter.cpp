@@ -13,12 +13,16 @@ TextEditorPresenter::TextEditorPresenter(
 	TextRepository *repo,
 	SearchRepository *search,
 	AssetsRepository *assets,
-	MarkdownScrollWidget *view
+	GraphRepository *graph,
+	MarkdownScrollWidget *view,
+	ThoughtDetailsWidget *detailsView
 )
 	: m_repository(repo),
 	m_searchRepository(search),
 	m_assetsRepository(assets),
-	m_view(view)
+	m_graphRepository(graph),
+	m_view(view),
+	m_detailsView(detailsView)
 {
 	m_editView = view->markdownWidget();
 	m_editView->setImageAssetProvider(this);
@@ -56,6 +60,11 @@ TextEditorPresenter::TextEditorPresenter(
 	connect(
 		m_editView, SIGNAL(imageInsertionActivated()),
 		this, SLOT(onImageInsertion())
+	);
+
+	connect(
+		m_detailsView, SIGNAL(titleEditConfirmed(QString, std::function<void(bool)>)),
+		this, SLOT(onTitleChanged(QString, std::function<void(bool)>))
 	);
 }
 
@@ -249,6 +258,25 @@ void TextEditorPresenter::onAssetLinkSelected(QString assetName) {
 
 void TextEditorPresenter::onUrlSelected(QString path) {
 	QDesktopServices::openUrl(QUrl(path));
+}
+
+void TextEditorPresenter::onTitleChanged(
+	QString text,
+	std::function<void(bool)> callback
+) {
+	if (m_graphRepository == nullptr)
+		return;
+
+	if (m_id == InvalidThoughtId)
+		return;
+
+	std::string value = text.toStdString();
+	bool result = m_graphRepository->updateThought(m_id, value);
+	callback(result);
+
+	if (result) {
+		emit thoughtRenamed(m_id, text);
+	}
 }
 
 // Image asset provider.

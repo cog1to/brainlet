@@ -28,7 +28,8 @@ public:
 
 protected slots:
 	void onThoughtSelected(ThoughtId, QString);
-	void onThoughtRenamed(ThoughtId, QString);
+	void onCanvasThoughtRenamed(ThoughtId, QString);
+	void onEditorThoughtRenamed(ThoughtId, QString);
 	void onSearchItemSelected(ThoughtId, QString);
 	void onThoughtLinkSelected(ThoughtId);
 	void onConnectionCreated();

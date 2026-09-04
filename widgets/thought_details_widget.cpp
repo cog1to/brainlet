@@ -4,6 +4,7 @@
 
 #include "widgets/thought_details_widget.h"
 #include "widgets/markdown_scroll_widget.h"
+#include "widgets/wrapping_text_edit_widget.h"
 
 ThoughtDetailsWidget::ThoughtDetailsWidget(
 	QWidget *parent,
@@ -13,7 +14,7 @@ ThoughtDetailsWidget::ThoughtDetailsWidget(
 {
 	m_markdown = markdown;
 	m_layout = new QVBoxLayout(this);
-	m_title = new QLabel(nullptr);
+	m_title = new WrappingTextEditWidget(nullptr);
 	m_separator = new QWidget(nullptr);
 
 	setStyleSheet(
@@ -28,7 +29,6 @@ ThoughtDetailsWidget::ThoughtDetailsWidget(
 			.arg(style->editor.textFont.pixelSize() * 2.0)
 			.arg(style->editor.textFont.family())
 	);
-	m_title->setWordWrap(true);
 	m_title->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Minimum);
 
 	m_separator->setMinimumSize(1, 1);
@@ -45,14 +45,23 @@ ThoughtDetailsWidget::ThoughtDetailsWidget(
 	m_layout->addWidget(m_title);
 	m_layout->addWidget(m_separator);
 	m_layout->addWidget(markdown);
+
+	QObject::connect(
+		m_title, SIGNAL(editConfirmed(QString&, std::function<void(bool)>)),
+		this, SLOT(onTitleEditConfirmed(QString&, std::function<void(bool)>))
+	);
 }
 
 ThoughtDetailsWidget::~ThoughtDetailsWidget() {
 	delete m_layout;
 }
 
+void ThoughtDetailsWidget::onTitleEditConfirmed(QString& newTitle, std::function<void(bool)> callback) {
+	emit titleEditConfirmed(newTitle, callback);
+}
+
 void ThoughtDetailsWidget::setTitle(QString title) {
-	m_title->setText(title);
+	m_title->setTitle(title);
 	m_title->updateGeometry();
 	m_layout->update();
 }
