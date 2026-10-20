@@ -137,9 +137,9 @@ void text::Line::parseLinks(QString *input) {
 		// from previous folding operations.
 		offset = 0;
 		for (auto& format: foldedFormats) {
-			if (format.from < match.capturedStart())
+			if ((format.from+offset) < match.capturedStart())
 				offset += format.startOffset();
-			if (format.to < match.capturedStart())
+			if ((format.to+offset) < match.capturedStart())
 				offset += format.endOffset();
 		}
 
@@ -225,7 +225,7 @@ void text::Line::parseLinks(QString *input) {
 }
 
 void text::Line::parseCheckboxes(QString *input) {
-	QRegularExpression expr("\\!?(^| )(\\[[ x]\\])($|\\W)");
+	QRegularExpression expr("(^| )(\\[[ x]\\])($|\\W)");
 	QRegularExpressionMatch match = expr.match(*input);
 	QString fullCheckbox(QChar(0xf14a));
 	QString emptyCheckbox(QChar(0xf0c8));
@@ -236,9 +236,9 @@ void text::Line::parseCheckboxes(QString *input) {
 		// from previous folding operations.
 		offset = 0;
 		for (auto& format: foldedFormats) {
-			if (format.from < match.capturedStart())
+			if ((format.from+offset) < match.capturedStart())
 				offset += format.startOffset();
-			if (format.to < match.capturedStart())
+			if ((format.to+offset) < match.capturedStart())
 				offset += format.endOffset();
 		}
 
@@ -313,9 +313,9 @@ void text::Line::parseSimpleLinks(QString *input) {
 		// Get offset from formats before.
 		offset = 0;
 		for (auto& format: foldedFormats) {
-			if (format.from < match.capturedStart())
+			if ((format.from+offset) < match.capturedStart())
 				offset += format.startOffset();
-			if (format.to < match.capturedStart())
+			if ((format.to+offset) < match.capturedStart())
 				offset += format.endOffset();
 		}
 
@@ -355,9 +355,9 @@ void text::Line::apply(
 		// Get offset from formats before.
 		offset = 0;
 		for (auto& format: foldedFormats) {
-			if (format.from < match.capturedStart())
+			if ((format.from+offset) < match.capturedStart())
 				offset += format.startOffset();
-			if (format.to < match.capturedStart())
+			if ((format.to+offset) < match.capturedStart())
 				offset += format.endOffset();
 		}
 

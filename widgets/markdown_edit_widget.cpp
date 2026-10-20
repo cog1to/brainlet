@@ -208,9 +208,6 @@ void MarkdownEditWidget::mouseMoveEvent(QMouseEvent *event) {
 }
 
 void MarkdownEditWidget::mouseReleaseEvent(QMouseEvent *event) {
-	//if (!hasFocus())
-	//	return;
-
 	bool found = false;
 	MarkdownCursor cursor = cursorAtPoint(event->pos(), &found);
 	text::FormatRange range(0, 0, text::Highlight);
@@ -239,6 +236,20 @@ void MarkdownEditWidget::mouseReleaseEvent(QMouseEvent *event) {
 			QString newText = line->text;
 
 			int position = range.from;
+
+			// Adjust positon for format folding.
+			QList<text::FormatRange> *ranges = &line->foldedFormats;
+			auto offset = 0;
+			for (auto& range: *ranges) {
+				if (range.to <= position) {
+					offset += range.endOffset();
+				}
+				if (range.from < position) {
+					offset += range.startOffset();
+				}
+			}
+			position += offset;
+
 			if (range.format == text::Checkbox)
 				position += 1;
 
