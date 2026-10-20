@@ -225,7 +225,7 @@ void text::Line::parseLinks(QString *input) {
 }
 
 void text::Line::parseCheckboxes(QString *input) {
-	QRegularExpression expr("(^| )(\\[[ x]\\])($| )");
+	QRegularExpression expr("\\!?(^| )(\\[[ x]\\])($|\\W)");
 	QRegularExpressionMatch match = expr.match(*input);
 	QString fullCheckbox(QChar(0xf14a));
 	QString emptyCheckbox(QChar(0xf0c8));
