@@ -70,6 +70,7 @@ void MarkdownEditWidget::loadInternal(QString& data, bool clearHistory) {
 	// Reset cursor.
 	m_cursor = MarkdownCursor::empty();
 	m_lastCursor = MarkdownCursor::empty();
+	m_selection = MarkdownSelection();
 
 	// Create blocks.
 	QList<text::Paragraph> *list = m_model.paragraphs();
@@ -828,7 +829,7 @@ QTextLayout::FormatRange MarkdownEditWidget::selectionInLine(
 		.format = QTextCharFormat()
 	};
 
-	if (m_selection.active == false)
+	if (m_selection.active == false || m_selection.start.block == nullptr || m_selection.end.block == nullptr)
 		return range;
 
 	MarkdownCursor startCursor = m_selection.start;
@@ -2134,6 +2135,9 @@ QKeySequence MarkdownEditWidget::keySequence(QKeyEvent *event) {
 bool MarkdownEditWidget::cursorAfter(
 	MarkdownCursor first, MarkdownCursor second
 ) {
+	if (first.block == nullptr || second.block == nullptr)
+		return false;
+
 	text::Paragraph *firstPar = first.block->paragraph();
 	int firstParIdx = indexOfParagraph(firstPar);
 	text::Paragraph *secondPar = second.block->paragraph();
